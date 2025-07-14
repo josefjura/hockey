@@ -42,7 +42,7 @@ export default function LandingPage() {
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 <Link
                   href="/auth/signin"
-                  className="bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg flex items-center space-x-2"
+                  className="bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg flex items-center space-x-2"
                 >
                   <span>{t('hero.getStarted')}</span>
                   <ArrowRight className="w-4 h-4" />

@@ -5,6 +5,7 @@ import { getMessages } from 'next-intl/server';
 import { Geist, Geist_Mono } from "next/font/google";
 import AuthProvider from "@/components/auth-provider";
 import "../globals.css";
+import Providers from '@/providers';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,7 @@ export default async function LocaleLayout({
   // Providing all messages to the client
   // side is the easiest way to get started
   const messages = await getMessages();
- 
+
   return (
     <html lang={locale}>
       <body
@@ -40,7 +41,9 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
+						<Providers>
             {children}
+						</Providers>
           </AuthProvider>
         </NextIntlClientProvider>
       </body>

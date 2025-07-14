@@ -1,139 +1,144 @@
 {
-	"LandingPage": {
-		"title": "Hockey DB",
-		"login": "Login",
-		"hero": {
-			"title": "Professional Hockey Database Management",
-			"subtitle": "Complete hockey league management with team tracking, player statistics, and game analytics for professional leagues and organizations.",
-			"getStarted": "Get Started"
-		},
-		"features": {
-			"title": "Everything you need for hockey management",
-			"subtitle": "Powerful tools to manage your hockey organization from player statistics to league standings.",
-			"data": {
-				"title": "Data Management",
-				"description": "Store and organize all your hockey data in one secure, reliable database system."
-			},
-			"analytics": {
-				"title": "Advanced Analytics",
-				"description": "Get detailed insights with comprehensive statistics and performance analytics."
-			},
-			"leagues": {
-				"title": "League Management",
-				"description": "Manage multiple leagues, seasons, and tournaments with ease."
-			},
-			"teams": {
-				"title": "Team Coordination",
-				"description": "Track teams, players, contracts, and performance across your organization."
-			}
-		}
-	},
-	"SignIn": {
-		"title": "Sign in to your account",
-		"subtitle": "Access the Hockey Database Management System",
-		"form": {
-			"email": "Email address",
-			"password": "Password",
-			"signIn": "Sign in",
-			"signingIn": "Signing in..."
-		},
-		"errors": {
-			"invalidCredentials": "Invalid email or password",
-			"general": "Something went wrong. Please try again."
-		},
-		"loading": "Loading...",
-		"alreadySignedIn": {
-			"title": "Already signed in",
-			"welcome": "Welcome back, {email}!",
-			"goToDashboard": "Go to Dashboard",
-			"signOut": "Sign Out"
-		},
-		"defaultCredentials": {
-			"title": "Default credentials for testing:",
-			"email": "Email",
-			"password": "Password"
-		}
-	},
-	"Navigation": {
-		"dashboard": "Dashboard",
-		"dashboardDescription": "Overview and stats",
-		"teams": "Teams",
-		"teamsDescription": "Manage teams",
-		"players": "Players",
-		"playersDescription": "Player database",
-		"events": "Events",
-		"eventsDescription": "Tournaments & leagues",
-		"seasons": "Seasons",
-		"seasonsDescription": "Season management",
-		"countries": "Countries",
-		"countriesDescription": "Country settings",
-		"reports": "Reports",
-		"reportsDescription": "Data analytics",
-		"management": "Management",
-		"managementDescription": "System settings",
-		"signedInAs": "Signed in as",
-		"signOut": "Sign Out"
-	},
-	"Dashboard": {
-		"title": "Dashboard",
-		"subtitle": "Welcome to your hockey management system overview",
-		"stats": {
-			"totalTeams": "Total Teams",
-			"activePlayers": "Active Players",
-			"ongoingSeasons": "Ongoing Seasons",
-			"totalEvents": "Total Events"
-		},
-		"recentActivity": {
-			"title": "Recent Activity"
-		},
-		"activity": {
-			"teamRegistered": "Team registered:",
-			"playerTransfer": "Player transfer:",
-			"seasonStarted": "Season started:",
-			"eventCreated": "Event created:"
-		},
-		"quickActions": {
-			"title": "Quick Actions",
-			"addTeam": "Add New Team",
-			"addTeamDescription": "Register a new team in the system",
-			"addPlayer": "Add New Player",
-			"addPlayerDescription": "Register a new player profile",
-			"createEvent": "Create Event",
-			"createEventDescription": "Set up a new tournament or league",
-			"viewReports": "View Reports",
-			"viewReportsDescription": "Access analytics and statistics"
-		}
-	},
-	"Management": {
-		"title": "Management",
-		"description": "Configure and manage system settings, countries, and administrative options.",
-		"countries": {
-			"title": "Countries",
-			"searchPlaceholder": "Search countries...",
-			"table": {
-				"country": "Country",
-				"code": "Code"
-			},
-			"empty": {
-				"title": "No countries found",
-				"searchMessage": "Try adjusting your search terms.",
-				"emptyMessage": "All countries from the system database are shown here."
-			}
-		},
-		"sections": {
-			"systemSettings": {
-				"title": "System Settings",
-				"description": "Configure global system preferences and options."
-			},
-			"userManagement": {
-				"title": "User Management",
-				"description": "Manage user accounts and permissions."
-			},
-			"dataImportExport": {
-				"title": "Data Import/Export",
-				"description": "Import and export hockey data in various formats."
-			},
-			"comingSoon": "Coming soon..."
-		}
-	}
+  "LandingPage": {
+    "title": "Hockey DB",
+    "login": "Login",
+    "hero": {
+      "title": "Professional Hockey Database Management",
+      "subtitle": "Complete hockey league management with team tracking, player statistics, and game analytics for professional leagues and organizations.",
+      "getStarted": "Get Started"
+    },
+    "features": {
+      "title": "Everything you need for hockey management",
+      "subtitle": "Powerful tools to manage your hockey organization from player statistics to league standings.",
+      "data": {
+        "title": "Data Management",
+        "description": "Store and organize all your hockey data in one secure, reliable database system."
+      },
+      "analytics": {
+        "title": "Advanced Analytics",
+        "description": "Get detailed insights with comprehensive statistics and performance analytics."
+      },
+      "leagues": {
+        "title": "League Management",
+        "description": "Manage multiple leagues, seasons, and tournaments with ease."
+      },
+      "teams": {
+        "title": "Team Coordination",
+        "description": "Track teams, players, contracts, and performance across your organization."
+      }
+    }
+  },
+  "SignIn": {
+    "title": "Sign in to your account",
+    "subtitle": "Access the Hockey Database Management System",
+    "form": {
+      "email": "Email address",
+      "password": "Password",
+      "signIn": "Sign in",
+      "signingIn": "Signing in..."
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "general": "Something went wrong. Please try again."
+    },
+    "loading": "Loading...",
+    "alreadySignedIn": {
+      "title": "Already signed in",
+      "welcome": "Welcome back, {email}!",
+      "goToDashboard": "Go to Dashboard",
+      "signOut": "Sign Out"
+    },
+    "defaultCredentials": {
+      "title": "Default credentials for testing:",
+      "email": "Email",
+      "password": "Password"
+    }
+  },
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "dashboardDescription": "Overview and stats",
+    "teams": "Teams",
+    "teamsDescription": "Manage teams",
+    "players": "Players",
+    "playersDescription": "Player database",
+    "events": "Events",
+    "eventsDescription": "Tournaments & leagues",
+    "seasons": "Seasons",
+    "seasonsDescription": "Season management",
+    "countries": "Countries",
+    "countriesDescription": "Country settings",
+    "reports": "Reports",
+    "reportsDescription": "Data analytics",
+    "management": "Management",
+    "managementDescription": "System settings",
+    "signedInAs": "Signed in as",
+    "signOut": "Sign Out"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Welcome to your hockey management system overview",
+    "stats": {
+      "totalTeams": "Total Teams",
+      "activePlayers": "Active Players",
+      "ongoingSeasons": "Ongoing Seasons",
+      "totalEvents": "Total Events"
+    },
+    "recentActivity": {
+      "title": "Recent Activity"
+    },
+    "activity": {
+      "teamRegistered": "Team registered:",
+      "playerTransfer": "Player transfer:",
+      "seasonStarted": "Season started:",
+      "eventCreated": "Event created:"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "addTeam": "Add New Team",
+      "addTeamDescription": "Register a new team in the system",
+      "addPlayer": "Add New Player",
+      "addPlayerDescription": "Register a new player profile",
+      "createEvent": "Create Event",
+      "createEventDescription": "Set up a new tournament or league",
+      "viewReports": "View Reports",
+      "viewReportsDescription": "Access analytics and statistics"
+    }
+  },
+  "Management": {
+    "title": "Management",
+    "description": "Configure and manage system settings, countries, and administrative options.",
+    "countries": {
+      "title": "Countries",
+      "searchPlaceholder": "Search countries...",
+      "table": {
+        "country": "Country",
+        "code": "Code",
+        "iocCode": "Olympic code",
+        "isoCode": "ISO 3136 Code",
+        "iihfMember": "IIHF Member",
+        "enabled": "Enabled"
+      },
+      "empty": {
+        "title": "No countries found",
+        "searchMessage": "Try adjusting your search terms.",
+        "emptyMessage": "All countries from the system database are shown here."
+      }
+    },
+    "sections": {
+      "systemSettings": {
+        "title": "System Settings",
+        "description": "Configure global system preferences and options."
+      },
+      "userManagement": {
+        "title": "User Management",
+        "description": "Manage user accounts and permissions."
+      },
+      "dataImportExport": {
+        "title": "Data Import/Export",
+        "description": "Import and export hockey data in various formats."
+      },
+      "comingSoon": "Coming soon..."
+    },
+    "Loading": "Loading"
+  }
 }

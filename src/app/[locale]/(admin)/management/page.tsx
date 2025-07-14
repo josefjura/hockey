@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import { Globe, Search, Settings } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import countries from '@/utils/countries.json'
+import type { Country } from '@/types/country'
 import { getCountryFlag } from '@/utils/countryFlag'
 import Image from 'next/image'
 import Pager from '@/components/pager'
+import { useQuery } from '@tanstack/react-query'
+import { fetchCountryList } from '@/queries/countries'
 
 const pageSize = 10;
 
@@ -15,16 +17,26 @@ export default function Management() {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [page, setPage] = useState(0)
 
-	const allFilteredCountries = countries.filter((country) =>
-		country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		country.code.toLowerCase().includes(searchTerm.toLowerCase())
-	)
-	
-	const totalPages = Math.ceil(allFilteredCountries.length / pageSize)
-	const filteredCountries = allFilteredCountries.slice(page * pageSize, (page + 1) * pageSize)
+	// const allFilteredCountries = typedCountries.filter((country) =>
+	// 	country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+	// 	country.code.toLowerCase().includes(searchTerm.toLowerCase())
+	// )
+
+	const {data} = useQuery<Country[]>({
+		queryKey: ['countries', searchTerm, page],
+		queryFn: fetchCountryList,
+		select: (data) => data.filter((country: Country) =>
+			country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			country.ioc_code?.toLowerCase().includes(searchTerm.toLowerCase())
+		).slice(page * pageSize, (page + 1) * pageSize)
+	})		
 
 	const handlePageChange = (newPage: number) => {
 		setPage(newPage)
+	}
+
+	if (!data) {
+		return <div className="text-center py-12">{t('Loading')}</div>
 	}
 
 	return (
@@ -77,19 +89,25 @@ export default function Management() {
 									{t('countries.table.country')}
 								</th>
 								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									{t('countries.table.code')}
+									{t('countries.table.iocCode')}
 								</th>
 								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-									IIHF Member
+									{t('countries.table.isoCode')}
+								</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									{t('countries.table.iihfMember')}
+								</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									{t('countries.table.enabled')}
 								</th>
 							</tr>
 						</thead>
 						<tbody className="bg-white divide-y divide-gray-200">
-							{filteredCountries.map((country) => (
-								<tr key={country.code} className="hover:bg-gray-50">
+							{data.map((country) => (
+								<tr key={country.id} className="hover:bg-gray-50">
 									<td className="px-6 py-4 whitespace-nowrap">
 										<div className="flex items-center">
-											<Image width={32} height={25} src={getCountryFlag(country.code)} alt={country.code} className='mr-2 shadow-sm shadow-black' />
+											<Image width={32} height={25} src={getCountryFlag(country.iso2_code ?? "UNKNOWN", country.ioc_code ?? "UNKNOWN", country.is_historical ?? false)} alt={country.iso2_code ?? "Unknown"} className='mr-2 shadow-sm shadow-black' />
 											<div className="text-sm font-medium text-gray-900">
 												{country.name}
 											</div>
@@ -97,7 +115,12 @@ export default function Management() {
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
 										<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-											{country.code}
+											{country.ioc_code ?? 'N/A'}
+										</span>
+									</td>
+									<td className="px-6 py-4 whitespace-nowrap">
+										<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+											{country.iso2_code ?? 'N/A'}
 										</span>
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap">
@@ -109,25 +132,29 @@ export default function Management() {
 											{country.iihf ? 'Yes' : 'No'}
 										</span>
 									</td>
+									<td className="px-6 py-4 whitespace-nowrap">
+										<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+											{country.enabled ? 'Yes' : 'No'}
+										</span>
+									</td>
 								</tr>
 							))}
 						</tbody>
 					</table>
-				</div>
+				</div>				
 
 				{/* Pagination */}
-				{allFilteredCountries.length > 0 && (
+				{data && data.length > 0 && (
 					<Pager
 						currentPage={page}
-						totalPages={totalPages}
+						totalPages={Math.ceil(data.length / pageSize)}
 						onPageChange={handlePageChange}
 						pageSize={pageSize}
-						totalItems={allFilteredCountries.length}
+						totalItems={data.length}
 					/>
 				)}
-
 				{/* Empty State */}
-				{filteredCountries.length === 0 && (
+				{data.length === 0 && (
 					<div className="px-6 py-12 text-center">
 						<Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
 						<h3 className="text-lg font-medium text-gray-900 mb-2">

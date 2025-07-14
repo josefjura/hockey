@@ -3,373 +3,497 @@
 		"code": "AFG",
 		"name": "Afghanistan",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "AF",
+		"isHistorical": false
 	},
 	{
 		"code": "ALB",
 		"name": "Albania",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "AL",
+		"isHistorical": false
 	},
 	{
 		"code": "ALG",
 		"name": "Algeria",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "DZ",
+		"isHistorical": false
 	},
 	{
 		"code": "AND",
 		"name": "Andorra",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "AD",
+		"isHistorical": false
 	},
 	{
 		"code": "ANG",
 		"name": "Angola",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "AO",
+		"isHistorical": false
 	},
 	{
 		"code": "ANT",
 		"name": "Antigua and Barbuda",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "AG",
+		"isHistorical": false
 	},
 	{
 		"code": "ARG",
 		"name": "Argentina",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "AR",
+		"isHistorical": false
 	},
 	{
 		"code": "ARM",
 		"name": "Armenia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "AM",
+		"isHistorical": false
 	},
 	{
 		"code": "ARU",
 		"name": "Aruba",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "AW",
+		"isHistorical": false
 	},
 	{
 		"code": "ASA",
 		"name": "American Samoa",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "AS",
+		"isHistorical": false
 	},
 	{
 		"code": "AUS",
 		"name": "Australia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "AU",
+		"isHistorical": false
 	},
 	{
 		"code": "AUT",
 		"name": "Austria",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "AT",
+		"isHistorical": false
 	},
 	{
 		"code": "AZE",
 		"name": "Azerbaijan",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "AZ",
+		"isHistorical": false
 	},
 	{
 		"code": "BAH",
 		"name": "Bahamas",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BS",
+		"isHistorical": false
 	},
 	{
 		"code": "BAN",
 		"name": "Bangladesh",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BD",
+		"isHistorical": false
 	},
 	{
 		"code": "BAR",
 		"name": "Barbados",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BB",
+		"isHistorical": false
 	},
 	{
 		"code": "BDI",
 		"name": "Burundi",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BI",
+		"isHistorical": false
 	},
 	{
 		"code": "BEL",
 		"name": "Belgium",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "BE",
+		"isHistorical": false
 	},
 	{
 		"code": "BEN",
 		"name": "Benin",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BJ",
+		"isHistorical": false
 	},
 	{
 		"code": "BER",
 		"name": "Bermuda",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BM",
+		"isHistorical": false
 	},
 	{
 		"code": "BHU",
 		"name": "Bhutan",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BT",
+		"isHistorical": false
 	},
 	{
 		"code": "BIH",
 		"name": "Bosnia and Herzegovina",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "BA",
+		"isHistorical": false
 	},
 	{
 		"code": "BIZ",
 		"name": "Belize",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BZ",
+		"isHistorical": false
 	},
 	{
 		"code": "BLR",
 		"name": "Belarus",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "BY",
+		"isHistorical": false
 	},
 	{
 		"code": "BOL",
 		"name": "Bolivia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BO",
+		"isHistorical": false
 	},
 	{
 		"code": "BOT",
 		"name": "Botswana",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BW",
+		"isHistorical": false
 	},
 	{
 		"code": "BRA",
 		"name": "Brazil",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "BR",
+		"isHistorical": false
 	},
 	{
 		"code": "BRN",
 		"name": "Bahrain",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "BH",
+		"isHistorical": false
 	},
 	{
 		"code": "BRU",
 		"name": "Brunei",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BN",
+		"isHistorical": false
 	},
 	{
 		"code": "BUL",
 		"name": "Bulgaria",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "BG",
+		"isHistorical": false
 	},
 	{
 		"code": "BUR",
 		"name": "Burkina Faso",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "BF",
+		"isHistorical": false
 	},
 	{
 		"code": "CAF",
 		"name": "Central African Republic",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CF",
+		"isHistorical": false
 	},
 	{
 		"code": "CAM",
 		"name": "Cambodia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "KH",
+		"isHistorical": false
 	},
 	{
 		"code": "CAN",
 		"name": "Canada",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "CA",
+		"isHistorical": false
 	},
 	{
 		"code": "CAY",
 		"name": "Cayman Islands",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "KY",
+		"isHistorical": false
 	},
 	{
 		"code": "CGO",
 		"name": "Republic of the Congo",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CG",
+		"isHistorical": false
 	},
 	{
 		"code": "CHA",
 		"name": "Chad",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TD",
+		"isHistorical": false
 	},
 	{
 		"code": "CHI",
 		"name": "Chile",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "CL",
+		"isHistorical": false
 	},
 	{
 		"code": "CHN",
 		"name": "China",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "CN",
+		"isHistorical": false
 	},
 	{
 		"code": "CIV",
 		"name": "Ivory Coast",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CI",
+		"isHistorical": false
 	},
 	{
 		"code": "CMR",
 		"name": "Cameroon",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CM",
+		"isHistorical": false
 	},
 	{
 		"code": "COD",
 		"name": "Democratic Republic of the Congo",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CD",
+		"isHistorical": false
 	},
 	{
 		"code": "COK",
 		"name": "Cook Islands",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CK",
+		"isHistorical": false
 	},
 	{
 		"code": "COL",
 		"name": "Colombia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "CO",
+		"isHistorical": false
 	},
 	{
 		"code": "COM",
 		"name": "Comoros",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "KM",
+		"isHistorical": false
 	},
 	{
 		"code": "CPV",
 		"name": "Cape Verde",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CV",
+		"isHistorical": false
 	},
 	{
 		"code": "CRC",
 		"name": "Costa Rica",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CR",
+		"isHistorical": false
 	},
 	{
 		"code": "CRO",
 		"name": "Croatia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "HR",
+		"isHistorical": false
 	},
 	{
 		"code": "CUB",
 		"name": "Cuba",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "CU",
+		"isHistorical": false
 	},
 	{
 		"code": "CYP",
 		"name": "Cyprus",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "CY",
+		"isHistorical": false
 	},
 	{
 		"code": "CZE",
 		"name": "Czechia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "CZ",
+		"isHistorical": false
 	},
 	{
 		"code": "DEN",
 		"name": "Denmark",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "DK",
+		"isHistorical": false
 	},
 	{
 		"code": "DJI",
 		"name": "Djibouti",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "DJ",
+		"isHistorical": false
 	},
 	{
 		"code": "DMA",
 		"name": "Dominica",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "DM",
+		"isHistorical": false
 	},
 	{
 		"code": "DOM",
 		"name": "Dominican Republic",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "DO",
+		"isHistorical": false
 	},
 	{
 		"code": "ECU",
 		"name": "Ecuador",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "EC",
+		"isHistorical": false
 	},
 	{
 		"code": "EGY",
 		"name": "Egypt",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "EG",
+		"isHistorical": false
 	},
 	{
 		"code": "ERI",
 		"name": "Eritrea",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "ER",
+		"isHistorical": false
 	},
 	{
 		"code": "ESA",
 		"name": "El Salvador",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SV",
+		"isHistorical": false
 	},
 	{
 		"code": "ESP",
 		"name": "Spain",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "ES",
+		"isHistorical": false
 	},
 	{
 		"code": "EST",
 		"name": "Estonia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "EE",
+		"isHistorical": false
 	},
 	{
 		"code": "ETH",
 		"name": "Ethiopia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "ET",
+		"isHistorical": false
 	},
 	{
 		"code": "EUN",
@@ -377,25 +501,33 @@
 		"years": "1992",
 		"note": "Former Soviet states in 1992 Olympics",
 		"type": "historical",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": null,
+		"isHistorical": true
 	},
 	{
 		"code": "FIJ",
 		"name": "Fiji",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "FJ",
+		"isHistorical": false
 	},
 	{
 		"code": "FIN",
 		"name": "Finland",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "FI",
+		"isHistorical": false
 	},
 	{
 		"code": "FRA",
 		"name": "France",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "FR",
+		"isHistorical": false
 	},
 	{
 		"code": "FRG",
@@ -403,37 +535,49 @@
 		"years": "1956-1988",
 		"successor": "GER",
 		"type": "historical",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": null,
+		"isHistorical": true
 	},
 	{
 		"code": "FSM",
 		"name": "Federated States of Micronesia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "FM",
+		"isHistorical": false
 	},
 	{
 		"code": "GAB",
 		"name": "Gabon",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GA",
+		"isHistorical": false
 	},
 	{
 		"code": "GAM",
 		"name": "The Gambia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GM",
+		"isHistorical": false
 	},
 	{
 		"code": "GBR",
 		"name": "Great Britain",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "GB",
+		"isHistorical": false
 	},
 	{
 		"code": "GBS",
 		"name": "Guinea-Bissau",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GW",
+		"isHistorical": false
 	},
 	{
 		"code": "GDR",
@@ -441,553 +585,737 @@
 		"years": "1956-1988",
 		"successor": "GER",
 		"type": "historical",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": null,
+		"isHistorical": true
 	},
 	{
 		"code": "GEO",
 		"name": "Georgia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "GE",
+		"isHistorical": false
 	},
 	{
 		"code": "GEQ",
 		"name": "Equatorial Guinea",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GQ",
+		"isHistorical": false
 	},
 	{
 		"code": "GER",
 		"name": "Germany",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "DE",
+		"isHistorical": false
 	},
 	{
 		"code": "GHA",
 		"name": "Ghana",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GH",
+		"isHistorical": false
 	},
 	{
 		"code": "GRE",
 		"name": "Greece",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "GR",
+		"isHistorical": false
 	},
 	{
 		"code": "GRN",
 		"name": "Grenada",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GD",
+		"isHistorical": false
 	},
 	{
 		"code": "GUA",
 		"name": "Guatemala",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GT",
+		"isHistorical": false
 	},
 	{
 		"code": "GUI",
 		"name": "Guinea",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GN",
+		"isHistorical": false
 	},
 	{
 		"code": "GUM",
 		"name": "Guam",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GU",
+		"isHistorical": false
 	},
 	{
 		"code": "GUY",
 		"name": "Guyana",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "GY",
+		"isHistorical": false
 	},
 	{
 		"code": "HAI",
 		"name": "Haiti",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "HT",
+		"isHistorical": false
 	},
 	{
 		"code": "HKG",
 		"name": "Hong Kong",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "HK",
+		"isHistorical": false
 	},
 	{
 		"code": "HON",
 		"name": "Honduras",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "HN",
+		"isHistorical": false
 	},
 	{
 		"code": "HUN",
 		"name": "Hungary",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "HU",
+		"isHistorical": false
 	},
 	{
 		"code": "INA",
 		"name": "Indonesia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "ID",
+		"isHistorical": false
 	},
 	{
 		"code": "IND",
 		"name": "India",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "IN",
+		"isHistorical": false
 	},
 	{
 		"code": "IRI",
 		"name": "Iran",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "IR",
+		"isHistorical": false
 	},
 	{
 		"code": "IRL",
 		"name": "Ireland",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "IE",
+		"isHistorical": false
 	},
 	{
 		"code": "IRQ",
 		"name": "Iraq",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "IQ",
+		"isHistorical": false
 	},
 	{
 		"code": "ISL",
 		"name": "Iceland",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "IS",
+		"isHistorical": false
 	},
 	{
 		"code": "ISR",
 		"name": "Israel",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "IL",
+		"isHistorical": false
 	},
 	{
 		"code": "ISV",
 		"name": "Virgin Islands",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "VI",
+		"isHistorical": false
 	},
 	{
 		"code": "ITA",
 		"name": "Italy",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "IT",
+		"isHistorical": false
 	},
 	{
 		"code": "IVB",
 		"name": "British Virgin Islands",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "VG",
+		"isHistorical": false
 	},
 	{
 		"code": "JAM",
 		"name": "Jamaica",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "JM",
+		"isHistorical": false
 	},
 	{
 		"code": "JOR",
 		"name": "Jordan",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "JO",
+		"isHistorical": false
 	},
 	{
 		"code": "JPN",
 		"name": "Japan",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "JP",
+		"isHistorical": false
 	},
 	{
 		"code": "KAZ",
 		"name": "Kazakhstan",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "KZ",
+		"isHistorical": false
 	},
 	{
 		"code": "KEN",
 		"name": "Kenya",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "KE",
+		"isHistorical": false
 	},
 	{
 		"code": "KGZ",
 		"name": "Kyrgyzstan",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "KG",
+		"isHistorical": false
 	},
 	{
 		"code": "KIR",
 		"name": "Kiribati",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "KI",
+		"isHistorical": false
 	},
 	{
 		"code": "KOR",
 		"name": "South Korea",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "KR",
+		"isHistorical": false
 	},
 	{
 		"code": "KOS",
 		"name": "Kosovo",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "XK",
+		"isHistorical": false
 	},
 	{
 		"code": "KSA",
 		"name": "Saudi Arabia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SA",
+		"isHistorical": false
 	},
 	{
 		"code": "KUW",
 		"name": "Kuwait",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "KW",
+		"isHistorical": false
 	},
 	{
 		"code": "LAO",
 		"name": "Laos",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "LA",
+		"isHistorical": false
 	},
 	{
 		"code": "LAT",
 		"name": "Latvia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "LV",
+		"isHistorical": false
 	},
 	{
 		"code": "LBA",
 		"name": "Libya",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "LY",
+		"isHistorical": false
 	},
 	{
 		"code": "LBN",
 		"name": "Lebanon",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "LB",
+		"isHistorical": false
 	},
 	{
 		"code": "LBR",
 		"name": "Liberia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "LR",
+		"isHistorical": false
 	},
 	{
 		"code": "LCA",
 		"name": "Saint Lucia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "LC",
+		"isHistorical": false
 	},
 	{
 		"code": "LES",
 		"name": "Lesotho",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "LS",
+		"isHistorical": false
 	},
 	{
 		"code": "LIE",
 		"name": "Liechtenstein",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "LI",
+		"isHistorical": false
 	},
 	{
 		"code": "LTU",
 		"name": "Lithuania",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "LT",
+		"isHistorical": false
 	},
 	{
 		"code": "LUX",
 		"name": "Luxembourg",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "LU",
+		"isHistorical": false
 	},
 	{
 		"code": "MAD",
 		"name": "Madagascar",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "MG",
+		"isHistorical": false
 	},
 	{
 		"code": "MAR",
 		"name": "Morocco",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "MA",
+		"isHistorical": false
 	},
 	{
 		"code": "MAS",
 		"name": "Malaysia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "MY",
+		"isHistorical": false
 	},
 	{
 		"code": "MAW",
 		"name": "Malawi",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "MW",
+		"isHistorical": false
 	},
 	{
 		"code": "MDA",
 		"name": "Moldova",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "MD",
+		"isHistorical": false
 	},
 	{
 		"code": "MDV",
 		"name": "Maldives",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "MV",
+		"isHistorical": false
 	},
 	{
 		"code": "MEX",
 		"name": "Mexico",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "MX",
+		"isHistorical": false
 	},
 	{
 		"code": "MGL",
 		"name": "Mongolia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "MN",
+		"isHistorical": false
 	},
 	{
 		"code": "MHL",
 		"name": "Marshall Islands",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "MH",
+		"isHistorical": false
 	},
 	{
 		"code": "MKD",
 		"name": "North Macedonia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "MK",
+		"isHistorical": false
 	},
 	{
 		"code": "MLI",
 		"name": "Mali",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "ML",
+		"isHistorical": false
 	},
 	{
 		"code": "MLT",
 		"name": "Malta",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "MT",
+		"isHistorical": false
 	},
 	{
 		"code": "MNE",
 		"name": "Montenegro",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "ME",
+		"isHistorical": false
 	},
 	{
 		"code": "MON",
 		"name": "Monaco",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "MC",
+		"isHistorical": false
 	},
 	{
 		"code": "MOZ",
 		"name": "Mozambique",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "MZ",
+		"isHistorical": false
 	},
 	{
 		"code": "MRI",
 		"name": "Mauritius",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "MU",
+		"isHistorical": false
 	},
 	{
 		"code": "MTN",
 		"name": "Mauritania",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "MR",
+		"isHistorical": false
 	},
 	{
 		"code": "MYA",
 		"name": "Myanmar",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "MM",
+		"isHistorical": false
 	},
 	{
 		"code": "NAM",
 		"name": "Namibia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "NA",
+		"isHistorical": false
 	},
 	{
 		"code": "NCA",
 		"name": "Nicaragua",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "NI",
+		"isHistorical": false
 	},
 	{
 		"code": "NED",
 		"name": "Netherlands",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "NL",
+		"isHistorical": false
 	},
 	{
 		"code": "NEP",
 		"name": "Nepal",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "NP",
+		"isHistorical": false
 	},
 	{
 		"code": "NGR",
 		"name": "Nigeria",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "NG",
+		"isHistorical": false
 	},
 	{
 		"code": "NIG",
 		"name": "Niger",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "NE",
+		"isHistorical": false
 	},
 	{
 		"code": "NOR",
 		"name": "Norway",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "NO",
+		"isHistorical": false
 	},
 	{
 		"code": "NRU",
 		"name": "Nauru",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "NR",
+		"isHistorical": false
 	},
 	{
 		"code": "NZL",
 		"name": "New Zealand",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "NZ",
+		"isHistorical": false
 	},
 	{
 		"code": "OMA",
 		"name": "Oman",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "OM",
+		"isHistorical": false
 	},
 	{
 		"code": "PAK",
 		"name": "Pakistan",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "PK",
+		"isHistorical": false
 	},
 	{
 		"code": "PAN",
 		"name": "Panama",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "PA",
+		"isHistorical": false
 	},
 	{
 		"code": "PAR",
 		"name": "Paraguay",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "PY",
+		"isHistorical": false
 	},
 	{
 		"code": "PER",
 		"name": "Peru",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "PE",
+		"isHistorical": false
 	},
 	{
 		"code": "PHI",
 		"name": "Philippines",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "PH",
+		"isHistorical": false
 	},
 	{
 		"code": "PLE",
 		"name": "Palestine",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "PS",
+		"isHistorical": false
 	},
 	{
 		"code": "PLW",
 		"name": "Palau",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "PW",
+		"isHistorical": false
 	},
 	{
 		"code": "PNG",
 		"name": "Papua New Guinea",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "PG",
+		"isHistorical": false
 	},
 	{
 		"code": "POL",
 		"name": "Poland",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "PL",
+		"isHistorical": false
 	},
 	{
 		"code": "POR",
 		"name": "Portugal",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "PT",
+		"isHistorical": false
 	},
 	{
 		"code": "PRK",
 		"name": "North Korea",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "KP",
+		"isHistorical": false
 	},
 	{
 		"code": "PUR",
 		"name": "Puerto Rico",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "PR",
+		"isHistorical": false
 	},
 	{
 		"code": "QAT",
 		"name": "Qatar",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "QA",
+		"isHistorical": false
 	},
 	{
 		"code": "ROU",
 		"name": "Romania",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "RO",
+		"isHistorical": false
 	},
 	{
 		"code": "RSA",
 		"name": "South Africa",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "ZA",
+		"isHistorical": false
 	},
 	{
 		"code": "RUS",
 		"name": "Russia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "RU",
+		"isHistorical": false
 	},
 	{
 		"code": "RWA",
 		"name": "Rwanda",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "RW",
+		"isHistorical": false
 	},
 	{
 		"code": "SAM",
 		"name": "Samoa",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "WS",
+		"isHistorical": false
 	},
 	{
 		"code": "SCG",
@@ -998,133 +1326,177 @@
 			"MNE"
 		],
 		"type": "historical",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": null,
+		"isHistorical": true
 	},
 	{
 		"code": "SEN",
 		"name": "Senegal",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SN",
+		"isHistorical": false
 	},
 	{
 		"code": "SEY",
 		"name": "Seychelles",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SC",
+		"isHistorical": false
 	},
 	{
 		"code": "SGP",
 		"name": "Singapore",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "SG",
+		"isHistorical": false
 	},
 	{
 		"code": "SKN",
 		"name": "Saint Kitts and Nevis",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "KN",
+		"isHistorical": false
 	},
 	{
 		"code": "SLE",
 		"name": "Sierra Leone",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SL",
+		"isHistorical": false
 	},
 	{
 		"code": "SLO",
 		"name": "Slovenia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "SI",
+		"isHistorical": false
 	},
 	{
 		"code": "SMR",
 		"name": "San Marino",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SM",
+		"isHistorical": false
 	},
 	{
 		"code": "SOL",
 		"name": "Solomon Islands",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SB",
+		"isHistorical": false
 	},
 	{
 		"code": "SOM",
 		"name": "Somalia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SO",
+		"isHistorical": false
 	},
 	{
 		"code": "SRB",
 		"name": "Serbia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "RS",
+		"isHistorical": false
 	},
 	{
 		"code": "SRI",
 		"name": "Sri Lanka",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "LK",
+		"isHistorical": false
 	},
 	{
 		"code": "SSD",
 		"name": "South Sudan",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SS",
+		"isHistorical": false
 	},
 	{
 		"code": "STP",
 		"name": "São Tomé and Príncipe",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "ST",
+		"isHistorical": false
 	},
 	{
 		"code": "SUD",
 		"name": "Sudan",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SD",
+		"isHistorical": false
 	},
 	{
 		"code": "SUI",
 		"name": "Switzerland",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "CH",
+		"isHistorical": false
 	},
 	{
 		"code": "SUR",
 		"name": "Suriname",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SR",
+		"isHistorical": false
 	},
 	{
 		"code": "SVK",
 		"name": "Slovakia",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "SK",
+		"isHistorical": false
 	},
 	{
 		"code": "SWE",
 		"name": "Sweden",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "SE",
+		"isHistorical": false
 	},
 	{
 		"code": "SWZ",
 		"name": "Eswatini",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SZ",
+		"isHistorical": false
 	},
 	{
 		"code": "SYR",
 		"name": "Syria",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "SY",
+		"isHistorical": false
 	},
 	{
 		"code": "TAN",
 		"name": "Tanzania",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TZ",
+		"isHistorical": false
 	},
 	{
 		"code": "TCH",
@@ -1135,91 +1507,121 @@
 			"SVK"
 		],
 		"type": "historical",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": null,
+		"isHistorical": true
 	},
 	{
 		"code": "TGA",
 		"name": "Tonga",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TO",
+		"isHistorical": false
 	},
 	{
 		"code": "THA",
 		"name": "Thailand",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "TH",
+		"isHistorical": false
 	},
 	{
 		"code": "TJK",
 		"name": "Tajikistan",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TJ",
+		"isHistorical": false
 	},
 	{
 		"code": "TKM",
 		"name": "Turkmenistan",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "TM",
+		"isHistorical": false
 	},
 	{
 		"code": "TLS",
 		"name": "Timor-Leste",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TL",
+		"isHistorical": false
 	},
 	{
 		"code": "TOG",
 		"name": "Togo",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TG",
+		"isHistorical": false
 	},
 	{
 		"code": "TPE",
 		"name": "Chinese Taipei",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "TW",
+		"isHistorical": false
 	},
 	{
 		"code": "TTO",
 		"name": "Trinidad and Tobago",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TT",
+		"isHistorical": false
 	},
 	{
 		"code": "TUN",
 		"name": "Tunisia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TN",
+		"isHistorical": false
 	},
 	{
 		"code": "TUR",
 		"name": "Turkey",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "TR",
+		"isHistorical": false
 	},
 	{
 		"code": "TUV",
 		"name": "Tuvalu",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "TV",
+		"isHistorical": false
 	},
 	{
 		"code": "UAE",
 		"name": "United Arab Emirates",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "AE",
+		"isHistorical": false
 	},
 	{
 		"code": "UGA",
 		"name": "Uganda",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "UG",
+		"isHistorical": false
 	},
 	{
 		"code": "UKR",
 		"name": "Ukraine",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "UA",
+		"isHistorical": false
 	},
 	{
 		"code": "URS",
@@ -1227,55 +1629,73 @@
 		"years": "1952-1991",
 		"successor": "RUS",
 		"type": "historical",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": null,
+		"isHistorical": true
 	},
 	{
 		"code": "URU",
 		"name": "Uruguay",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "UY",
+		"isHistorical": false
 	},
 	{
 		"code": "USA",
 		"name": "United States",
 		"type": "current",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": "US",
+		"isHistorical": false
 	},
 	{
 		"code": "UZB",
 		"name": "Uzbekistan",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "UZ",
+		"isHistorical": false
 	},
 	{
 		"code": "VAN",
 		"name": "Vanuatu",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "VU",
+		"isHistorical": false
 	},
 	{
 		"code": "VEN",
 		"name": "Venezuela",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "VE",
+		"isHistorical": false
 	},
 	{
 		"code": "VIE",
 		"name": "Vietnam",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "VN",
+		"isHistorical": false
 	},
 	{
 		"code": "VIN",
 		"name": "Saint Vincent and the Grenadines",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "VC",
+		"isHistorical": false
 	},
 	{
 		"code": "YEM",
 		"name": "Yemen",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "YE",
+		"isHistorical": false
 	},
 	{
 		"code": "YUG",
@@ -1290,18 +1710,24 @@
 			"MNE"
 		],
 		"type": "historical",
-		"iihf": true
+		"iihf": true,
+		"iso2Code": null,
+		"isHistorical": true
 	},
 	{
 		"code": "ZAM",
 		"name": "Zambia",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "ZM",
+		"isHistorical": false
 	},
 	{
 		"code": "ZIM",
 		"name": "Zimbabwe",
 		"type": "current",
-		"iihf": false
+		"iihf": false,
+		"iso2Code": "ZW",
+		"isHistorical": false
 	}
 ]
