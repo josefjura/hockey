@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
+import { useLocale, useTranslations } from 'next-intl'
 import { 
   LayoutDashboard, 
   Users, 
@@ -24,56 +25,58 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname()
+  const locale = useLocale()
+  const t = useTranslations('Navigation')
   const [collapsed, setCollapsed] = useState(false)
 
   const navigation = [
     { 
-      name: 'Dashboard', 
-      href: '/dashboard', 
+      name: t('dashboard'), 
+      href: `/${locale}/dashboard`, 
       icon: LayoutDashboard,
-      description: 'Overview and stats'
+      description: t('dashboardDescription')
     },
     { 
-      name: 'Teams', 
-      href: '/teams', 
+      name: t('teams'), 
+      href: `/${locale}/teams`, 
       icon: Users,
-      description: 'Manage teams'
+      description: t('teamsDescription')
     },
     { 
-      name: 'Players', 
-      href: '/players', 
+      name: t('players'), 
+      href: `/${locale}/players`, 
       icon: Users,
-      description: 'Player database'
+      description: t('playersDescription')
     },
     { 
-      name: 'Events', 
-      href: '/events', 
+      name: t('events'), 
+      href: `/${locale}/events`, 
       icon: Trophy,
-      description: 'Tournaments & leagues'
+      description: t('eventsDescription')
     },
     { 
-      name: 'Seasons', 
-      href: '/seasons', 
+      name: t('seasons'), 
+      href: `/${locale}/seasons`, 
       icon: Calendar,
-      description: 'Season management'
+      description: t('seasonsDescription')
     },
     { 
-      name: 'Countries', 
-      href: '/countries', 
+      name: t('countries'), 
+      href: `/${locale}/countries`, 
       icon: Globe,
-      description: 'Country settings'
+      description: t('countriesDescription')
     },
     { 
-      name: 'Reports', 
-      href: '/reports', 
+      name: t('reports'), 
+      href: `/${locale}/reports`, 
       icon: FileText,
-      description: 'Data analytics'
+      description: t('reportsDescription')
     },
     { 
-      name: 'Management', 
-      href: '/management', 
+      name: t('management'), 
+      href: `/${locale}/management`, 
       icon: Settings,
-      description: 'System settings'
+      description: t('managementDescription')
     },
   ]
 
@@ -137,7 +140,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
         {!collapsed && (
           <div className="mb-3 px-3 py-2">
             <div className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
-              Signed in as
+              {t('signedInAs')}
             </div>
             <div className="text-sm text-white font-medium mt-1 truncate">
               {user?.email}
@@ -150,10 +153,10 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
           className={`group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-red-600 hover:text-white transition-colors ${
             collapsed ? 'justify-center' : ''
           }`}
-          title={collapsed ? 'Sign Out' : undefined}
+          title={collapsed ? t('signOut') : undefined}
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
-          {!collapsed && <span className="ml-3">Sign Out</span>}
+          {!collapsed && <span className="ml-3">{t('signOut')}</span>}
         </button>
       </div>
     </div>

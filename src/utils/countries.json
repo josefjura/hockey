@@ -1,0 +1,1307 @@
+[
+	{
+		"code": "AFG",
+		"name": "Afghanistan",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ALB",
+		"name": "Albania",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ALG",
+		"name": "Algeria",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "AND",
+		"name": "Andorra",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "ANG",
+		"name": "Angola",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ANT",
+		"name": "Antigua and Barbuda",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ARG",
+		"name": "Argentina",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "ARM",
+		"name": "Armenia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "ARU",
+		"name": "Aruba",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ASA",
+		"name": "American Samoa",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "AUS",
+		"name": "Australia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "AUT",
+		"name": "Austria",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "AZE",
+		"name": "Azerbaijan",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "BAH",
+		"name": "Bahamas",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BAN",
+		"name": "Bangladesh",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BAR",
+		"name": "Barbados",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BDI",
+		"name": "Burundi",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BEL",
+		"name": "Belgium",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "BEN",
+		"name": "Benin",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BER",
+		"name": "Bermuda",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BHU",
+		"name": "Bhutan",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BIH",
+		"name": "Bosnia and Herzegovina",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "BIZ",
+		"name": "Belize",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BLR",
+		"name": "Belarus",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "BOL",
+		"name": "Bolivia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BOT",
+		"name": "Botswana",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BRA",
+		"name": "Brazil",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "BRN",
+		"name": "Bahrain",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "BRU",
+		"name": "Brunei",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "BUL",
+		"name": "Bulgaria",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "BUR",
+		"name": "Burkina Faso",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CAF",
+		"name": "Central African Republic",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CAM",
+		"name": "Cambodia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CAN",
+		"name": "Canada",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "CAY",
+		"name": "Cayman Islands",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CGO",
+		"name": "Republic of the Congo",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CHA",
+		"name": "Chad",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CHI",
+		"name": "Chile",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "CHN",
+		"name": "China",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "CIV",
+		"name": "Ivory Coast",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CMR",
+		"name": "Cameroon",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "COD",
+		"name": "Democratic Republic of the Congo",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "COK",
+		"name": "Cook Islands",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "COL",
+		"name": "Colombia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "COM",
+		"name": "Comoros",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CPV",
+		"name": "Cape Verde",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CRC",
+		"name": "Costa Rica",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CRO",
+		"name": "Croatia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "CUB",
+		"name": "Cuba",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "CYP",
+		"name": "Cyprus",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "CZE",
+		"name": "Czechia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "DEN",
+		"name": "Denmark",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "DJI",
+		"name": "Djibouti",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "DMA",
+		"name": "Dominica",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "DOM",
+		"name": "Dominican Republic",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ECU",
+		"name": "Ecuador",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "EGY",
+		"name": "Egypt",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ERI",
+		"name": "Eritrea",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ESA",
+		"name": "El Salvador",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ESP",
+		"name": "Spain",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "EST",
+		"name": "Estonia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "ETH",
+		"name": "Ethiopia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "EUN",
+		"name": "Unified Team",
+		"years": "1992",
+		"note": "Former Soviet states in 1992 Olympics",
+		"type": "historical",
+		"iihf": true
+	},
+	{
+		"code": "FIJ",
+		"name": "Fiji",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "FIN",
+		"name": "Finland",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "FRA",
+		"name": "France",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "FRG",
+		"name": "West Germany",
+		"years": "1956-1988",
+		"successor": "GER",
+		"type": "historical",
+		"iihf": true
+	},
+	{
+		"code": "FSM",
+		"name": "Federated States of Micronesia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GAB",
+		"name": "Gabon",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GAM",
+		"name": "The Gambia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GBR",
+		"name": "Great Britain",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "GBS",
+		"name": "Guinea-Bissau",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GDR",
+		"name": "East Germany",
+		"years": "1956-1988",
+		"successor": "GER",
+		"type": "historical",
+		"iihf": true
+	},
+	{
+		"code": "GEO",
+		"name": "Georgia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "GEQ",
+		"name": "Equatorial Guinea",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GER",
+		"name": "Germany",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "GHA",
+		"name": "Ghana",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GRE",
+		"name": "Greece",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "GRN",
+		"name": "Grenada",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GUA",
+		"name": "Guatemala",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GUI",
+		"name": "Guinea",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GUM",
+		"name": "Guam",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "GUY",
+		"name": "Guyana",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "HAI",
+		"name": "Haiti",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "HKG",
+		"name": "Hong Kong",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "HON",
+		"name": "Honduras",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "HUN",
+		"name": "Hungary",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "INA",
+		"name": "Indonesia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "IND",
+		"name": "India",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "IRI",
+		"name": "Iran",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "IRL",
+		"name": "Ireland",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "IRQ",
+		"name": "Iraq",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "ISL",
+		"name": "Iceland",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "ISR",
+		"name": "Israel",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "ISV",
+		"name": "Virgin Islands",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ITA",
+		"name": "Italy",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "IVB",
+		"name": "British Virgin Islands",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "JAM",
+		"name": "Jamaica",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "JOR",
+		"name": "Jordan",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "JPN",
+		"name": "Japan",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "KAZ",
+		"name": "Kazakhstan",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "KEN",
+		"name": "Kenya",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "KGZ",
+		"name": "Kyrgyzstan",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "KIR",
+		"name": "Kiribati",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "KOR",
+		"name": "South Korea",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "KOS",
+		"name": "Kosovo",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "KSA",
+		"name": "Saudi Arabia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "KUW",
+		"name": "Kuwait",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "LAO",
+		"name": "Laos",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "LAT",
+		"name": "Latvia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "LBA",
+		"name": "Libya",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "LBN",
+		"name": "Lebanon",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "LBR",
+		"name": "Liberia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "LCA",
+		"name": "Saint Lucia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "LES",
+		"name": "Lesotho",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "LIE",
+		"name": "Liechtenstein",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "LTU",
+		"name": "Lithuania",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "LUX",
+		"name": "Luxembourg",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MAD",
+		"name": "Madagascar",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "MAR",
+		"name": "Morocco",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MAS",
+		"name": "Malaysia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MAW",
+		"name": "Malawi",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "MDA",
+		"name": "Moldova",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MDV",
+		"name": "Maldives",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "MEX",
+		"name": "Mexico",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MGL",
+		"name": "Mongolia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MHL",
+		"name": "Marshall Islands",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "MKD",
+		"name": "North Macedonia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MLI",
+		"name": "Mali",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "MLT",
+		"name": "Malta",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MNE",
+		"name": "Montenegro",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MON",
+		"name": "Monaco",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "MOZ",
+		"name": "Mozambique",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "MRI",
+		"name": "Mauritius",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "MTN",
+		"name": "Mauritania",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "MYA",
+		"name": "Myanmar",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "NAM",
+		"name": "Namibia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "NCA",
+		"name": "Nicaragua",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "NED",
+		"name": "Netherlands",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "NEP",
+		"name": "Nepal",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "NGR",
+		"name": "Nigeria",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "NIG",
+		"name": "Niger",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "NOR",
+		"name": "Norway",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "NRU",
+		"name": "Nauru",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "NZL",
+		"name": "New Zealand",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "OMA",
+		"name": "Oman",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "PAK",
+		"name": "Pakistan",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "PAN",
+		"name": "Panama",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "PAR",
+		"name": "Paraguay",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "PER",
+		"name": "Peru",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "PHI",
+		"name": "Philippines",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "PLE",
+		"name": "Palestine",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "PLW",
+		"name": "Palau",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "PNG",
+		"name": "Papua New Guinea",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "POL",
+		"name": "Poland",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "POR",
+		"name": "Portugal",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "PRK",
+		"name": "North Korea",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "PUR",
+		"name": "Puerto Rico",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "QAT",
+		"name": "Qatar",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ROU",
+		"name": "Romania",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "RSA",
+		"name": "South Africa",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "RUS",
+		"name": "Russia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "RWA",
+		"name": "Rwanda",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SAM",
+		"name": "Samoa",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SCG",
+		"name": "Serbia and Montenegro",
+		"years": "2003-2006",
+		"successors": [
+			"SRB",
+			"MNE"
+		],
+		"type": "historical",
+		"iihf": true
+	},
+	{
+		"code": "SEN",
+		"name": "Senegal",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SEY",
+		"name": "Seychelles",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SGP",
+		"name": "Singapore",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "SKN",
+		"name": "Saint Kitts and Nevis",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SLE",
+		"name": "Sierra Leone",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SLO",
+		"name": "Slovenia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "SMR",
+		"name": "San Marino",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SOL",
+		"name": "Solomon Islands",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SOM",
+		"name": "Somalia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SRB",
+		"name": "Serbia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "SRI",
+		"name": "Sri Lanka",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SSD",
+		"name": "South Sudan",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "STP",
+		"name": "São Tomé and Príncipe",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SUD",
+		"name": "Sudan",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SUI",
+		"name": "Switzerland",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "SUR",
+		"name": "Suriname",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SVK",
+		"name": "Slovakia",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "SWE",
+		"name": "Sweden",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "SWZ",
+		"name": "Eswatini",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "SYR",
+		"name": "Syria",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "TAN",
+		"name": "Tanzania",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "TCH",
+		"name": "Czechoslovakia",
+		"years": "1920-1992",
+		"successors": [
+			"CZE",
+			"SVK"
+		],
+		"type": "historical",
+		"iihf": true
+	},
+	{
+		"code": "TGA",
+		"name": "Tonga",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "THA",
+		"name": "Thailand",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "TJK",
+		"name": "Tajikistan",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "TKM",
+		"name": "Turkmenistan",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "TLS",
+		"name": "Timor-Leste",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "TOG",
+		"name": "Togo",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "TPE",
+		"name": "Chinese Taipei",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "TTO",
+		"name": "Trinidad and Tobago",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "TUN",
+		"name": "Tunisia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "TUR",
+		"name": "Turkey",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "TUV",
+		"name": "Tuvalu",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "UAE",
+		"name": "United Arab Emirates",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "UGA",
+		"name": "Uganda",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "UKR",
+		"name": "Ukraine",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "URS",
+		"name": "Soviet Union",
+		"years": "1952-1991",
+		"successor": "RUS",
+		"type": "historical",
+		"iihf": true
+	},
+	{
+		"code": "URU",
+		"name": "Uruguay",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "USA",
+		"name": "United States",
+		"type": "current",
+		"iihf": true
+	},
+	{
+		"code": "UZB",
+		"name": "Uzbekistan",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "VAN",
+		"name": "Vanuatu",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "VEN",
+		"name": "Venezuela",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "VIE",
+		"name": "Vietnam",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "VIN",
+		"name": "Saint Vincent and the Grenadines",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "YEM",
+		"name": "Yemen",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "YUG",
+		"name": "Yugoslavia",
+		"years": "1920-1992",
+		"successors": [
+			"SRB",
+			"CRO",
+			"BIH",
+			"SLO",
+			"MKD",
+			"MNE"
+		],
+		"type": "historical",
+		"iihf": true
+	},
+	{
+		"code": "ZAM",
+		"name": "Zambia",
+		"type": "current",
+		"iihf": false
+	},
+	{
+		"code": "ZIM",
+		"name": "Zimbabwe",
+		"type": "current",
+		"iihf": false
+	}
+]
