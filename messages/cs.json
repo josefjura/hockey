@@ -109,34 +109,15 @@
 		"description": "Konfigurace a správa systémových nastavení, zemí a administrativních možností.",
 		"countries": {
 			"title": "Země",
-			"addCountry": "Přidat zemi",
 			"searchPlaceholder": "Hledat země...",
-			"form": {
-				"countryName": "Název země",
-				"countryNamePlaceholder": "např. Česká republika",
-				"countryCode": "Kód země",
-				"countryCodePlaceholder": "např. CZ",
-				"save": "Uložit",
-				"cancel": "Zrušit"
-			},
 			"table": {
 				"country": "Země",
-				"code": "Kód",
-				"status": "Stav",
-				"actions": "Akce"
-			},
-			"status": {
-				"active": "Aktivní",
-				"inactive": "Neaktivní"
-			},
-			"actions": {
-				"edit": "Upravit zemi",
-				"delete": "Smazat zemi"
+				"code": "Kód"
 			},
 			"empty": {
 				"title": "Nebyly nalezeny žádné země",
 				"searchMessage": "Zkuste upravit vyhledávací podmínky.",
-				"emptyMessage": "Začněte přidáním své první země."
+				"emptyMessage": "Zde jsou zobrazeny všechny země ze systémové databáze."
 			}
 		},
 		"sections": {

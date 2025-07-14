@@ -109,34 +109,15 @@
 		"description": "Configure and manage system settings, countries, and administrative options.",
 		"countries": {
 			"title": "Countries",
-			"addCountry": "Add Country",
 			"searchPlaceholder": "Search countries...",
-			"form": {
-				"countryName": "Country Name",
-				"countryNamePlaceholder": "e.g., Czech Republic",
-				"countryCode": "Country Code",
-				"countryCodePlaceholder": "e.g., CZ",
-				"save": "Save",
-				"cancel": "Cancel"
-			},
 			"table": {
 				"country": "Country",
-				"code": "Code",
-				"status": "Status",
-				"actions": "Actions"
-			},
-			"status": {
-				"active": "Active",
-				"inactive": "Inactive"
-			},
-			"actions": {
-				"edit": "Edit country",
-				"delete": "Delete country"
+				"code": "Code"
 			},
 			"empty": {
 				"title": "No countries found",
 				"searchMessage": "Try adjusting your search terms.",
-				"emptyMessage": "Get started by adding your first country."
+				"emptyMessage": "All countries from the system database are shown here."
 			}
 		},
 		"sections": {
