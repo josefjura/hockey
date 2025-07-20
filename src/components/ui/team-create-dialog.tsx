@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -34,6 +34,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
     handleSubmit,
     watch,
     reset,
+		setFocus,
     formState: { errors, isValid },
   } = useForm<TeamCreateFormData>({
     resolver: zodResolver(teamCreateSchema),
@@ -44,6 +45,15 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
   })
   
   const watchedValues = watch()
+
+	useEffect(() => {
+		if (isOpen) {
+			// Add a small delay to ensure the dialog is fully rendered
+			setTimeout(() => {
+				setFocus('name')
+			}, 100)
+		}
+	}, [isOpen, setFocus])
 
   const onSubmit = async (data: TeamCreateFormData) => {
     try {
@@ -126,7 +136,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
                 id="name"
                 {...register('name')}
                 placeholder="Enter team name (optional for national teams)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
                 disabled={createTeamMutation.isPending}
               />
               <p className="mt-1 text-xs text-gray-500">
@@ -147,14 +157,15 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
                 <select
                   id="country"
                   {...register('country_id')}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white ${
                     errors.country_id ? 'border-red-300' : 'border-gray-300'
                   }`}
+                  style={{ color: '#111827' }}
                   disabled={createTeamMutation.isPending}
                 >
-                  <option value="">Select a country</option>
+                  <option value="" className="text-gray-500">Select a country</option>
                   {countries.map((country) => (
-                    <option key={country.id} value={country.id}>
+                    <option key={country.id} value={country.id} className="text-gray-900">
                       {country.name}
                     </option>
                   ))}

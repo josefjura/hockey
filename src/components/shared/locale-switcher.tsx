@@ -19,10 +19,11 @@ export default function LocaleSwitcher() {
       <select
         value={locale}
         onChange={(e) => switchLocale(e.target.value)}
-        className="appearance-none bg-transparent border border-gray-300 rounded-md pl-8 pr-8 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="appearance-none bg-transparent border border-gray-300 rounded-md pl-8 pr-8 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+        style={{ color: '#111827' }}
       >
         {routing.locales.map((loc) => (
-          <option key={loc} value={loc}>
+          <option key={loc} value={loc} className="text-gray-900">
             {loc.toUpperCase()}
           </option>
         ))}
