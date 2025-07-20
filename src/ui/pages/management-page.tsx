@@ -10,7 +10,7 @@ import Pager from '@/components/ui/pager'
 import Badge from '@/components/ui/badge'
 import TableSkeleton from '@/components/ui/table-skeleton'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { countryQueries } from '@/queries/countries'
+import { countryQueries, useUpdateCountryStatus } from '@/queries/countries'
 import { useDebounce } from '@/hooks/useDebounce'
 
 function CountriesTable({ searchTerm, page, onPageChange }: { 
@@ -21,6 +21,7 @@ function CountriesTable({ searchTerm, page, onPageChange }: {
     const t = useTranslations('Management')
     
     const { data } = useSuspenseQuery(countryQueries.list(searchTerm, page))
+    const updateCountryStatus = useUpdateCountryStatus()
 
     return (
         <>
@@ -43,6 +44,9 @@ function CountriesTable({ searchTerm, page, onPageChange }: {
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {t('countries.table.enabled')}
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
                             </th>
                         </tr>
                     </thead>
@@ -75,7 +79,32 @@ function CountriesTable({ searchTerm, page, onPageChange }: {
                                     </Badge>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <Badge>{country.enabled ? 'Yes' : 'No'}</Badge>
+                                    <div className="flex items-center">
+                                        <div className={`h-2 w-2 rounded-full mr-2 ${
+                                            country.enabled ? 'bg-green-500' : 'bg-gray-400'
+                                        }`}></div>
+                                        <span className={`text-sm font-medium ${
+                                            country.enabled ? 'text-green-700' : 'text-gray-500'
+                                        }`}>
+                                            {country.enabled ? 'Enabled' : 'Disabled'}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <button
+                                        onClick={() => updateCountryStatus.mutate({
+                                            countryId: country.id.toString(),
+                                            enabled: !country.enabled
+                                        })}
+                                        disabled={updateCountryStatus.isPending}
+                                        className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+                                            country.enabled
+                                                ? 'bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50'
+                                                : 'bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50'
+                                        }`}
+                                    >
+                                        {updateCountryStatus.isPending ? 'Updating...' : (country.enabled ? 'Disable' : 'Enable')}
+                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -145,13 +174,14 @@ export default function ManagementPage() {
                 <Suspense fallback={
                     <TableSkeleton 
                         rows={15} 
-                        columns={5} 
+                        columns={6} 
                         headers={[
                             t('countries.table.country'),
                             t('countries.table.iocCode'),
                             t('countries.table.isoCode'),
                             t('countries.table.iihfMember'),
-                            t('countries.table.enabled')
+                            t('countries.table.enabled'),
+                            'Actions'
                         ]}
                     />
                 }>

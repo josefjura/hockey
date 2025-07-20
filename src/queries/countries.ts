@@ -1,6 +1,6 @@
 import { Country } from "@/types/country";
 import { PaginatedResponse } from "@/types/paging";
-import { queryOptions } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
@@ -42,4 +42,55 @@ export const countryQueries = {
 			queryFn: () => fetchCountryList(page, searchTerm || undefined),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
+};
+
+// Country mutations
+export const useUpdateCountryStatus = () => {
+	const queryClient = useQueryClient();
+	
+	return useMutation({
+		mutationFn: ({ countryId, enabled }: { countryId: string; enabled: boolean }) =>
+			updateCountryStatus(countryId, enabled),
+		onMutate: async ({ countryId, enabled }) => {
+			// Cancel outgoing refetches so they don't overwrite our optimistic update
+			await queryClient.cancelQueries({ queryKey: ['countries'] });
+
+			// Snapshot previous values for rollback
+			const previousData = queryClient.getQueriesData({ queryKey: ['countries'] });
+
+			// Optimistically update all country list queries
+			queryClient.setQueriesData(
+				{ queryKey: ['countries'] },
+				(old: PaginatedResponse<Country> | undefined) => {
+					if (!old) return old;
+					
+					return {
+						...old,
+						items: old.items.map(country =>
+							country.id.toString() === countryId
+								? { ...country, enabled }
+								: country
+						)
+					};
+				}
+			);
+
+			return { previousData };
+		},
+		onError: (error, variables, context) => {
+			// Rollback on error
+			if (context?.previousData) {
+				context.previousData.forEach(([queryKey, data]) => {
+					queryClient.setQueryData(queryKey, data);
+				});
+			}
+			console.error('Failed to update country status:', error);
+		},
+		onSettled: (data, error) => {
+			// Only refetch if there was an error to ensure consistency
+			if (error) {
+				queryClient.invalidateQueries({ queryKey: ['countries'] });
+			}
+		},
+	});
 };
