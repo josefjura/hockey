@@ -7,13 +7,12 @@ import type { Team } from '@/types/team'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { teamQueries } from '@/queries/teams'
 import { useDebounce } from '@/hooks/useDebounce'
+import TeamsTable from '@/components/ui/teams-table'
 
-function TeamsList({ searchTerm, page }: { 
+function TeamsTableWrapper({ searchTerm, page }: { 
     searchTerm: string
     page: number 
 }) {
-    const t = useTranslations('Teams')
-    
     const { data } = useSuspenseQuery(teamQueries.list(searchTerm, page))
 
     return (
@@ -22,29 +21,7 @@ function TeamsList({ searchTerm, page }: {
                 Found {data.total} teams
             </div>
             
-            <div className="grid gap-4">
-                {data.items.map((team: Team) => (
-                    <div key={team.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-                        <div className="flex items-center space-x-3">
-                            <Users className="h-5 w-5 text-blue-500" />
-                            <div>
-                                <h3 className="font-medium text-gray-900">
-                                    {team.name || 'Unnamed Team'}
-                                </h3>
-                                <p className="text-sm text-gray-500">
-                                    Country ID: {team.country_id}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-                
-                {data.items.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                        No teams found
-                    </div>
-                )}
-            </div>
+            <TeamsTable data={data.items} />
         </div>
     )
 }
@@ -89,21 +66,9 @@ export default function TeamsPage() {
 
                 <div className="p-6">
                     <Suspense fallback={
-                        <div className="space-y-4">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="p-4 border border-gray-200 rounded-lg animate-pulse">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="h-5 w-5 bg-gray-200 rounded"></div>
-                                        <div className="space-y-2">
-                                            <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                                            <div className="h-3 w-24 bg-gray-200 rounded"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <TeamsTable data={[]} loading={true} />
                     }>
-                        <TeamsList 
+                        <TeamsTableWrapper 
                             searchTerm={debouncedSearchTerm}
                             page={page}
                         />
