@@ -9,7 +9,7 @@
  * w80', etc.)
  * @returns {string} Flag URL
  */
-export function getCountryFlag(isoCode: string, iocCode: string, isHistorical: boolean, size = 'w40'): string {
+export function getCountryFlag(isoCode: string, isHistorical: boolean, size = 'w40'): string {
 	// For historical countries, return local SVG path
 	if (isHistorical) {
 		return `/flags/${isoCode.toLowerCase()}.svg`;

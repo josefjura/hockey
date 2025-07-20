@@ -9,11 +9,13 @@ import { teamQueries } from '@/queries/teams'
 import { useDebounce } from '@/hooks/useDebounce'
 import TeamsTable from '@/components/ui/teams-table'
 
-function TeamsTableWrapper({ searchTerm, page }: { 
+function TeamsTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
     searchTerm: string
-    page: number 
+    page: number
+    pageSize: number
+    onPageChange: (page: number) => void
 }) {
-    const { data } = useSuspenseQuery(teamQueries.list(searchTerm, page))
+    const { data } = useSuspenseQuery(teamQueries.list(searchTerm, page, pageSize))
 
     return (
         <div className="space-y-4">
@@ -21,7 +23,16 @@ function TeamsTableWrapper({ searchTerm, page }: {
                 Found {data.total} teams
             </div>
             
-            <TeamsTable data={data.items} />
+            <TeamsTable 
+                data={data.items}
+                totalItems={data.total}
+                currentPage={data.page}
+                pageSize={data.page_size}
+                totalPages={data.total_pages}
+                hasNext={data.has_next}
+                hasPrevious={data.has_previous}
+                onPageChange={onPageChange}
+            />
         </div>
     )
 }
@@ -31,11 +42,17 @@ export default function TeamsPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [page, setPage] = useState(0)
     const debouncedSearchTerm = useDebounce(searchTerm, 300)
+    const pageSize = 20 // Consistent page size
 
     // Reset page when search term changes
     useEffect(() => {
         setPage(0)
     }, [debouncedSearchTerm])
+
+    // Handle page changes (convert from 1-based backend to 0-based frontend)
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage - 1) // Convert 1-based to 0-based
+    }
 
     return (
         <div className="space-y-6">
@@ -66,11 +83,23 @@ export default function TeamsPage() {
 
                 <div className="p-6">
                     <Suspense fallback={
-                        <TeamsTable data={[]} loading={true} />
+                        <TeamsTable 
+                            data={[]} 
+                            loading={true}
+                            totalItems={0}
+                            currentPage={1}
+                            pageSize={pageSize}
+                            totalPages={1}
+                            hasNext={false}
+                            hasPrevious={false}
+                            onPageChange={() => {}}
+                        />
                     }>
                         <TeamsTableWrapper 
                             searchTerm={debouncedSearchTerm}
                             page={page}
+                            pageSize={pageSize}
+                            onPageChange={handlePageChange}
                         />
                     </Suspense>
                 </div>

@@ -4,9 +4,10 @@ import { queryOptions } from '@tanstack/react-query';
 
 const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
-export const fetchTeamList = async (page: number = 0, searchTerm?: string): Promise<PaginatedResponse<Team>> => {
+export const fetchTeamList = async (page: number = 0, searchTerm?: string, pageSize: number = 20): Promise<PaginatedResponse<Team>> => {
 	const params = new URLSearchParams({
 		page: (page + 1).toString(), // Convert from 0-based to 1-based for backend
+		page_size: pageSize.toString(),
 	});
 
 	if (searchTerm) {
@@ -22,10 +23,10 @@ export const fetchTeamList = async (page: number = 0, searchTerm?: string): Prom
 
 // Simple query configuration for team list
 export const teamQueries = {
-	list: (searchTerm: string = '', page: number = 0) => 
+	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20) => 
 		queryOptions({
-			queryKey: ['teams', searchTerm, page],
-			queryFn: () => fetchTeamList(page, searchTerm || undefined),
+			queryKey: ['teams', searchTerm, page, pageSize],
+			queryFn: () => fetchTeamList(page, searchTerm || undefined, pageSize),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 };

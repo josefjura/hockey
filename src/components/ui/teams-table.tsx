@@ -6,23 +6,42 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   flexRender,
   createColumnHelper,
   type SortingState,
   type ColumnFiltersState,
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import Image from 'next/image'
 import type { Team } from '@/types/team'
+import { getCountryFlag } from '@/utils/countryFlag'
+import Badge from '@/components/ui/badge'
 
 const columnHelper = createColumnHelper<Team>()
 
 interface TeamsTableProps {
   data: Team[]
   loading?: boolean
+  totalItems: number
+  currentPage: number
+  pageSize: number
+  totalPages: number
+  hasNext: boolean
+  hasPrevious: boolean
+  onPageChange: (page: number) => void
 }
 
-export default function TeamsTable({ data, loading = false }: TeamsTableProps) {
+export default function TeamsTable({ 
+  data, 
+  loading = false, 
+  totalItems,
+  currentPage,
+  pageSize,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  onPageChange
+}: TeamsTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
 
@@ -34,12 +53,31 @@ export default function TeamsTable({ data, loading = false }: TeamsTableProps) {
     }),
     columnHelper.accessor('name', {
       header: 'Team Name',
-      cell: info => info.getValue() || 'Unnamed Team',
+      cell: info => info.getValue() || 'National Team',
       enableSorting: true,
     }),
-    columnHelper.accessor('country_id', {
-      header: 'Country ID',
-      cell: info => info.getValue(),
+    columnHelper.accessor('country_name', {
+      header: 'Country',
+      cell: ({ row }) => {
+        const team = row.original
+        return (
+          <div className="flex items-center space-x-2">
+            <Image 
+              width={24} 
+              height={18} 
+              src={getCountryFlag(team.country_iso2_code, false)} 
+              alt={team.country_iso2_code} 
+              className='shadow-sm shadow-black' 
+            />
+            <span>{team.country_name}</span>
+          </div>
+        )
+      },
+      enableSorting: true,
+    }),
+    columnHelper.accessor('country_iso2_code', {
+      header: 'ISO Code',
+      cell: info => <Badge>{info.getValue()}</Badge>,
       enableSorting: true,
     }),
     columnHelper.display({
@@ -76,12 +114,6 @@ export default function TeamsTable({ data, loading = false }: TeamsTableProps) {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
   })
 
   if (loading) {
@@ -175,32 +207,29 @@ export default function TeamsTable({ data, loading = false }: TeamsTableProps) {
         </div>
       )}
 
-      {/* Pagination */}
-      {table.getPageCount() > 1 && (
+      {/* Backend Pagination */}
+      {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{' '}
-            {Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
-            )}{' '}
-            of {table.getFilteredRowModel().rows.length} results
+            Showing {(currentPage - 1) * pageSize + 1} to{' '}
+            {Math.min(currentPage * pageSize, totalItems)}{' '}
+            of {totalItems} results
           </div>
           <div className="flex items-center space-x-2">
             <button
               className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={!hasPrevious}
             >
               Previous
             </button>
             <span className="px-3 py-1 text-sm text-gray-700">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              Page {currentPage} of {totalPages}
             </span>
             <button
               className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={!hasNext}
             >
               Next
             </button>
