@@ -58,7 +58,7 @@ function CountriesTable({ searchTerm, page, onPageChange }: {
                                         <Image 
                                             width={32} 
                                             height={25} 
-                                            src={getCountryFlag(country.iso2_code ?? "UNKNOWN", country.ioc_code ?? "UNKNOWN", country.is_historical ?? false)} 
+                                            src={getCountryFlag(country.iso2_code ?? "UNKNOWN", country.is_historical ?? false)} 
                                             alt={country.iso2_code ?? "Unknown"} 
                                             className='mr-2 shadow-sm shadow-black' 
                                         />

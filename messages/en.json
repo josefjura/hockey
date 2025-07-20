@@ -145,5 +145,10 @@
     "title": "Teams",
     "description": "Manage and view all teams in the system.",
     "searchPlaceholder": "Search teams..."
+  },
+  "Events": {
+    "title": "Events",
+    "description": "Manage and view all hockey events and tournaments.",
+    "searchPlaceholder": "Search events..."
   }
 }

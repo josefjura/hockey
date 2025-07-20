@@ -145,5 +145,10 @@
     "title": "Týmy",
     "description": "Správa a zobrazení všech týmů v systému.",
     "searchPlaceholder": "Hledat týmy..."
+  },
+  "Events": {
+    "title": "Události",
+    "description": "Správa a zobrazení všech hokejových událostí a turnajů.",
+    "searchPlaceholder": "Hledat události..."
   }
 }

@@ -1,29 +1,28 @@
 "use client"
 
 import { useState, useEffect, Suspense } from 'react'
-import { Users, Search, Plus } from 'lucide-react'
+import { Calendar, Search } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { teamQueries } from '@/queries/teams'
+import { eventQueries } from '@/queries/teams'
 import { useDebounce } from '@/hooks/useDebounce'
-import TeamsTable from '@/components/ui/teams-table'
-import TeamCreateDialog from '@/components/ui/team-create-dialog'
+import EventsTable from '@/components/ui/events-table'
 
-function TeamsTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
+function EventsTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
     searchTerm: string
     page: number
     pageSize: number
     onPageChange: (page: number) => void
 }) {
-    const { data } = useSuspenseQuery(teamQueries.list(searchTerm, page, pageSize))
+    const { data } = useSuspenseQuery(eventQueries.list(searchTerm, page, pageSize))
 
     return (
         <div className="space-y-4">
             <div className="text-sm text-gray-600">
-                Found {data.total} teams
+                Found {data.total} events
             </div>
             
-            <TeamsTable 
+            <EventsTable 
                 data={data.items}
                 totalItems={data.total}
                 currentPage={data.page}
@@ -37,11 +36,10 @@ function TeamsTableWrapper({ searchTerm, page, pageSize, onPageChange }: {
     )
 }
 
-export default function TeamsPage() {
-    const t = useTranslations('Teams')
+export default function EventsPage() {
+    const t = useTranslations('Events')
     const [searchTerm, setSearchTerm] = useState('')
     const [page, setPage] = useState(0)
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
     const debouncedSearchTerm = useDebounce(searchTerm, 300)
     const pageSize = 20 // Consistent page size
 
@@ -60,28 +58,16 @@ export default function TeamsPage() {
             {/* Header */}
             <div>
                 <div className="flex items-center space-x-3 mb-2">
-                    <Users className="h-8 w-8 text-blue-500" />
+                    <Calendar className="h-8 w-8 text-blue-500" />
                     <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
                 </div>
                 <p className="text-gray-600">{t('description')}</p>
             </div>
 
-            {/* Teams Section */}
+            {/* Events Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                {/* Header with Create Button and Search */}
-                <div className="px-6 py-4 border-b border-gray-200 space-y-4">
-                    {/* Create Button */}
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-lg font-semibold text-gray-900">All Teams</h2>
-                        <button
-                            onClick={() => setIsCreateDialogOpen(true)}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Team
-                        </button>
-                    </div>
-                    {/* Search */}
+                {/* Search */}
+                <div className="px-6 py-4 border-b border-gray-200">
                     <div className="relative">
                         <Search className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
                         <input
@@ -96,7 +82,7 @@ export default function TeamsPage() {
 
                 <div className="p-6">
                     <Suspense fallback={
-                        <TeamsTable 
+                        <EventsTable 
                             data={[]} 
                             loading={true}
                             totalItems={0}
@@ -108,7 +94,7 @@ export default function TeamsPage() {
                             onPageChange={() => {}}
                         />
                     }>
-                        <TeamsTableWrapper 
+                        <EventsTableWrapper 
                             searchTerm={debouncedSearchTerm}
                             page={page}
                             pageSize={pageSize}
@@ -117,12 +103,6 @@ export default function TeamsPage() {
                     </Suspense>
                 </div>
             </div>
-
-            {/* Create Dialog */}
-            <TeamCreateDialog 
-                isOpen={isCreateDialogOpen} 
-                onClose={() => setIsCreateDialogOpen(false)} 
-            />
         </div>
     )
 }

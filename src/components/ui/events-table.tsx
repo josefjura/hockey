@@ -13,13 +13,13 @@ import {
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import Image from 'next/image'
-import type { Team } from '@/types/team'
+import type { Event } from '@/types/event'
 import { getCountryFlag } from '@/utils/countryFlag'
 
-const columnHelper = createColumnHelper<Team>()
+const columnHelper = createColumnHelper<Event>()
 
-interface TeamsTableProps {
-  data: Team[]
+interface EventsTableProps {
+  data: Event[]
   loading?: boolean
   totalItems: number
   currentPage: number
@@ -30,7 +30,7 @@ interface TeamsTableProps {
   onPageChange: (page: number) => void
 }
 
-export default function TeamsTable({ 
+export default function EventsTable({ 
   data, 
   loading = false, 
   totalItems,
@@ -40,7 +40,7 @@ export default function TeamsTable({
   hasNext,
   hasPrevious,
   onPageChange
-}: TeamsTableProps) {
+}: EventsTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
 
@@ -51,24 +51,27 @@ export default function TeamsTable({
       enableSorting: true,
     }),
     columnHelper.accessor('name', {
-      header: 'Team Name',
-      cell: info => info.getValue() || 'National Team',
+      header: 'Event Name',
+      cell: info => info.getValue(),
       enableSorting: true,
     }),
     columnHelper.accessor('country_name', {
-      header: 'Country',
+      header: 'Host Country',
       cell: ({ row }) => {
-        const team = row.original
+        const event = row.original
+        if (!event.country_name || !event.country_iso2_code) {
+          return <span className="text-gray-500 italic">No host country</span>
+        }
         return (
           <div className="flex items-center space-x-2">
             <Image 
               width={24} 
               height={18} 
-              src={getCountryFlag(team.country_iso2_code, false)} 
-              alt={team.country_iso2_code} 
+              src={getCountryFlag(event.country_iso2_code, false)} 
+              alt={event.country_iso2_code} 
               className='shadow-sm shadow-black' 
             />
-            <span>{team.country_name}</span>
+            <span>{event.country_name}</span>
           </div>
         )
       },
@@ -81,13 +84,13 @@ export default function TeamsTable({
         <div className="flex space-x-2">
           <button
             className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-            onClick={() => console.log('Edit team:', row.original.id)}
+            onClick={() => console.log('Edit event:', row.original.id)}
           >
             Edit
           </button>
           <button
             className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-            onClick={() => console.log('Delete team:', row.original.id)}
+            onClick={() => console.log('Delete event:', row.original.id)}
           >
             Delete
           </button>
@@ -197,7 +200,7 @@ export default function TeamsTable({
       {/* Empty state */}
       {table.getRowModel().rows.length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          No teams found
+          No events found
         </div>
       )}
 
