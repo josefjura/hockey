@@ -7,6 +7,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
+import { Toaster } from "react-hot-toast";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -54,7 +55,8 @@ return <html lang={locale}>
             {children}						
           </AuthProvider>
         </NextIntlClientProvider>
-				</QueryClientProvider>				
+				</QueryClientProvider>
+				<Toaster position="top-right" />
       </body>
     </html>
 }

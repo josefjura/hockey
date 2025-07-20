@@ -16,7 +16,8 @@
 		"next-auth": "^5.0.0-beta.29",
 		"next-intl": "^4.3.4",
 		"react": "^19.0.0",
-		"react-dom": "^19.0.0"
+		"react-dom": "^19.0.0",
+		"react-hot-toast": "^2.5.2"
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3",

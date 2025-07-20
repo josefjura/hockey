@@ -1,6 +1,7 @@
 import { Country } from "@/types/country";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
@@ -77,6 +78,9 @@ export const useUpdateCountryStatus = () => {
 
 			return { previousData };
 		},
+		onSuccess: (data, variables) => {
+			toast.success(`Country ${variables.enabled ? 'enabled' : 'disabled'} successfully`);
+		},
 		onError: (error, variables, context) => {
 			// Rollback on error
 			if (context?.previousData) {
@@ -84,6 +88,7 @@ export const useUpdateCountryStatus = () => {
 					queryClient.setQueryData(queryKey, data);
 				});
 			}
+			toast.error('Failed to update country status. Please try again.');
 			console.error('Failed to update country status:', error);
 		},
 		onSettled: (data, error) => {
