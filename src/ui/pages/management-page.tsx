@@ -10,7 +10,7 @@ import Pager from '@/components/ui/pager'
 import Badge from '@/components/ui/badge'
 import TableSkeleton from '@/components/ui/table-skeleton'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { fetchCountryList } from '@/queries/countries'
+import { countryQueries } from '@/queries/countries'
 import { useDebounce } from '@/hooks/useDebounce'
 
 function CountriesTable({ searchTerm, page, onPageChange }: { 
@@ -20,11 +20,7 @@ function CountriesTable({ searchTerm, page, onPageChange }: {
 }) {
     const t = useTranslations('Management')
     
-    const { data } = useSuspenseQuery({
-        queryKey: ['countries', searchTerm, page],
-        queryFn: () => fetchCountryList(page, searchTerm || undefined),
-        staleTime: 5 * 60 * 1000,
-    })
+    const { data } = useSuspenseQuery(countryQueries.list(searchTerm, page))
 
     return (
         <>
