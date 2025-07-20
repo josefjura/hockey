@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useHotkeys } from 'react-hotkeys-hook'
 import { countryQueries, useCreateTeam } from '@/queries/teams'
 import { getCountryFlag } from '@/utils/countryFlag'
 import Image from 'next/image'
@@ -65,6 +66,31 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
       onClose()
     }
   }
+
+  // Keyboard shortcuts
+  useHotkeys(
+    'shift+enter',
+    (e) => {
+      e.preventDefault()
+      if (isValid && !createTeamMutation.isPending) {
+        handleSubmit(onSubmit)()
+      }
+    },
+    {
+      enabled: isOpen, // Only active when dialog is open
+      enableOnFormTags: ['input', 'select'], // Allow in form fields
+    }
+  )
+
+  useHotkeys(
+    'escape',
+    () => {
+      handleClose()
+    },
+    {
+      enabled: isOpen && !createTeamMutation.isPending,
+    }
+  )
 
   return (
     <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
@@ -163,6 +189,17 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
                 })()}
               </div>
             )}
+
+            {/* Keyboard shortcuts hint */}
+            <div className="text-xs text-gray-500 border-t border-gray-100 pt-3">
+              <div className="flex justify-between items-center">
+                <span>Keyboard shortcuts:</span>
+                <div className="flex space-x-3">
+                  <span><kbd className="px-1.5 py-0.5 text-xs bg-gray-100 border border-gray-300 rounded">Shift</kbd> + <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 border border-gray-300 rounded">Enter</kbd> to submit</span>
+                  <span><kbd className="px-1.5 py-0.5 text-xs bg-gray-100 border border-gray-300 rounded">Esc</kbd> to cancel</span>
+                </div>
+              </div>
+            </div>
 
             {/* Actions */}
             <div className="flex justify-end space-x-3 pt-4">
