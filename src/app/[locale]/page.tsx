@@ -1,5 +1,5 @@
 // app/[locale]/page.tsx - Localized Landing Page
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { ArrowRight, Database, BarChart3, Trophy, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 

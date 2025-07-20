@@ -112,7 +112,11 @@
       "searchPlaceholder": "Hledat země...",
       "table": {
         "country": "Země",
-        "code": "Kód"
+        "code": "Kód",
+        "enabled": "Povoleno",
+        "iihfMember": "IIHF člen",
+        "iocCode": "Olympijský kód",
+        "isoCode": "ISO 3136 kód"
       },
       "empty": {
         "title": "Nebyly nalezeny žádné země",

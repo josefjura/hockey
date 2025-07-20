@@ -1,11 +1,18 @@
-import {NextIntlClientProvider, hasLocale} from 'next-intl';
-import {notFound} from 'next/navigation';
-import {routing} from '@/i18n/routing';
-import { getMessages } from 'next-intl/server';
+// app/layout.tsx - Root Layout
+import AuthProvider from "@/components/shared/auth-provider";
+import { routing } from "@/i18n/routing";
+import { QueryClientProvider } from "@/providers";
+import type { Metadata } from "next";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
-import AuthProvider from "@/components/auth-provider";
+import { notFound } from "next/navigation";
 import "../globals.css";
-import Providers from '@/providers';
+
+export const metadata: Metadata = {
+  title: "Hockey Database - League Management System",
+  description: "Complete hockey league management with team tracking, player statistics, and game analytics",
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,14 +23,17 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
- 
-export default async function LocaleLayout({
+
+
+
+export default async function RootLayout({
   children,
   params
 }: {
   children: React.ReactNode;
   params: Promise<{locale: string}>;
 }) {
+
   // Ensure that the incoming `locale` is valid
   const {locale} = await params;
   if (!hasLocale(routing.locales, locale)) {
@@ -33,20 +43,18 @@ export default async function LocaleLayout({
   // Providing all messages to the client
   // side is the easiest way to get started
   const messages = await getMessages();
-
-  return (
-    <html lang={locale}>
+return <html lang={locale}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning={true}
       >
+				<QueryClientProvider>
         <NextIntlClientProvider messages={messages}>
-          <AuthProvider>
-						<Providers>
-            {children}
-						</Providers>
+          <AuthProvider>						
+            {children}						
           </AuthProvider>
         </NextIntlClientProvider>
+				</QueryClientProvider>				
       </body>
     </html>
-  );
 }

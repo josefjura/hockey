@@ -1,9 +1,8 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { Link, usePathname } from "@/i18n/navigation"
 import { signOut } from "next-auth/react"
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { 
   LayoutDashboard, 
   Users, 
@@ -25,56 +24,55 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname()
-  const locale = useLocale()
   const t = useTranslations('Navigation')
   const [collapsed, setCollapsed] = useState(false)
 
   const navigation = [
     { 
       name: t('dashboard'), 
-      href: `/${locale}/dashboard`, 
+      href: '/dashboard', 
       icon: LayoutDashboard,
       description: t('dashboardDescription')
     },
     { 
       name: t('teams'), 
-      href: `/${locale}/teams`, 
+      href: '/teams', 
       icon: Users,
       description: t('teamsDescription')
     },
     { 
       name: t('players'), 
-      href: `/${locale}/players`, 
+      href: '/players', 
       icon: Users,
       description: t('playersDescription')
     },
     { 
       name: t('events'), 
-      href: `/${locale}/events`, 
+      href: '/events', 
       icon: Trophy,
       description: t('eventsDescription')
     },
     { 
       name: t('seasons'), 
-      href: `/${locale}/seasons`, 
+      href: '/seasons', 
       icon: Calendar,
       description: t('seasonsDescription')
     },
     { 
       name: t('countries'), 
-      href: `/${locale}/countries`, 
+      href: '/countries', 
       icon: Globe,
       description: t('countriesDescription')
     },
     { 
       name: t('reports'), 
-      href: `/${locale}/reports`, 
+      href: '/reports', 
       icon: FileText,
       description: t('reportsDescription')
     },
     { 
       name: t('management'), 
-      href: `/${locale}/management`, 
+      href: '/management', 
       icon: Settings,
       description: t('managementDescription')
     },

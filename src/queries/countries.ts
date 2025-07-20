@@ -1,12 +1,23 @@
+import { Country } from "@/types/country";
+import { PaginatedResponse } from "@/types/paging";
+
 const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
-export const fetchCountryList = async () => {
-	const response = await fetch(`${API_URL}/country`);
+export const fetchCountryList = async (page: number = 0, searchTerm?: string): Promise<PaginatedResponse<Country>> => {
+	const params = new URLSearchParams({
+		page: (page + 1).toString(), // Convert from 0-based to 1-based for backend
+	});
+
+	if (searchTerm) {
+		params.append('name', searchTerm);
+	}
+
+	const response = await fetch(`${API_URL}/country?${params}`);
 	if (!response.ok) {
 		throw new Error('Network response was not ok');
 	}
 	return response.json();
-}
+};
 
 export const updateCountryStatus = async (countryId: string, status: boolean) => {
 	const response = await fetch(`${API_URL}/country/${countryId}`, {
