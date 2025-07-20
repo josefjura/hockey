@@ -140,5 +140,10 @@
       "comingSoon": "Coming soon..."
     },
     "Loading": "Loading"
+  },
+  "Teams": {
+    "title": "Teams",
+    "description": "Manage and view all teams in the system.",
+    "searchPlaceholder": "Search teams..."
   }
 }

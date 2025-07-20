@@ -140,5 +140,10 @@
       "comingSoon": "Již brzy..."
     },
     "Loading": "Načítání"
+  },
+  "Teams": {
+    "title": "Týmy",
+    "description": "Správa a zobrazení všech týmů v systému.",
+    "searchPlaceholder": "Hledat týmy..."
   }
 }
