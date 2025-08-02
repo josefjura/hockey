@@ -9,7 +9,6 @@ import {
   UserCheck,
   Settings, 
   Trophy,
-  Globe,
   Calendar,
   FileText,
   LogOut,
@@ -58,12 +57,6 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
       href: '/seasons', 
       icon: Calendar,
       description: t('seasonsDescription')
-    },
-    { 
-      name: t('countries'), 
-      href: '/countries', 
-      icon: Globe,
-      description: t('countriesDescription')
     },
     { 
       name: t('reports'), 

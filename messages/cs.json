@@ -1,159 +1,157 @@
 {
-  "LandingPage": {
-    "title": "Hockey DB",
-    "login": "Přihlásit se",
-    "hero": {
-      "title": "Profesionální správa hokejové databáze",
-      "subtitle": "Kompletní správa hokejových lig s sledováním týmů, statistikami hráčů a herní analytikou pro profesionální ligy a organizace.",
-      "getStarted": "Začít"
-    },
-    "features": {
-      "title": "Vše co potřebujete pro správu hokeje",
-      "subtitle": "Výkonné nástroje pro správu vaší hokejové organizace od statistik hráčů po ligové tabulky.",
-      "data": {
-        "title": "Správa dat",
-        "description": "Uložte a organizujte všechna svá hokejová data v jednom bezpečném a spolehlivém databázovém systému."
-      },
-      "analytics": {
-        "title": "Pokročilé analýzy",
-        "description": "Získejte podrobné poznatky s komplexními statistikami a analýzami výkonu."
-      },
-      "leagues": {
-        "title": "Správa lig",
-        "description": "Spravujte více lig, sezón a turnajů s lehkostí."
-      },
-      "teams": {
-        "title": "Koordinace týmů",
-        "description": "Sledujte týmy, hráče, smlouvy a výkony napříč vaší organizací."
-      }
-    }
-  },
-  "SignIn": {
-    "title": "Přihlaste se do svého účtu",
-    "subtitle": "Přístup do systému správy hokejové databáze",
-    "form": {
-      "email": "E-mailová adresa",
-      "password": "Heslo",
-      "signIn": "Přihlásit se",
-      "signingIn": "Přihlašování..."
-    },
-    "errors": {
-      "invalidCredentials": "Neplatný e-mail nebo heslo",
-      "general": "Něco se pokazilo. Zkuste to prosím znovu."
-    },
-    "loading": "Načítání...",
-    "alreadySignedIn": {
-      "title": "Již jste přihlášeni",
-      "welcome": "Vítejte zpět, {email}!",
-      "goToDashboard": "Přejít na dashboard",
-      "signOut": "Odhlásit se"
-    },
-    "defaultCredentials": {
-      "title": "Výchozí přihlašovací údaje pro testování:",
-      "email": "E-mail",
-      "password": "Heslo"
-    }
-  },
-  "Navigation": {
-    "dashboard": "Dashboard",
-    "dashboardDescription": "Přehled a statistiky",
-    "teams": "Týmy",
-    "teamsDescription": "Správa týmů",
-    "players": "Hráči",
-    "playersDescription": "Databáze hráčů",
-    "events": "Události",
-    "eventsDescription": "Turnaje a ligy",
-    "seasons": "Sezóny",
-    "seasonsDescription": "Správa sezón",
-    "countries": "Země",
-    "countriesDescription": "Nastavení zemí",
-    "reports": "Zprávy",
-    "reportsDescription": "Analýza dat",
-    "management": "Správa",
-    "managementDescription": "Nastavení systému",
-    "signedInAs": "Přihlášen jako",
-    "signOut": "Odhlásit se"
-  },
-  "Dashboard": {
-    "title": "Dashboard",
-    "subtitle": "Vítejte v přehledu vašeho systému správy hokeje",
-    "stats": {
-      "totalTeams": "Celkem týmů",
-      "activePlayers": "Aktivních hráčů",
-      "ongoingSeasons": "Probíhajících sezón",
-      "totalEvents": "Celkem událostí"
-    },
-    "recentActivity": {
-      "title": "Nedávná aktivita"
-    },
-    "activity": {
-      "teamRegistered": "Tým zaregistrován:",
-      "playerTransfer": "Přestup hráče:",
-      "seasonStarted": "Sezóna zahájena:",
-      "eventCreated": "Událost vytvořena:"
-    },
-    "quickActions": {
-      "title": "Rychlé akce",
-      "addTeam": "Přidat nový tým",
-      "addTeamDescription": "Zaregistrovat nový tým v systému",
-      "addPlayer": "Přidat nového hráče",
-      "addPlayerDescription": "Zaregistrovat nový profil hráče",
-      "createEvent": "Vytvořit událost",
-      "createEventDescription": "Nastavit nový turnaj nebo ligu",
-      "viewReports": "Zobrazit zprávy",
-      "viewReportsDescription": "Přístup k analytice a statistikám"
-    }
-  },
-  "Management": {
-    "title": "Správa",
-    "description": "Konfigurace a správa systémových nastavení, zemí a administrativních možností.",
-    "countries": {
-      "title": "Země",
-      "searchPlaceholder": "Hledat země...",
-      "table": {
-        "country": "Země",
-        "code": "Kód",
-        "enabled": "Povoleno",
-        "iihfMember": "IIHF člen",
-        "iocCode": "Olympijský kód",
-        "isoCode": "ISO 3136 kód"
-      },
-      "empty": {
-        "title": "Nebyly nalezeny žádné země",
-        "searchMessage": "Zkuste upravit vyhledávací podmínky.",
-        "emptyMessage": "Zde jsou zobrazeny všechny země ze systémové databáze."
-      }
-    },
-    "sections": {
-      "systemSettings": {
-        "title": "Systémová nastavení",
-        "description": "Konfigurace globálních systémových preferencí a možností."
-      },
-      "userManagement": {
-        "title": "Správa uživatelů",
-        "description": "Správa uživatelských účtů a oprávnění."
-      },
-      "dataImportExport": {
-        "title": "Import/Export dat",
-        "description": "Import a export hokejových dat v různých formátech."
-      },
-      "comingSoon": "Již brzy..."
-    },
-    "Loading": "Načítání"
-  },
-  "Teams": {
-    "title": "Týmy",
-    "description": "Správa a zobrazení všech týmů v systému.",
-    "searchPlaceholder": "Hledat týmy..."
-  },
-  "Events": {
-    "title": "Události",
-    "description": "Správa a zobrazení všech hokejových událostí a turnajů.",
-    "searchPlaceholder": "Hledat události..."
-  },
-  "Players": {
-    "title": "Hráči",
-    "description": "Správa a zobrazení všech hráčů v systému.",
-    "searchPlaceholder": "Hledat hráče..."
-  }
+	"LandingPage": {
+		"title": "Hockey DB",
+		"login": "Přihlásit se",
+		"hero": {
+			"title": "Profesionální správa hokejové databáze",
+			"subtitle": "Kompletní správa hokejových lig s sledováním týmů, statistikami hráčů a herní analytikou pro profesionální ligy a organizace.",
+			"getStarted": "Začít"
+		},
+		"features": {
+			"title": "Vše co potřebujete pro správu hokeje",
+			"subtitle": "Výkonné nástroje pro správu vaší hokejové organizace od statistik hráčů po ligové tabulky.",
+			"data": {
+				"title": "Správa dat",
+				"description": "Uložte a organizujte všechna svá hokejová data v jednom bezpečném a spolehlivém databázovém systému."
+			},
+			"analytics": {
+				"title": "Pokročilé analýzy",
+				"description": "Získejte podrobné poznatky s komplexními statistikami a analýzami výkonu."
+			},
+			"leagues": {
+				"title": "Správa lig",
+				"description": "Spravujte více lig, sezón a turnajů s lehkostí."
+			},
+			"teams": {
+				"title": "Koordinace týmů",
+				"description": "Sledujte týmy, hráče, smlouvy a výkony napříč vaší organizací."
+			}
+		}
+	},
+	"SignIn": {
+		"title": "Přihlaste se do svého účtu",
+		"subtitle": "Přístup do systému správy hokejové databáze",
+		"form": {
+			"email": "E-mailová adresa",
+			"password": "Heslo",
+			"signIn": "Přihlásit se",
+			"signingIn": "Přihlašování..."
+		},
+		"errors": {
+			"invalidCredentials": "Neplatný e-mail nebo heslo",
+			"general": "Něco se pokazilo. Zkuste to prosím znovu."
+		},
+		"loading": "Načítání...",
+		"alreadySignedIn": {
+			"title": "Již jste přihlášeni",
+			"welcome": "Vítejte zpět, {email}!",
+			"goToDashboard": "Přejít na dashboard",
+			"signOut": "Odhlásit se"
+		},
+		"defaultCredentials": {
+			"title": "Výchozí přihlašovací údaje pro testování:",
+			"email": "E-mail",
+			"password": "Heslo"
+		}
+	},
+	"Navigation": {
+		"dashboard": "Dashboard",
+		"dashboardDescription": "Přehled a statistiky",
+		"teams": "Týmy",
+		"teamsDescription": "Správa týmů",
+		"players": "Hráči",
+		"playersDescription": "Databáze hráčů",
+		"events": "Události",
+		"eventsDescription": "Turnaje a ligy",
+		"seasons": "Sezóny",
+		"seasonsDescription": "Správa sezón",
+		"reports": "Zprávy",
+		"reportsDescription": "Analýza dat",
+		"management": "Správa",
+		"managementDescription": "Nastavení systému",
+		"signedInAs": "Přihlášen jako",
+		"signOut": "Odhlásit se"
+	},
+	"Dashboard": {
+		"title": "Dashboard",
+		"subtitle": "Vítejte v přehledu vašeho systému správy hokeje",
+		"stats": {
+			"totalTeams": "Celkem týmů",
+			"activePlayers": "Aktivních hráčů",
+			"ongoingSeasons": "Probíhajících sezón",
+			"totalEvents": "Celkem událostí"
+		},
+		"recentActivity": {
+			"title": "Nedávná aktivita"
+		},
+		"activity": {
+			"teamRegistered": "Tým zaregistrován:",
+			"playerTransfer": "Přestup hráče:",
+			"seasonStarted": "Sezóna zahájena:",
+			"eventCreated": "Událost vytvořena:"
+		},
+		"quickActions": {
+			"title": "Rychlé akce",
+			"addTeam": "Přidat nový tým",
+			"addTeamDescription": "Zaregistrovat nový tým v systému",
+			"addPlayer": "Přidat nového hráče",
+			"addPlayerDescription": "Zaregistrovat nový profil hráče",
+			"createEvent": "Vytvořit událost",
+			"createEventDescription": "Nastavit nový turnaj nebo ligu",
+			"viewReports": "Zobrazit zprávy",
+			"viewReportsDescription": "Přístup k analytice a statistikám"
+		}
+	},
+	"Management": {
+		"title": "Správa",
+		"description": "Konfigurace a správa systémových nastavení, zemí a administrativních možností.",
+		"countries": {
+			"title": "Země",
+			"searchPlaceholder": "Hledat země...",
+			"table": {
+				"country": "Země",
+				"code": "Kód",
+				"enabled": "Povoleno",
+				"iihfMember": "IIHF člen",
+				"iocCode": "Olympijský kód",
+				"isoCode": "ISO 3136 kód"
+			},
+			"empty": {
+				"title": "Nebyly nalezeny žádné země",
+				"searchMessage": "Zkuste upravit vyhledávací podmínky.",
+				"emptyMessage": "Zde jsou zobrazeny všechny země ze systémové databáze."
+			}
+		},
+		"sections": {
+			"systemSettings": {
+				"title": "Systémová nastavení",
+				"description": "Konfigurace globálních systémových preferencí a možností."
+			},
+			"userManagement": {
+				"title": "Správa uživatelů",
+				"description": "Správa uživatelských účtů a oprávnění."
+			},
+			"dataImportExport": {
+				"title": "Import/Export dat",
+				"description": "Import a export hokejových dat v různých formátech."
+			},
+			"comingSoon": "Již brzy..."
+		},
+		"Loading": "Načítání"
+	},
+	"Teams": {
+		"title": "Týmy",
+		"description": "Správa a zobrazení všech týmů v systému.",
+		"searchPlaceholder": "Hledat týmy..."
+	},
+	"Events": {
+		"title": "Události",
+		"description": "Správa a zobrazení všech hokejových událostí a turnajů.",
+		"searchPlaceholder": "Hledat události..."
+	},
+	"Players": {
+		"title": "Hráči",
+		"description": "Správa a zobrazení všech hráčů v systému.",
+		"searchPlaceholder": "Hledat hráče..."
+	}
 }

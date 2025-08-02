@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { BarChart3, Users, Trophy, Calendar, TrendingUp, Activity } from 'lucide-react'
+import { QuickCreateTeam, QuickCreatePlayer, QuickCreateEvent } from '@/components/ui/quick-create-forms'
 
 export default function Dashboard() {
   const t = useTranslations('Dashboard')
@@ -135,29 +136,9 @@ export default function Dashboard() {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 gap-4">
-              <button className="flex items-center p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <Users className="h-6 w-6 text-blue-500 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">{t('quickActions.addTeam')}</div>
-                  <div className="text-sm text-gray-500">{t('quickActions.addTeamDescription')}</div>
-                </div>
-              </button>
-              
-              <button className="flex items-center p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <Activity className="h-6 w-6 text-green-500 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">{t('quickActions.addPlayer')}</div>
-                  <div className="text-sm text-gray-500">{t('quickActions.addPlayerDescription')}</div>
-                </div>
-              </button>
-              
-              <button className="flex items-center p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                <Trophy className="h-6 w-6 text-yellow-500 mr-3" />
-                <div>
-                  <div className="font-medium text-gray-900">{t('quickActions.createEvent')}</div>
-                  <div className="text-sm text-gray-500">{t('quickActions.createEventDescription')}</div>
-                </div>
-              </button>
+              <QuickCreateTeam />
+              <QuickCreatePlayer />
+              <QuickCreateEvent />
               
               <button className="flex items-center p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                 <BarChart3 className="h-6 w-6 text-purple-500 mr-3" />
