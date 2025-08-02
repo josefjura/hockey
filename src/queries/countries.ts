@@ -21,6 +21,15 @@ export const fetchCountryList = async (page: number = 0, searchTerm?: string): P
 	return response.json();
 };
 
+export const fetchCountryListAll = async (): Promise<Country[]> => {
+	const response = await fetch(`${API_URL}/country?page_size=200&enabled=true`); // Get all enabled countries
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	const data: PaginatedResponse<Country> = await response.json();
+	return data.items;
+};
+
 export const updateCountryStatus = async (countryId: string, status: boolean) => {
 	const response = await fetch(`${API_URL}/country/${countryId}`, {
 		method: 'PATCH',
@@ -37,18 +46,24 @@ export const updateCountryStatus = async (countryId: string, status: boolean) =>
 
 // Simple query configuration for country list (no details needed)
 export const countryQueries = {
-	list: (searchTerm: string = '', page: number = 0) => 
+	list: (searchTerm: string = '', page: number = 0) =>
 		queryOptions({
 			queryKey: ['countries', searchTerm, page],
 			queryFn: () => fetchCountryList(page, searchTerm || undefined),
 			staleTime: 5 * 60 * 1000, // 5 minutes
+		}),
+	all: () =>
+		queryOptions({
+			queryKey: ['countries-all'],
+			queryFn: () => fetchCountryListAll(),
+			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),
 };
 
 // Country mutations
 export const useUpdateCountryStatus = () => {
 	const queryClient = useQueryClient();
-	
+
 	return useMutation({
 		mutationFn: ({ countryId, enabled }: { countryId: string; enabled: boolean }) =>
 			updateCountryStatus(countryId, enabled),
@@ -64,7 +79,7 @@ export const useUpdateCountryStatus = () => {
 				{ queryKey: ['countries'] },
 				(old: PaginatedResponse<Country> | undefined) => {
 					if (!old) return old;
-					
+
 					return {
 						...old,
 						items: old.items.map(country =>

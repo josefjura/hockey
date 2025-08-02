@@ -150,5 +150,10 @@
     "title": "Události",
     "description": "Správa a zobrazení všech hokejových událostí a turnajů.",
     "searchPlaceholder": "Hledat události..."
+  },
+  "Players": {
+    "title": "Hráči",
+    "description": "Správa a zobrazení všech hráčů v systému.",
+    "searchPlaceholder": "Hledat hráče..."
   }
 }

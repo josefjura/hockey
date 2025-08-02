@@ -8,6 +8,8 @@ import { teamQueries } from '@/queries/teams'
 import { useDebounce } from '@/hooks/useDebounce'
 import TeamsTable from '@/components/ui/teams-table'
 import TeamCreateDialog from '@/components/ui/team-create-dialog'
+import ErrorBoundary from '@/components/error-boundary'
+import QueryErrorBoundary from '@/components/query-error-boundary'
 
 function TeamsTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
     searchTerm: string
@@ -17,22 +19,39 @@ function TeamsTableWrapper({ searchTerm, page, pageSize, onPageChange }: {
 }) {
     const { data } = useSuspenseQuery(teamQueries.list(searchTerm, page, pageSize))
 
+    // Runtime validation as failsafe
+    if (!data || typeof data !== 'object') {
+        throw new Error('Invalid data received from API')
+    }
+    
+    if (!Array.isArray(data.items)) {
+        throw new Error('API data.items is not an array')
+    }
+
     return (
         <div className="space-y-4">
             <div className="text-sm text-gray-600">
                 Found {data.total} teams
             </div>
             
-            <TeamsTable 
-                data={data.items}
-                totalItems={data.total}
-                currentPage={data.page}
-                pageSize={data.page_size}
-                totalPages={data.total_pages}
-                hasNext={data.has_next}
-                hasPrevious={data.has_previous}
-                onPageChange={onPageChange}
-            />
+            <ErrorBoundary
+                fallback={
+                    <div className="p-4 text-center text-red-600 bg-red-50 rounded-md">
+                        Error loading teams table. Please refresh the page.
+                    </div>
+                }
+            >
+                <TeamsTable 
+                    data={data.items || []}
+                    totalItems={data.total || 0}
+                    currentPage={data.page || 1}
+                    pageSize={data.page_size || pageSize}
+                    totalPages={data.total_pages || 1}
+                    hasNext={data.has_next || false}
+                    hasPrevious={data.has_previous || false}
+                    onPageChange={onPageChange}
+                />
+            </ErrorBoundary>
         </div>
     )
 }
@@ -95,26 +114,41 @@ export default function TeamsPage() {
                 </div>
 
                 <div className="p-6">
-                    <Suspense fallback={
-                        <TeamsTable 
-                            data={[]} 
-                            loading={true}
-                            totalItems={0}
-                            currentPage={1}
-                            pageSize={pageSize}
-                            totalPages={1}
-                            hasNext={false}
-                            hasPrevious={false}
-                            onPageChange={() => {}}
-                        />
-                    }>
-                        <TeamsTableWrapper 
-                            searchTerm={debouncedSearchTerm}
-                            page={page}
-                            pageSize={pageSize}
-                            onPageChange={handlePageChange}
-                        />
-                    </Suspense>
+                    <QueryErrorBoundary
+                        fallback={
+                            <div className="p-4 text-center text-red-600 bg-red-50 rounded-md">
+                                Failed to load teams. This might be due to a backend API issue.
+                                <br />
+                                <button 
+                                    onClick={() => window.location.reload()} 
+                                    className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                                >
+                                    Reload Page
+                                </button>
+                            </div>
+                        }
+                    >
+                        <Suspense fallback={
+                            <TeamsTable 
+                                data={[]} 
+                                loading={true}
+                                totalItems={0}
+                                currentPage={1}
+                                pageSize={pageSize}
+                                totalPages={1}
+                                hasNext={false}
+                                hasPrevious={false}
+                                onPageChange={() => {}}
+                            />
+                        }>
+                            <TeamsTableWrapper 
+                                searchTerm={debouncedSearchTerm}
+                                page={page}
+                                pageSize={pageSize}
+                                onPageChange={handlePageChange}
+                            />
+                        </Suspense>
+                    </QueryErrorBoundary>
                 </div>
             </div>
 

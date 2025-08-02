@@ -1,11 +1,11 @@
-import { Team } from "@/types/team";
+import { Event } from "@/types/event";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
-export const fetchTeamList = async (page: number = 0, searchTerm?: string, pageSize: number = 20): Promise<PaginatedResponse<Team>> => {
+export const fetchEventList = async (page: number = 0, searchTerm?: string, pageSize: number = 20): Promise<PaginatedResponse<Event>> => {
 	const params = new URLSearchParams({
 		page: (page + 1).toString(), // Convert from 0-based to 1-based for backend
 		page_size: pageSize.toString(),
@@ -15,22 +15,22 @@ export const fetchTeamList = async (page: number = 0, searchTerm?: string, pageS
 		params.append('name', searchTerm);
 	}
 
-	const response = await fetch(`${API_URL}/team?${params}`);
+	const response = await fetch(`${API_URL}/event?${params}`);
 	if (!response.ok) {
 		throw new Error('Network response was not ok');
 	}
 	return response.json();
 };
 
-export const createTeam = async (teamData: { name: string | null; country_id: string }): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/team`, {
+export const createEvent = async (eventData: { name: string; country_id: string | null }): Promise<{ id: number }> => {
+	const response = await fetch(`${API_URL}/event`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 		},
 		body: JSON.stringify({
-			name: teamData.name || null,
-			country_id: parseInt(teamData.country_id),
+			name: eventData.name,
+			country_id: eventData.country_id ? parseInt(eventData.country_id) : null,
 		}),
 	});
 	if (!response.ok) {
@@ -40,29 +40,29 @@ export const createTeam = async (teamData: { name: string | null; country_id: st
 };
 
 // Query configurations
-export const teamQueries = {
+export const eventQueries = {
 	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20) =>
 		queryOptions({
-			queryKey: ['teams', searchTerm, page, pageSize],
-			queryFn: () => fetchTeamList(page, searchTerm || undefined, pageSize),
+			queryKey: ['events', searchTerm, page, pageSize],
+			queryFn: () => fetchEventList(page, searchTerm || undefined, pageSize),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 };
 
-// Team mutations
-export const useCreateTeam = () => {
+// Event mutations
+export const useCreateEvent = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: createTeam,
+		mutationFn: createEvent,
 		onSuccess: (data, variables) => {
-			// Invalidate teams queries to refetch data
-			queryClient.invalidateQueries({ queryKey: ['teams'] });
-			toast.success(`Team "${variables.name || 'National Team'}" created successfully`);
+			// Invalidate events queries to refetch data
+			queryClient.invalidateQueries({ queryKey: ['events'] });
+			toast.success(`Event "${variables.name}" created successfully`);
 		},
 		onError: (error) => {
-			toast.error('Failed to create team. Please try again.');
-			console.error('Failed to create team:', error);
+			toast.error('Failed to create event. Please try again.');
+			console.error('Failed to create event:', error);
 		},
 	});
 };

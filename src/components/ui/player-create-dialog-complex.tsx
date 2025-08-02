@@ -9,26 +9,32 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { countryQueries } from '@/queries/countries'
-import { useCreateTeam } from '@/queries/teams'
+import { useCreatePlayer, useUpdatePlayer } from '@/queries/players'
 import { getCountryFlag } from '@/utils/countryFlag'
 import Image from 'next/image'
+import type { Player } from '@/types/player'
 
 // Form validation schema  
-const teamCreateSchema = z.object({
-  name: z.string().optional(),
+const playerCreateSchema = z.object({
+  name: z.string().min(1, 'Player name is required'),
   country_id: z.string().min(1, 'Country is required'),
 })
 
-type TeamCreateFormData = z.infer<typeof teamCreateSchema>
+type PlayerCreateFormData = z.infer<typeof playerCreateSchema>
 
-interface TeamCreateDialogProps {
+interface PlayerCreateDialogProps {
   isOpen: boolean
   onClose: () => void
+  editingPlayer?: Player | null
 }
 
-export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogProps) {
+export default function PlayerCreateDialog({ isOpen, onClose, editingPlayer }: PlayerCreateDialogProps) {
   const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all())
-  const createTeamMutation = useCreateTeam()
+  const createPlayerMutation = useCreatePlayer()
+  const updatePlayerMutation = useUpdatePlayer()
+  
+  const isEditing = !!editingPlayer
+  const activeMutation = isEditing ? updatePlayerMutation : createPlayerMutation
   
   const {
     register,
@@ -37,8 +43,8 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
     reset,
 		setFocus,
     formState: { errors, isValid },
-  } = useForm<TeamCreateFormData>({
-    resolver: zodResolver(teamCreateSchema),
+  } = useForm<PlayerCreateFormData>({
+    resolver: zodResolver(playerCreateSchema),
     defaultValues: {
       name: '',
       country_id: '',
@@ -47,21 +53,46 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
   
   const watchedValues = watch()
 
-	useEffect(() => {
-		if (isOpen) {
-			// Add a small delay to ensure the dialog is fully rendered
-			setTimeout(() => {
-				setFocus('name')
-			}, 100)
-		}
-	}, [isOpen, setFocus])
+  useEffect(() => {
+    if (isOpen) {
+      // Add a small delay to ensure the dialog is fully rendered
+      setTimeout(() => {
+        setFocus('name')
+      }, 100)
+    }
+  }, [isOpen, setFocus])
 
-  const onSubmit = async (data: TeamCreateFormData) => {
-    try {
-      await createTeamMutation.mutateAsync({
-        name: data.name?.trim() || null,
-        country_id: data.country_id,
+  // Separate effect for handling editing player data
+  useEffect(() => {
+    if (isOpen && editingPlayer) {
+      reset({
+        name: editingPlayer.name,
+        country_id: editingPlayer.country_id,
       })
+    } else if (isOpen && !editingPlayer) {
+      reset({
+        name: '',
+        country_id: '',
+      })
+    }
+  }, [isOpen, editingPlayer, reset])
+
+  const onSubmit = async (data: PlayerCreateFormData) => {
+    try {
+      if (isEditing && editingPlayer) {
+        await updatePlayerMutation.mutateAsync({
+          id: editingPlayer.id,
+          data: {
+            name: data.name.trim(),
+            country_id: data.country_id,
+          }
+        })
+      } else {
+        await createPlayerMutation.mutateAsync({
+          name: data.name.trim(),
+          country_id: data.country_id,
+        })
+      }
       
       // Reset form and close dialog
       reset()
@@ -72,7 +103,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
   }
 
   const handleClose = () => {
-    if (!createTeamMutation.isPending) {
+    if (!activeMutation.isPending) {
       reset()
       onClose()
     }
@@ -83,7 +114,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
     'shift+enter',
     (e) => {
       e.preventDefault()
-      if (isValid && !createTeamMutation.isPending) {
+      if (isValid && !activeMutation.isPending) {
         handleSubmit(onSubmit)()
       }
     },
@@ -99,7 +130,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
       handleClose()
     },
     {
-      enabled: isOpen && !createTeamMutation.isPending,
+      enabled: isOpen && !activeMutation.isPending,
     }
   )
 
@@ -114,11 +145,11 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <DialogTitle as="h3" className="text-lg font-semibold text-gray-900">
-              Create New Team
+              {isEditing ? 'Edit Player' : 'Create New Player'}
             </DialogTitle>
             <button
               onClick={handleClose}
-              disabled={createTeamMutation.isPending}
+              disabled={activeMutation.isPending}
               className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
             >
               <X className="h-5 w-5" />
@@ -127,22 +158,24 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-            {/* Team Name */}
+            {/* Player Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Team Name
+                Player Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="name"
                 {...register('name')}
-                placeholder="Enter team name (optional for national teams)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
-                disabled={createTeamMutation.isPending}
+                placeholder="Enter player name"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 ${
+                  errors.name ? 'border-red-300' : 'border-gray-300'
+                }`}
+                disabled={activeMutation.isPending}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Leave empty for national teams
-              </p>
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+              )}
             </div>
 
             {/* Country Selection */}
@@ -162,7 +195,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
                     errors.country_id ? 'border-red-300' : 'border-gray-300'
                   }`}
                   style={{ color: '#111827' }}
-                  disabled={createTeamMutation.isPending}
+                  disabled={activeMutation.isPending}
                 >
                   <option value="" className="text-gray-500">Select a country</option>
                   {countries.map((country) => (
@@ -178,7 +211,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
             </div>
 
             {/* Selected Country Preview */}
-            {watchedValues.country_id && (
+            {watchedValues.country_id && watchedValues.name && (
               <div className="p-3 bg-gray-50 rounded-md">
                 {(() => {
                   const selectedCountry = countries.find(c => c.id === watchedValues.country_id)
@@ -194,7 +227,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
                         className='shadow-sm shadow-black' 
                       />
                       <span className="text-sm text-gray-700">
-                        {watchedValues.name?.trim() || 'National Team'} - {selectedCountry.name}
+                        {watchedValues.name.trim()} - {selectedCountry.name}
                       </span>
                     </div>
                   )
@@ -218,17 +251,20 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
               <button
                 type="button"
                 onClick={handleClose}
-                disabled={createTeamMutation.isPending}
+                disabled={activeMutation.isPending}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={!isValid || createTeamMutation.isPending}
+                disabled={!isValid || activeMutation.isPending}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {createTeamMutation.isPending ? 'Creating...' : 'Create Team'}
+                {activeMutation.isPending 
+                  ? (isEditing ? 'Updating...' : 'Creating...') 
+                  : (isEditing ? 'Update Player' : 'Create Player')
+                }
               </button>
             </div>
           </form>

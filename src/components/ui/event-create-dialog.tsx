@@ -9,26 +9,26 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { countryQueries } from '@/queries/countries'
-import { useCreateTeam } from '@/queries/teams'
+import { useCreateEvent } from '@/queries/events'
 import { getCountryFlag } from '@/utils/countryFlag'
 import Image from 'next/image'
 
 // Form validation schema  
-const teamCreateSchema = z.object({
-  name: z.string().optional(),
-  country_id: z.string().min(1, 'Country is required'),
+const eventCreateSchema = z.object({
+  name: z.string().min(1, 'Event name is required'),
+  country_id: z.string().optional(),
 })
 
-type TeamCreateFormData = z.infer<typeof teamCreateSchema>
+type EventCreateFormData = z.infer<typeof eventCreateSchema>
 
-interface TeamCreateDialogProps {
+interface EventCreateDialogProps {
   isOpen: boolean
   onClose: () => void
 }
 
-export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogProps) {
+export default function EventCreateDialog({ isOpen, onClose }: EventCreateDialogProps) {
   const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all())
-  const createTeamMutation = useCreateTeam()
+  const createEventMutation = useCreateEvent()
   
   const {
     register,
@@ -37,8 +37,8 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
     reset,
 		setFocus,
     formState: { errors, isValid },
-  } = useForm<TeamCreateFormData>({
-    resolver: zodResolver(teamCreateSchema),
+  } = useForm<EventCreateFormData>({
+    resolver: zodResolver(eventCreateSchema),
     defaultValues: {
       name: '',
       country_id: '',
@@ -56,11 +56,11 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
 		}
 	}, [isOpen, setFocus])
 
-  const onSubmit = async (data: TeamCreateFormData) => {
+  const onSubmit = async (data: EventCreateFormData) => {
     try {
-      await createTeamMutation.mutateAsync({
-        name: data.name?.trim() || null,
-        country_id: data.country_id,
+      await createEventMutation.mutateAsync({
+        name: data.name.trim(),
+        country_id: data.country_id || null,
       })
       
       // Reset form and close dialog
@@ -72,7 +72,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
   }
 
   const handleClose = () => {
-    if (!createTeamMutation.isPending) {
+    if (!createEventMutation.isPending) {
       reset()
       onClose()
     }
@@ -83,7 +83,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
     'shift+enter',
     (e) => {
       e.preventDefault()
-      if (isValid && !createTeamMutation.isPending) {
+      if (isValid && !createEventMutation.isPending) {
         handleSubmit(onSubmit)()
       }
     },
@@ -99,7 +99,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
       handleClose()
     },
     {
-      enabled: isOpen && !createTeamMutation.isPending,
+      enabled: isOpen && !createEventMutation.isPending,
     }
   )
 
@@ -114,11 +114,11 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <DialogTitle as="h3" className="text-lg font-semibold text-gray-900">
-              Create New Team
+              Create New Event
             </DialogTitle>
             <button
               onClick={handleClose}
-              disabled={createTeamMutation.isPending}
+              disabled={createEventMutation.isPending}
               className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
             >
               <X className="h-5 w-5" />
@@ -127,28 +127,30 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
-            {/* Team Name */}
+            {/* Event Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Team Name
+                Event Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="name"
                 {...register('name')}
-                placeholder="Enter team name (optional for national teams)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
-                disabled={createTeamMutation.isPending}
+                placeholder="Enter event name"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 ${
+                  errors.name ? 'border-red-300' : 'border-gray-300'
+                }`}
+                disabled={createEventMutation.isPending}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Leave empty for national teams
-              </p>
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+              )}
             </div>
 
             {/* Country Selection */}
             <div>
               <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-                Country <span className="text-red-500">*</span>
+                Country
               </label>
               {countriesLoading ? (
                 <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
@@ -158,13 +160,11 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
                 <select
                   id="country"
                   {...register('country_id')}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white ${
-                    errors.country_id ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                   style={{ color: '#111827' }}
-                  disabled={createTeamMutation.isPending}
+                  disabled={createEventMutation.isPending}
                 >
-                  <option value="" className="text-gray-500">Select a country</option>
+                  <option value="" className="text-gray-500">Select a country (optional)</option>
                   {countries.map((country) => (
                     <option key={country.id} value={country.id} className="text-gray-900">
                       {country.name}
@@ -172,9 +172,9 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
                   ))}
                 </select>
               )}
-              {errors.country_id && (
-                <p className="mt-1 text-sm text-red-600">{errors.country_id.message}</p>
-              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Leave empty for international events
+              </p>
             </div>
 
             {/* Selected Country Preview */}
@@ -194,7 +194,7 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
                         className='shadow-sm shadow-black' 
                       />
                       <span className="text-sm text-gray-700">
-                        {watchedValues.name?.trim() || 'National Team'} - {selectedCountry.name}
+                        {watchedValues.name?.trim() || 'Event'} - {selectedCountry.name}
                       </span>
                     </div>
                   )
@@ -218,17 +218,17 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
               <button
                 type="button"
                 onClick={handleClose}
-                disabled={createTeamMutation.isPending}
+                disabled={createEventMutation.isPending}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={!isValid || createTeamMutation.isPending}
+                disabled={!isValid || createEventMutation.isPending}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {createTeamMutation.isPending ? 'Creating...' : 'Create Team'}
+                {createEventMutation.isPending ? 'Creating...' : 'Create Event'}
               </button>
             </div>
           </form>

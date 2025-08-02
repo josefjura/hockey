@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { 
   LayoutDashboard, 
   Users, 
+  UserCheck,
   Settings, 
   Trophy,
   Globe,
@@ -43,7 +44,7 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
     { 
       name: t('players'), 
       href: '/players', 
-      icon: Users,
+      icon: UserCheck,
       description: t('playersDescription')
     },
     { 

@@ -12,6 +12,8 @@ import TableSkeleton from '@/components/ui/table-skeleton'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { countryQueries, useUpdateCountryStatus } from '@/queries/countries'
 import { useDebounce } from '@/hooks/useDebounce'
+import ErrorBoundary from '@/components/error-boundary'
+import QueryErrorBoundary from '@/components/query-error-boundary'
 
 function CountriesTable({ searchTerm, page, onPageChange }: { 
     searchTerm: string
@@ -22,6 +24,15 @@ function CountriesTable({ searchTerm, page, onPageChange }: {
     
     const { data } = useSuspenseQuery(countryQueries.list(searchTerm, page))
     const updateCountryStatus = useUpdateCountryStatus()
+
+    // Runtime validation as failsafe
+    if (!data || typeof data !== 'object') {
+        throw new Error('Invalid data received from API')
+    }
+    
+    if (!Array.isArray(data.items)) {
+        throw new Error('API data.items is not an array')
+    }
 
     return (
         <>
@@ -171,26 +182,49 @@ export default function ManagementPage() {
                     </div>
                 </div>
 
-                <Suspense fallback={
-                    <TableSkeleton 
-                        rows={15} 
-                        columns={6} 
-                        headers={[
-                            t('countries.table.country'),
-                            t('countries.table.iocCode'),
-                            t('countries.table.isoCode'),
-                            t('countries.table.iihfMember'),
-                            t('countries.table.enabled'),
-                            'Actions'
-                        ]}
-                    />
-                }>
-                    <CountriesTable 
-                        searchTerm={debouncedSearchTerm}
-                        page={page}
-                        onPageChange={setPage}
-                    />
-                </Suspense>
+                <QueryErrorBoundary
+                    fallback={
+                        <div className="p-4 text-center text-red-600 bg-red-50 rounded-md">
+                            Failed to load countries. This might be due to a backend API issue.
+                            <br />
+                            <button 
+                                onClick={() => window.location.reload()} 
+                                className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                            >
+                                Reload Page
+                            </button>
+                        </div>
+                    }
+                >
+                    <Suspense fallback={
+                        <TableSkeleton 
+                            rows={15} 
+                            columns={6} 
+                            headers={[
+                                t('countries.table.country'),
+                                t('countries.table.iocCode'),
+                                t('countries.table.isoCode'),
+                                t('countries.table.iihfMember'),
+                                t('countries.table.enabled'),
+                                'Actions'
+                            ]}
+                        />
+                    }>
+                        <ErrorBoundary
+                            fallback={
+                                <div className="p-4 text-center text-red-600 bg-red-50 rounded-md">
+                                    Error loading countries table. Please refresh the page.
+                                </div>
+                            }
+                        >
+                            <CountriesTable 
+                                searchTerm={debouncedSearchTerm}
+                                page={page}
+                                onPageChange={setPage}
+                            />
+                        </ErrorBoundary>
+                    </Suspense>
+                </QueryErrorBoundary>
             </div>
         </div>
     )

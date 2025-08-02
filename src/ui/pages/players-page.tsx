@@ -1,25 +1,25 @@
 "use client"
 
 import { useState, useEffect, Suspense } from 'react'
-import { Calendar, Search, Plus } from 'lucide-react'
+import { UserCheck, Search, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { eventQueries } from '@/queries/events'
+import { playerQueries } from '@/queries/players'
 import { useDebounce } from '@/hooks/useDebounce'
-import EventsTable from '@/components/ui/events-table'
-import EventCreateDialog from '@/components/ui/event-create-dialog'
+import PlayersTable from '@/components/ui/players-table'
+import PlayerCreateDialog from '@/components/ui/player-create-dialog'
 import ErrorBoundary from '@/components/error-boundary'
 import QueryErrorBoundary from '@/components/query-error-boundary'
 
-function EventsTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
+function PlayersTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
     searchTerm: string
     page: number
     pageSize: number
     onPageChange: (page: number) => void
 }) {
-    const { data } = useSuspenseQuery(eventQueries.list(searchTerm, page, pageSize))
+    const { data } = useSuspenseQuery(playerQueries.list(searchTerm, page, pageSize))
 
-    // Runtime validation as failsafe
+    // Additional runtime validation as failsafe
     if (!data || typeof data !== 'object') {
         throw new Error('Invalid data received from API')
     }
@@ -31,17 +31,17 @@ function EventsTableWrapper({ searchTerm, page, pageSize, onPageChange }: {
     return (
         <div className="space-y-4">
             <div className="text-sm text-gray-600">
-                Found {data.total} events
+                Found {data.total} players
             </div>
             
             <ErrorBoundary
                 fallback={
                     <div className="p-4 text-center text-red-600 bg-red-50 rounded-md">
-                        Error loading events table. Please refresh the page.
+                        Error loading players table. Please refresh the page.
                     </div>
                 }
             >
-                <EventsTable 
+                <PlayersTable 
                     data={data.items || []}
                     totalItems={data.total || 0}
                     currentPage={data.page || 1}
@@ -56,11 +56,15 @@ function EventsTableWrapper({ searchTerm, page, pageSize, onPageChange }: {
     )
 }
 
-export default function EventsPage() {
-    const t = useTranslations('Events')
+export default function PlayersPage() {
+    console.log('[PlayersPage] Render')
+    
+    const t = useTranslations('Players')
     const [searchTerm, setSearchTerm] = useState('')
     const [page, setPage] = useState(0)
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    
+    console.log('[PlayersPage] isCreateDialogOpen:', isCreateDialogOpen)
     const debouncedSearchTerm = useDebounce(searchTerm, 300)
     const pageSize = 20 // Consistent page size
 
@@ -74,30 +78,34 @@ export default function EventsPage() {
         setPage(newPage - 1) // Convert 1-based to 0-based
     }
 
+
     return (
         <div className="space-y-6">
             {/* Header */}
             <div>
                 <div className="flex items-center space-x-3 mb-2">
-                    <Calendar className="h-8 w-8 text-blue-500" />
+                    <UserCheck className="h-8 w-8 text-blue-500" />
                     <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
                 </div>
                 <p className="text-gray-600">{t('description')}</p>
             </div>
 
-            {/* Events Section */}
+            {/* Players Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 {/* Header with Create Button and Search */}
                 <div className="px-6 py-4 border-b border-gray-200 space-y-4">
                     {/* Create Button */}
                     <div className="flex justify-between items-center">
-                        <h2 className="text-lg font-semibold text-gray-900">All Events</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">All Players</h2>
                         <button
-                            onClick={() => setIsCreateDialogOpen(true)}
+                            onClick={() => {
+                                console.log('[PlayersPage] Create Player button clicked')
+                                setIsCreateDialogOpen(true)
+                            }}
                             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                         >
                             <Plus className="h-4 w-4 mr-2" />
-                            Create Event
+                            Create Player
                         </button>
                     </div>
                     {/* Search */}
@@ -117,7 +125,7 @@ export default function EventsPage() {
                     <QueryErrorBoundary
                         fallback={
                             <div className="p-4 text-center text-red-600 bg-red-50 rounded-md">
-                                Failed to load events. This might be due to a backend API issue.
+                                Failed to load players. This might be due to a backend API issue.
                                 <br />
                                 <button 
                                     onClick={() => window.location.reload()} 
@@ -129,19 +137,9 @@ export default function EventsPage() {
                         }
                     >
                         <Suspense fallback={
-                            <EventsTable 
-                                data={[]} 
-                                loading={true}
-                                totalItems={0}
-                                currentPage={1}
-                                pageSize={pageSize}
-                                totalPages={1}
-                                hasNext={false}
-                                hasPrevious={false}
-                                onPageChange={() => {}}
-                            />
+                            <div>Loading players...</div>
                         }>
-                            <EventsTableWrapper 
+                            <PlayersTableWrapper 
                                 searchTerm={debouncedSearchTerm}
                                 page={page}
                                 pageSize={pageSize}
@@ -153,9 +151,12 @@ export default function EventsPage() {
             </div>
 
             {/* Create Dialog */}
-            <EventCreateDialog 
+            <PlayerCreateDialog 
                 isOpen={isCreateDialogOpen} 
-                onClose={() => setIsCreateDialogOpen(false)} 
+                onClose={() => {
+                    console.log('[PlayersPage] Dialog onClose called')
+                    setIsCreateDialogOpen(false)
+                }}
             />
         </div>
     )
