@@ -25,3 +25,13 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   scroll-behavior: smooth;
 }
+
+/* Form element defaults - ensure readable text in inputs and selects */
+input, select, textarea {
+  color: #111827; /* text-gray-900 equivalent */
+}
+
+/* Option elements specifically */
+option {
+  color: #111827; /* text-gray-900 equivalent */
+}
