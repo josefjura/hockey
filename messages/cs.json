@@ -65,6 +65,8 @@
 		"eventsDescription": "Turnaje a ligy",
 		"seasons": "Sezóny",
 		"seasonsDescription": "Správa sezón",
+		"matches": "Zápasy",
+		"matchesDescription": "Správa her",
 		"reports": "Zprávy",
 		"reportsDescription": "Analýza dat",
 		"management": "Správa",
@@ -196,5 +198,21 @@
 		"title": "Sezóny",
 		"description": "Správa a zobrazení všech sezón v systému.",
 		"searchPlaceholder": "Hledat sezóny..."
+	},
+	"Matches": {
+		"title": "Zápasy",
+		"description": "Správa a zobrazení všech hokejových zápasů a her.",
+		"searchPlaceholder": "Hledat zápasy...",
+		"filters": {
+			"allSeasons": "Všechny sezóny",
+			"allTeams": "Všechny týmy",
+			"allStatuses": "Všechny stavy",
+			"status": {
+				"scheduled": "Naplánovaný",
+				"in_progress": "Probíhá",
+				"finished": "Ukončený",
+				"cancelled": "Zrušený"
+			}
+		}
 	}
 }

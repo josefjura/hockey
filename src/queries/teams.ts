@@ -22,6 +22,14 @@ export const fetchTeamList = async (page: number = 0, searchTerm?: string, pageS
 	return response.json();
 };
 
+export const fetchTeamListSimple = async (): Promise<Array<{id: number, name: string}>> => {
+	const response = await fetch(`${API_URL}/team/list`);
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	return response.json();
+};
+
 export const createTeam = async (teamData: { name: string | null; country_id: string }): Promise<{ id: number }> => {
 	const response = await fetch(`${API_URL}/team`, {
 		method: 'POST',
@@ -73,6 +81,13 @@ export const teamQueries = {
 			queryKey: ['teams', searchTerm, page, pageSize],
 			queryFn: () => fetchTeamList(page, searchTerm || undefined, pageSize),
 			staleTime: 5 * 60 * 1000, // 5 minutes
+		}),
+	
+	all: () =>
+		queryOptions({
+			queryKey: ['teams', 'simple'],
+			queryFn: () => fetchTeamListSimple(),
+			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),
 };
 

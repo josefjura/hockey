@@ -53,6 +53,14 @@ export const fetchSeasonList = async (page: number = 0, searchTerm?: string, eve
 	return validatePaginatedResponse<Season>(data);
 };
 
+export const fetchSeasonListSimple = async (): Promise<Array<{id: number, name: string, year: number, event_name: string}>> => {
+	const response = await fetch(`${API_URL}/season/list`);
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	return response.json();
+};
+
 export const createSeason = async (seasonData: { year: number; display_name: string | null; event_id: string }): Promise<{ id: number }> => {
 	const response = await fetch(`${API_URL}/season`, {
 		method: 'POST',
@@ -104,6 +112,13 @@ export const seasonQueries = {
 			queryKey: ['seasons', searchTerm, eventId, page, pageSize],
 			queryFn: () => fetchSeasonList(page, searchTerm || undefined, eventId || undefined, pageSize),
 			staleTime: 5 * 60 * 1000, // 5 minutes
+		}),
+	
+	all: () =>
+		queryOptions({
+			queryKey: ['seasons', 'simple'],
+			queryFn: () => fetchSeasonListSimple(),
+			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),
 };
 

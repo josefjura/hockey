@@ -13,7 +13,8 @@ import {
   FileText,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Gamepad2
 } from "lucide-react"
 import { useState } from "react"
 import type { User } from "@/types/auth"
@@ -57,6 +58,12 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
       href: '/seasons', 
       icon: Calendar,
       description: t('seasonsDescription')
+    },
+    { 
+      name: t('matches'), 
+      href: '/matches', 
+      icon: Gamepad2,
+      description: t('matchesDescription')
     },
     { 
       name: t('reports'), 

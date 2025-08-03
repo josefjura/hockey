@@ -65,6 +65,8 @@
 		"eventsDescription": "Tournaments & leagues",
 		"seasons": "Seasons",
 		"seasonsDescription": "Season management",
+		"matches": "Matches",
+		"matchesDescription": "Game management",
 		"reports": "Reports",
 		"reportsDescription": "Data analytics",
 		"management": "Management",
@@ -196,5 +198,21 @@
 		"title": "Seasons",
 		"description": "Manage and view all seasons in the system.",
 		"searchPlaceholder": "Search seasons..."
+	},
+	"Matches": {
+		"title": "Matches",
+		"description": "Manage and view all hockey matches and games.",
+		"searchPlaceholder": "Search matches...",
+		"filters": {
+			"allSeasons": "All Seasons",
+			"allTeams": "All Teams",
+			"allStatuses": "All Statuses",
+			"status": {
+				"scheduled": "Scheduled",
+				"in_progress": "In Progress",
+				"finished": "Finished",
+				"cancelled": "Cancelled"
+			}
+		}
 	}
 }
