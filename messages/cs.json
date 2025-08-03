@@ -153,5 +153,10 @@
 		"title": "Hráči",
 		"description": "Správa a zobrazení všech hráčů v systému.",
 		"searchPlaceholder": "Hledat hráče..."
+	},
+	"Seasons": {
+		"title": "Sezóny",
+		"description": "Správa a zobrazení všech sezón v systému.",
+		"searchPlaceholder": "Hledat sezóny..."
 	}
 }

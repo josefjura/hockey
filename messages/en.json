@@ -153,5 +153,10 @@
 		"title": "Players",
 		"description": "Manage and view all players in the system.",
 		"searchPlaceholder": "Search players..."
+	},
+	"Seasons": {
+		"title": "Seasons",
+		"description": "Manage and view all seasons in the system.",
+		"searchPlaceholder": "Search seasons..."
 	}
 }

@@ -22,6 +22,15 @@ export const fetchEventList = async (page: number = 0, searchTerm?: string, page
 	return response.json();
 };
 
+export const fetchEventListAll = async (): Promise<Event[]> => {
+	const response = await fetch(`${API_URL}/event?page_size=200`); // Get all events
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	const data: PaginatedResponse<Event> = await response.json();
+	return data.items;
+};
+
 export const createEvent = async (eventData: { name: string; country_id: string | null }): Promise<{ id: number }> => {
 	const response = await fetch(`${API_URL}/event`, {
 		method: 'POST',
@@ -46,6 +55,12 @@ export const eventQueries = {
 			queryKey: ['events', searchTerm, page, pageSize],
 			queryFn: () => fetchEventList(page, searchTerm || undefined, pageSize),
 			staleTime: 5 * 60 * 1000, // 5 minutes
+		}),
+	all: () =>
+		queryOptions({
+			queryKey: ['events-all'],
+			queryFn: () => fetchEventListAll(),
+			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),
 };
 
