@@ -48,6 +48,33 @@ export const createEvent = async (eventData: { name: string; country_id: string 
 	return response.json();
 };
 
+export const updateEvent = async (id: number, eventData: { name: string; country_id: string | null }): Promise<string> => {
+	const response = await fetch(`${API_URL}/event/${id}`, {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+			name: eventData.name,
+			country_id: eventData.country_id ? parseInt(eventData.country_id) : null,
+		}),
+	});
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	return response.json();
+};
+
+export const deleteEvent = async (id: number): Promise<string> => {
+	const response = await fetch(`${API_URL}/event/${id}`, {
+		method: 'DELETE',
+	});
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	return response.json();
+};
+
 // Query configurations
 export const eventQueries = {
 	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20) =>
@@ -78,6 +105,39 @@ export const useCreateEvent = () => {
 		onError: (error) => {
 			toast.error('Failed to create event. Please try again.');
 			console.error('Failed to create event:', error);
+		},
+	});
+};
+
+export const useUpdateEvent = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({ id, ...eventData }: { id: number; name: string; country_id: string | null }) => 
+			updateEvent(id, eventData),
+		onSuccess: (data, variables) => {
+			queryClient.invalidateQueries({ queryKey: ['events'] });
+			toast.success(`Event "${variables.name}" updated successfully`);
+		},
+		onError: (error) => {
+			toast.error('Failed to update event. Please try again.');
+			console.error('Failed to update event:', error);
+		},
+	});
+};
+
+export const useDeleteEvent = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: deleteEvent,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['events'] });
+			toast.success('Event deleted successfully');
+		},
+		onError: (error) => {
+			toast.error('Failed to delete event. Please try again.');
+			console.error('Failed to delete event:', error);
 		},
 	});
 };

@@ -8,14 +8,17 @@ import { eventQueries } from '@/queries/events'
 import { useDebounce } from '@/hooks/useDebounce'
 import EventsTable from '@/components/ui/events-table'
 import EventCreateDialog from '@/components/ui/event-create-dialog'
+import EventEditDialog from '@/components/ui/event-edit-dialog'
 import ErrorBoundary from '@/components/error-boundary'
 import QueryErrorBoundary from '@/components/query-error-boundary'
+import type { Event } from '@/types/event'
 
-function EventsTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
+function EventsTableWrapper({ searchTerm, page, pageSize, onPageChange, onEdit }: { 
     searchTerm: string
     page: number
     pageSize: number
     onPageChange: (page: number) => void
+    onEdit: (event: Event) => void
 }) {
     const { data } = useSuspenseQuery(eventQueries.list(searchTerm, page, pageSize))
 
@@ -50,6 +53,7 @@ function EventsTableWrapper({ searchTerm, page, pageSize, onPageChange }: {
                     hasNext={data.has_next || false}
                     hasPrevious={data.has_previous || false}
                     onPageChange={onPageChange}
+                    onEdit={onEdit}
                 />
             </ErrorBoundary>
         </div>
@@ -61,6 +65,8 @@ export default function EventsPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [page, setPage] = useState(0)
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
     const debouncedSearchTerm = useDebounce(searchTerm, 300)
     const pageSize = 20 // Consistent page size
 
@@ -72,6 +78,16 @@ export default function EventsPage() {
     // Handle page changes (convert from 1-based backend to 0-based frontend)
     const handlePageChange = (newPage: number) => {
         setPage(newPage - 1) // Convert 1-based to 0-based
+    }
+
+    const handleEdit = (event: Event) => {
+        setSelectedEvent(event)
+        setIsEditDialogOpen(true)
+    }
+
+    const handleCloseEdit = () => {
+        setIsEditDialogOpen(false)
+        setSelectedEvent(null)
     }
 
     return (
@@ -139,6 +155,7 @@ export default function EventsPage() {
                                 hasNext={false}
                                 hasPrevious={false}
                                 onPageChange={() => {}}
+                                onEdit={() => {}}
                             />
                         }>
                             <EventsTableWrapper 
@@ -146,6 +163,7 @@ export default function EventsPage() {
                                 page={page}
                                 pageSize={pageSize}
                                 onPageChange={handlePageChange}
+                                onEdit={handleEdit}
                             />
                         </Suspense>
                     </QueryErrorBoundary>
@@ -156,6 +174,13 @@ export default function EventsPage() {
             <EventCreateDialog 
                 isOpen={isCreateDialogOpen} 
                 onClose={() => setIsCreateDialogOpen(false)} 
+            />
+
+            {/* Edit Dialog */}
+            <EventEditDialog 
+                isOpen={isEditDialogOpen} 
+                onClose={handleCloseEdit}
+                event={selectedEvent}
             />
         </div>
     )

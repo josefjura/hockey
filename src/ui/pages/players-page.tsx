@@ -8,14 +8,17 @@ import { playerQueries } from '@/queries/players'
 import { useDebounce } from '@/hooks/useDebounce'
 import PlayersTable from '@/components/ui/players-table'
 import PlayerCreateDialog from '@/components/ui/player-create-dialog'
+import PlayerEditDialog from '@/components/ui/player-edit-dialog'
 import ErrorBoundary from '@/components/error-boundary'
 import QueryErrorBoundary from '@/components/query-error-boundary'
+import type { Player } from '@/types/player'
 
-function PlayersTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
+function PlayersTableWrapper({ searchTerm, page, pageSize, onPageChange, onEdit }: { 
     searchTerm: string
     page: number
     pageSize: number
     onPageChange: (page: number) => void
+    onEdit: (player: Player) => void
 }) {
     const { data } = useSuspenseQuery(playerQueries.list(searchTerm, page, pageSize))
 
@@ -50,6 +53,7 @@ function PlayersTableWrapper({ searchTerm, page, pageSize, onPageChange }: {
                     hasNext={data.has_next || false}
                     hasPrevious={data.has_previous || false}
                     onPageChange={onPageChange}
+                    onEdit={onEdit}
                 />
             </ErrorBoundary>
         </div>
@@ -63,6 +67,8 @@ export default function PlayersPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [page, setPage] = useState(0)
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
     
     console.log('[PlayersPage] isCreateDialogOpen:', isCreateDialogOpen)
     const debouncedSearchTerm = useDebounce(searchTerm, 300)
@@ -76,6 +82,16 @@ export default function PlayersPage() {
     // Handle page changes (convert from 1-based backend to 0-based frontend)
     const handlePageChange = (newPage: number) => {
         setPage(newPage - 1) // Convert 1-based to 0-based
+    }
+
+    const handleEdit = (player: Player) => {
+        setSelectedPlayer(player)
+        setIsEditDialogOpen(true)
+    }
+
+    const handleCloseEdit = () => {
+        setIsEditDialogOpen(false)
+        setSelectedPlayer(null)
     }
 
 
@@ -144,6 +160,7 @@ export default function PlayersPage() {
                                 page={page}
                                 pageSize={pageSize}
                                 onPageChange={handlePageChange}
+                                onEdit={handleEdit}
                             />
                         </Suspense>
                     </QueryErrorBoundary>
@@ -157,6 +174,13 @@ export default function PlayersPage() {
                     console.log('[PlayersPage] Dialog onClose called')
                     setIsCreateDialogOpen(false)
                 }}
+            />
+
+            {/* Edit Dialog */}
+            <PlayerEditDialog 
+                isOpen={isEditDialogOpen} 
+                onClose={handleCloseEdit}
+                player={selectedPlayer}
             />
         </div>
     )

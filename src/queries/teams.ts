@@ -39,6 +39,33 @@ export const createTeam = async (teamData: { name: string | null; country_id: st
 	return response.json();
 };
 
+export const updateTeam = async (id: number, teamData: { name: string | null; country_id: string }): Promise<string> => {
+	const response = await fetch(`${API_URL}/team/${id}`, {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+			name: teamData.name || null,
+			country_id: parseInt(teamData.country_id),
+		}),
+	});
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	return response.json();
+};
+
+export const deleteTeam = async (id: number): Promise<string> => {
+	const response = await fetch(`${API_URL}/team/${id}`, {
+		method: 'DELETE',
+	});
+	if (!response.ok) {
+		throw new Error('Network response was not ok');
+	}
+	return response.json();
+};
+
 // Query configurations
 export const teamQueries = {
 	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20) =>
@@ -63,6 +90,39 @@ export const useCreateTeam = () => {
 		onError: (error) => {
 			toast.error('Failed to create team. Please try again.');
 			console.error('Failed to create team:', error);
+		},
+	});
+};
+
+export const useUpdateTeam = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({ id, ...teamData }: { id: number; name: string | null; country_id: string }) => 
+			updateTeam(id, teamData),
+		onSuccess: (data, variables) => {
+			queryClient.invalidateQueries({ queryKey: ['teams'] });
+			toast.success(`Team "${variables.name || 'National Team'}" updated successfully`);
+		},
+		onError: (error) => {
+			toast.error('Failed to update team. Please try again.');
+			console.error('Failed to update team:', error);
+		},
+	});
+};
+
+export const useDeleteTeam = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: deleteTeam,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['teams'] });
+			toast.success('Team deleted successfully');
+		},
+		onError: (error) => {
+			toast.error('Failed to delete team. Please try again.');
+			console.error('Failed to delete team:', error);
 		},
 	});
 };

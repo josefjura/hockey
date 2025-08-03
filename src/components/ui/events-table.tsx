@@ -11,10 +11,12 @@ import {
   type SortingState,
   type ColumnFiltersState,
 } from '@tanstack/react-table'
-import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, Edit2, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import type { Event } from '@/types/event'
 import { getCountryFlag } from '@/utils/countryFlag'
+import { useDeleteEvent } from '@/queries/events'
+import Pager from '@/components/ui/pager'
 
 const columnHelper = createColumnHelper<Event>()
 
@@ -28,6 +30,7 @@ interface EventsTableProps {
   hasNext: boolean
   hasPrevious: boolean
   onPageChange: (page: number) => void
+  onEdit?: (event: Event) => void
 }
 
 export default function EventsTable({ 
@@ -39,24 +42,58 @@ export default function EventsTable({
   totalPages,
   hasNext,
   hasPrevious,
-  onPageChange
+  onPageChange,
+  onEdit
 }: EventsTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const deleteEventMutation = useDeleteEvent()
+
+  const handleDelete = async (event: Event) => {
+    if (window.confirm(`Are you sure you want to delete event "${event.name}"?`)) {
+      deleteEventMutation.mutate(event.id)
+    }
+  }
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {
       header: 'ID',
       cell: info => info.getValue(),
-      enableSorting: true,
+      size: 80,
     }),
     columnHelper.accessor('name', {
-      header: 'Event Name',
-      cell: info => info.getValue(),
-      enableSorting: true,
+      header: ({ column }) => (
+        <button
+          className="flex items-center space-x-1 hover:bg-gray-100 p-1 rounded"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          <span>Event Name</span>
+          {{
+            asc: <ChevronUp className="h-4 w-4" />,
+            desc: <ChevronDown className="h-4 w-4" />,
+          }[column.getIsSorted() as string] ?? <ChevronsUpDown className="h-4 w-4" />}
+        </button>
+      ),
+      cell: info => (
+        <span className="font-semibold text-blue-600">
+          {info.getValue()}
+        </span>
+      ),
+      size: 200,
     }),
     columnHelper.accessor('country_name', {
-      header: 'Host Country',
+      header: ({ column }) => (
+        <button
+          className="flex items-center space-x-1 hover:bg-gray-100 p-1 rounded"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          <span>Host Country</span>
+          {{
+            asc: <ChevronUp className="h-4 w-4" />,
+            desc: <ChevronDown className="h-4 w-4" />,
+          }[column.getIsSorted() as string] ?? <ChevronsUpDown className="h-4 w-4" />}
+        </button>
+      ),
       cell: ({ row }) => {
         const event = row.original
         if (!event.country_name || !event.country_iso2_code) {
@@ -71,33 +108,39 @@ export default function EventsTable({
               alt={event.country_iso2_code} 
               className='shadow-sm shadow-black' 
             />
-            <span>{event.country_name}</span>
+            <span className="text-gray-900">{event.country_name}</span>
           </div>
         )
       },
-      enableSorting: true,
+      size: 200,
     }),
     columnHelper.display({
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(row.original)}
+              className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+              title="Edit event"
+            >
+              <Edit2 className="h-4 w-4" />
+            </button>
+          )}
           <button
-            className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-            onClick={() => console.log('Edit event:', row.original.id)}
+            onClick={() => handleDelete(row.original)}
+            disabled={deleteEventMutation.isPending}
+            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+            title="Delete event"
           >
-            Edit
-          </button>
-          <button
-            className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-            onClick={() => console.log('Delete event:', row.original.id)}
-          >
-            Delete
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       ),
+      size: 100,
     }),
-  ], [])
+  ], [onEdit, deleteEventMutation.isPending])
 
   const table = useReactTable({
     data,
@@ -115,29 +158,13 @@ export default function EventsTable({
 
   if (loading) {
     return (
-      <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-        <table className="min-w-full divide-y divide-gray-300">
-          <thead className="bg-gray-50">
-            <tr>
-              {columns.map((_, index) => (
-                <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {Array.from({ length: 5 }).map((_, rowIndex) => (
-              <tr key={rowIndex}>
-                {columns.map((_, colIndex) => (
-                  <td key={colIndex} className="px-6 py-4 whitespace-nowrap">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="space-y-4">
+        <div className="animate-pulse">
+          <div className="h-10 bg-gray-200 rounded mb-4"></div>
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-gray-100 rounded mb-2"></div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -154,30 +181,14 @@ export default function EventsTable({
                   <th
                     key={header.id}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    style={{ width: header.getSize() }}
                   >
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className={`flex items-center space-x-1 ${
-                          header.column.getCanSort() ? 'cursor-pointer select-none' : ''
-                        }`}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        <span>
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </span>
-                        {header.column.getCanSort() && (
-                          <span className="flex">
-                            {header.column.getIsSorted() === 'asc' ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : header.column.getIsSorted() === 'desc' ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                            )}
-                          </span>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
                         )}
-                      </div>
-                    )}
                   </th>
                 ))}
               </tr>
@@ -187,7 +198,10 @@ export default function EventsTable({
             {table.getRowModel().rows.map(row => (
               <tr key={row.id} className="hover:bg-gray-50">
                 {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 whitespace-nowrap text-sm"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -197,42 +211,19 @@ export default function EventsTable({
         </table>
       </div>
 
-      {/* Empty state */}
-      {table.getRowModel().rows.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No events found
+      {data.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <div className="text-gray-500">No events found</div>
         </div>
       )}
 
-      {/* Backend Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            Showing {(currentPage - 1) * pageSize + 1} to{' '}
-            {Math.min(currentPage * pageSize, totalItems)}{' '}
-            of {totalItems} results
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={!hasPrevious}
-            >
-              Previous
-            </button>
-            <span className="px-3 py-1 text-sm text-gray-700">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={!hasNext}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <Pager
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        totalItems={totalItems}
+        pageSize={pageSize}
+      />
     </div>
   )
 }

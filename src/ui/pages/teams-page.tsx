@@ -8,14 +8,17 @@ import { teamQueries } from '@/queries/teams'
 import { useDebounce } from '@/hooks/useDebounce'
 import TeamsTable from '@/components/ui/teams-table'
 import TeamCreateDialog from '@/components/ui/team-create-dialog'
+import TeamEditDialog from '@/components/ui/team-edit-dialog'
 import ErrorBoundary from '@/components/error-boundary'
 import QueryErrorBoundary from '@/components/query-error-boundary'
+import type { Team } from '@/types/team'
 
-function TeamsTableWrapper({ searchTerm, page, pageSize, onPageChange }: { 
+function TeamsTableWrapper({ searchTerm, page, pageSize, onPageChange, onEdit }: { 
     searchTerm: string
     page: number
     pageSize: number
     onPageChange: (page: number) => void
+    onEdit: (team: Team) => void
 }) {
     const { data } = useSuspenseQuery(teamQueries.list(searchTerm, page, pageSize))
 
@@ -50,6 +53,7 @@ function TeamsTableWrapper({ searchTerm, page, pageSize, onPageChange }: {
                     hasNext={data.has_next || false}
                     hasPrevious={data.has_previous || false}
                     onPageChange={onPageChange}
+                    onEdit={onEdit}
                 />
             </ErrorBoundary>
         </div>
@@ -61,6 +65,8 @@ export default function TeamsPage() {
     const [searchTerm, setSearchTerm] = useState('')
     const [page, setPage] = useState(0)
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+    const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
     const debouncedSearchTerm = useDebounce(searchTerm, 300)
     const pageSize = 20 // Consistent page size
 
@@ -72,6 +78,16 @@ export default function TeamsPage() {
     // Handle page changes (convert from 1-based backend to 0-based frontend)
     const handlePageChange = (newPage: number) => {
         setPage(newPage - 1) // Convert 1-based to 0-based
+    }
+
+    const handleEdit = (team: Team) => {
+        setSelectedTeam(team)
+        setIsEditDialogOpen(true)
+    }
+
+    const handleCloseEdit = () => {
+        setIsEditDialogOpen(false)
+        setSelectedTeam(null)
     }
 
     return (
@@ -139,6 +155,7 @@ export default function TeamsPage() {
                                 hasNext={false}
                                 hasPrevious={false}
                                 onPageChange={() => {}}
+                                onEdit={() => {}}
                             />
                         }>
                             <TeamsTableWrapper 
@@ -146,6 +163,7 @@ export default function TeamsPage() {
                                 page={page}
                                 pageSize={pageSize}
                                 onPageChange={handlePageChange}
+                                onEdit={handleEdit}
                             />
                         </Suspense>
                     </QueryErrorBoundary>
@@ -156,6 +174,13 @@ export default function TeamsPage() {
             <TeamCreateDialog 
                 isOpen={isCreateDialogOpen} 
                 onClose={() => setIsCreateDialogOpen(false)} 
+            />
+
+            {/* Edit Dialog */}
+            <TeamEditDialog 
+                isOpen={isEditDialogOpen} 
+                onClose={handleCloseEdit}
+                team={selectedTeam}
             />
         </div>
     )
