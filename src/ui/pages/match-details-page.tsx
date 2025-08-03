@@ -307,6 +307,7 @@ function MatchDetailsContent({ matchId }: { matchId: string }) {
                 isOpen={isAddGoalDialogOpen}
                 onClose={() => setIsAddGoalDialogOpen(false)}
                 matchId={matchId}
+                seasonId={match.season_id}
                 homeTeamId={match.home_team_id}
                 homeTeamName={match.home_team_name}
                 awayTeamId={match.away_team_id}
@@ -317,6 +318,7 @@ function MatchDetailsContent({ matchId }: { matchId: string }) {
                 isOpen={isIdentifyGoalDialogOpen}
                 onClose={() => setIsIdentifyGoalDialogOpen(false)}
                 matchId={matchId}
+                seasonId={match.season_id}
                 homeTeamId={match.home_team_id}
                 homeTeamName={match.home_team_name}
                 awayTeamId={match.away_team_id}

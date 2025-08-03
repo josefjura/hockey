@@ -7,7 +7,7 @@ const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
 // Match API functions
 export const fetchMatchList = async (
-	page: number = 0, 
+	page: number = 0,
 	filters: {
 		searchTerm?: string;
 		seasonId?: string;
@@ -87,7 +87,7 @@ export const createMatch = async (matchData: CreateMatchRequest): Promise<{ id: 
 
 export const updateMatch = async (id: string, matchData: UpdateMatchRequest): Promise<string> => {
 	const requestBody: Record<string, any> = {};
-	
+
 	if (matchData.season_id !== undefined) requestBody.season_id = parseInt(matchData.season_id);
 	if (matchData.home_team_id !== undefined) requestBody.home_team_id = parseInt(matchData.home_team_id);
 	if (matchData.away_team_id !== undefined) requestBody.away_team_id = parseInt(matchData.away_team_id);
@@ -185,6 +185,16 @@ export const deleteScoreEvent = async (matchId: string, eventId: string): Promis
 	return response.json();
 };
 
+export const fetchPlayersForTeamSeason = async (seasonId: string, teamId: string): Promise<Array<{ id: number, name: string, nationality: string }>> => {
+	const response = await fetch(`${API_URL}/season/${seasonId}/team/${teamId}/players`);
+	if (!response.ok) {
+		const errorText = await response.text();
+		console.error(`Failed to fetch players for season ${seasonId}, team ${teamId}:`, response.status, errorText);
+		throw new Error(`Failed to fetch players: ${response.status} ${response.statusText}`);
+	}
+	return response.json();
+};
+
 // Query configurations
 export const matchQueries = {
 	list: (
@@ -204,26 +214,34 @@ export const matchQueries = {
 			queryFn: () => fetchMatchList(page, filters, pageSize),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
-	
+
 	byId: (id: string) =>
 		queryOptions({
 			queryKey: ['match', id],
 			queryFn: () => fetchMatchById(id),
 			staleTime: 5 * 60 * 1000,
 		}),
-	
+
 	withStats: (id: string) =>
 		queryOptions({
 			queryKey: ['match', id, 'stats'],
 			queryFn: () => fetchMatchWithStats(id),
 			staleTime: 1 * 60 * 1000, // 1 minute - stats change more frequently
 		}),
-	
+
 	scoreEvents: (matchId: string) =>
 		queryOptions({
 			queryKey: ['match', matchId, 'score-events'],
 			queryFn: () => fetchScoreEventsForMatch(matchId),
 			staleTime: 1 * 60 * 1000, // 1 minute
+		}),
+
+	rosterPlayers: (seasonId: string, teamId: string) =>
+		queryOptions({
+			queryKey: ['season', seasonId, 'team', teamId, 'players'],
+			queryFn: () => fetchPlayersForTeamSeason(seasonId, teamId),
+			staleTime: 5 * 60 * 1000, // 5 minutes
+			enabled: !!(seasonId && teamId), // Only run if both IDs are provided
 		}),
 };
 
@@ -248,7 +266,7 @@ export const useUpdateMatch = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ id, ...matchData }: { id: string } & UpdateMatchRequest) => 
+		mutationFn: ({ id, ...matchData }: { id: string } & UpdateMatchRequest) =>
 			updateMatch(id, matchData),
 		onSuccess: (data, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['matches'] });
@@ -284,7 +302,7 @@ export const useCreateScoreEvent = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ matchId, ...eventData }: { matchId: string } & CreateScoreEventRequest) => 
+		mutationFn: ({ matchId, ...eventData }: { matchId: string } & CreateScoreEventRequest) =>
 			createScoreEvent(matchId, eventData),
 		onSuccess: (data, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'score-events'] });
@@ -302,7 +320,7 @@ export const useIdentifyGoal = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ matchId, ...eventData }: { matchId: string } & CreateScoreEventRequest) => 
+		mutationFn: ({ matchId, ...eventData }: { matchId: string } & CreateScoreEventRequest) =>
 			identifyGoal(matchId, eventData),
 		onSuccess: (data, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'score-events'] });
@@ -321,7 +339,7 @@ export const useDeleteScoreEvent = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ matchId, eventId }: { matchId: string; eventId: string }) => 
+		mutationFn: ({ matchId, eventId }: { matchId: string; eventId: string }) =>
 			deleteScoreEvent(matchId, eventId),
 		onSuccess: (data, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'score-events'] });

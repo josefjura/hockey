@@ -1,16 +1,23 @@
 "use client"
 
 import { useState, useEffect, Suspense } from 'react'
-import { X, Target } from 'lucide-react'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { X, Target, Plus } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { useIdentifyGoal } from '@/queries/matches'
-import { teamQueries } from '@/queries/teams'
+import QuickAddPlayerDialog from './quick-add-player-dialog'
 import type { CreateScoreEventRequest } from '@/types/match'
+
+interface Player {
+    id: number
+    name: string
+    country_name?: string
+}
 
 interface IdentifyGoalDialogProps {
     isOpen: boolean
     onClose: () => void
     matchId: string
+    seasonId: string
     homeTeamId: string
     homeTeamName: string
     awayTeamId: string
@@ -22,6 +29,7 @@ interface IdentifyGoalDialogProps {
 function IdentifyGoalForm({ 
     onClose, 
     matchId, 
+    seasonId,
     homeTeamId, 
     homeTeamName, 
     awayTeamId, 
@@ -31,6 +39,7 @@ function IdentifyGoalForm({
 }: { 
     onClose: () => void
     matchId: string
+    seasonId: string
     homeTeamId: string
     homeTeamName: string
     awayTeamId: string
@@ -38,8 +47,6 @@ function IdentifyGoalForm({
     homeUnidentified: number
     awayUnidentified: number
 }) {
-    const { data: teamsData } = useSuspenseQuery(teamQueries.all())
-    
     const [formData, setFormData] = useState<CreateScoreEventRequest>({
         team_id: '',
         scorer_id: '',
@@ -52,7 +59,27 @@ function IdentifyGoalForm({
     })
     
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
+    
     const identifyGoalMutation = useIdentifyGoal()
+
+    // Get roster data for the selected team
+    const { data: rosterPlayers } = useQuery({
+        queryKey: ['season', seasonId, 'team', formData.team_id, 'players'],
+        queryFn: async () => {
+            if (!formData.team_id || !seasonId) return []
+            
+            const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/season/${seasonId}/team/${formData.team_id}/players`)
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return [] // No players in roster yet
+                }
+                throw new Error('Failed to fetch roster players')
+            }
+            return response.json()
+        },
+        enabled: !!formData.team_id && !!seasonId,
+    })
 
     // Reset form when component mounts
     useEffect(() => {
@@ -68,6 +95,14 @@ function IdentifyGoalForm({
         })
         setErrors({})
     }, [])
+
+    const handleQuickAddPlayer = () => {
+        if (!formData.team_id) {
+            alert('Please select a team first')
+            return
+        }
+        setIsQuickAddOpen(true)
+    }
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {}
@@ -137,8 +172,6 @@ function IdentifyGoalForm({
             }))
         }
     }
-
-    const teams = teamsData || []
     
     // Only show teams that have unidentified goals
     const availableTeams = []
@@ -149,12 +182,8 @@ function IdentifyGoalForm({
         availableTeams.push({ id: awayTeamId, name: awayTeamName, unidentified: awayUnidentified })
     }
 
-    // Get players for the selected team
-    const allPlayers = teams.flatMap(team => [
-        { id: `${team.id}-player1`, name: `Player 1 (${team.name})` },
-        { id: `${team.id}-player2`, name: `Player 2 (${team.name})` },
-        { id: `${team.id}-player3`, name: `Player 3 (${team.name})` }
-    ])
+    // Get players for the selected team from the roster
+    const availablePlayers: Player[] = rosterPlayers || []
 
     if (availableTeams.length === 0) {
         return (
@@ -300,12 +329,22 @@ function IdentifyGoalForm({
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 >
                     <option value="">Unknown/No scorer specified</option>
-                    {allPlayers.map((player) => (
+                    {availablePlayers.map((player) => (
                         <option key={player.id} value={player.id}>
                             {player.name}
                         </option>
                     ))}
                 </select>
+                {formData.team_id && (
+                    <button
+                        type="button"
+                        onClick={handleQuickAddPlayer}
+                        className="mt-2 inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Quick add player to roster
+                    </button>
+                )}
             </div>
 
             {/* Assists */}
@@ -320,12 +359,22 @@ function IdentifyGoalForm({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     >
                         <option value="">No assist</option>
-                        {allPlayers.map((player) => (
+                        {availablePlayers.map((player) => (
                             <option key={player.id} value={player.id}>
                                 {player.name}
                             </option>
                         ))}
                     </select>
+                    {formData.team_id && (
+                        <button
+                            type="button"
+                            onClick={handleQuickAddPlayer}
+                            className="mt-1 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Quick add
+                        </button>
+                    )}
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -337,12 +386,22 @@ function IdentifyGoalForm({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     >
                         <option value="">No assist</option>
-                        {allPlayers.map((player) => (
+                        {availablePlayers.map((player) => (
                             <option key={player.id} value={player.id}>
                                 {player.name}
                             </option>
                         ))}
                     </select>
+                    {formData.team_id && (
+                        <button
+                            type="button"
+                            onClick={handleQuickAddPlayer}
+                            className="mt-1 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Quick add
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -373,6 +432,15 @@ function IdentifyGoalForm({
                     )}
                 </button>
             </div>
+
+            {/* Quick Add Player Dialog */}
+            <QuickAddPlayerDialog
+                isOpen={isQuickAddOpen}
+                onClose={() => setIsQuickAddOpen(false)}
+                seasonId={seasonId}
+                teamId={formData.team_id}
+                teamName={formData.team_id === homeTeamId ? homeTeamName : awayTeamName}
+            />
         </form>
     )
 }
@@ -381,6 +449,7 @@ export default function IdentifyGoalDialog({
     isOpen, 
     onClose, 
     matchId, 
+    seasonId,
     homeTeamId, 
     homeTeamName, 
     awayTeamId, 
@@ -418,6 +487,7 @@ export default function IdentifyGoalDialog({
                     <IdentifyGoalForm 
                         onClose={onClose}
                         matchId={matchId}
+                        seasonId={seasonId}
                         homeTeamId={homeTeamId}
                         homeTeamName={homeTeamName}
                         awayTeamId={awayTeamId}

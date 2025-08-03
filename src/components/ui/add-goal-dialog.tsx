@@ -2,15 +2,16 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { X, Plus } from 'lucide-react'
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { useCreateScoreEvent } from '@/queries/matches'
-import { teamQueries } from '@/queries/teams'
+import { useQuery } from '@tanstack/react-query'
+import { useCreateScoreEvent, matchQueries } from '@/queries/matches'
+import QuickAddPlayerDialog from '@/components/ui/quick-add-player-dialog'
 import type { CreateScoreEventRequest } from '@/types/match'
 
 interface AddGoalDialogProps {
     isOpen: boolean
     onClose: () => void
     matchId: string
+    seasonId: string
     homeTeamId: string
     homeTeamName: string
     awayTeamId: string
@@ -20,6 +21,7 @@ interface AddGoalDialogProps {
 function AddGoalForm({ 
     onClose, 
     matchId, 
+    seasonId,
     homeTeamId, 
     homeTeamName, 
     awayTeamId, 
@@ -27,13 +29,12 @@ function AddGoalForm({
 }: { 
     onClose: () => void
     matchId: string
+    seasonId: string
     homeTeamId: string
     homeTeamName: string
     awayTeamId: string
     awayTeamName: string
 }) {
-    const { data: teamsData } = useSuspenseQuery(teamQueries.all())
-    
     const [formData, setFormData] = useState<CreateScoreEventRequest>({
         team_id: '',
         scorer_id: '',
@@ -46,7 +47,18 @@ function AddGoalForm({
     })
     
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
     const createScoreEventMutation = useCreateScoreEvent()
+    
+    // Get roster players for the selected team
+    const { data: rosterPlayers } = useQuery(
+        matchQueries.rosterPlayers(seasonId, formData.team_id)
+    )
+
+    // Debug logging
+    useEffect(() => {
+        console.log('AddGoalDialog - seasonId:', seasonId, 'teamId:', formData.team_id);
+    }, [seasonId, formData.team_id])
 
     // Reset form when component mounts
     useEffect(() => {
@@ -123,18 +135,14 @@ function AddGoalForm({
         }
     }
 
-    const teams = teamsData || []
     const matchTeams = [
         { id: homeTeamId, name: homeTeamName },
         { id: awayTeamId, name: awayTeamName }
     ]
 
-    // For now, we'll show all players. In a real app, you'd filter by team participation
-    const allPlayers = teams.flatMap(team => [
-        { id: `${team.id}-player1`, name: `Player 1 (${team.name})` },
-        { id: `${team.id}-player2`, name: `Player 2 (${team.name})` },
-        { id: `${team.id}-player3`, name: `Player 3 (${team.name})` }
-    ])
+    // Get current team name for quick add dialog
+    const selectedTeam = matchTeams.find(team => team.id === formData.team_id)
+    const selectedTeamName = selectedTeam?.name || ''
 
     return (
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -246,12 +254,22 @@ function AddGoalForm({
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 >
                     <option value="">Unknown/No scorer specified</option>
-                    {allPlayers.map((player) => (
+                    {rosterPlayers?.map((player) => (
                         <option key={player.id} value={player.id}>
-                            {player.name}
+                            {player.name} ({player.nationality})
                         </option>
                     ))}
                 </select>
+                {formData.team_id && (
+                    <button
+                        type="button"
+                        onClick={() => setIsQuickAddOpen(true)}
+                        className="mt-2 inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Quick add player to roster
+                    </button>
+                )}
             </div>
 
             {/* Assists */}
@@ -266,12 +284,22 @@ function AddGoalForm({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     >
                         <option value="">No assist</option>
-                        {allPlayers.map((player) => (
+                        {rosterPlayers?.map((player) => (
                             <option key={player.id} value={player.id}>
-                                {player.name}
+                                {player.name} ({player.nationality})
                             </option>
                         ))}
                     </select>
+                    {formData.team_id && (
+                        <button
+                            type="button"
+                            onClick={() => setIsQuickAddOpen(true)}
+                            className="mt-1 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Quick add
+                        </button>
+                    )}
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -283,12 +311,22 @@ function AddGoalForm({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                     >
                         <option value="">No assist</option>
-                        {allPlayers.map((player) => (
+                        {rosterPlayers?.map((player) => (
                             <option key={player.id} value={player.id}>
-                                {player.name}
+                                {player.name} ({player.nationality})
                             </option>
                         ))}
                     </select>
+                    {formData.team_id && (
+                        <button
+                            type="button"
+                            onClick={() => setIsQuickAddOpen(true)}
+                            className="mt-1 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Quick add
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -319,6 +357,15 @@ function AddGoalForm({
                     )}
                 </button>
             </div>
+
+            {/* Quick Add Player Dialog */}
+            <QuickAddPlayerDialog
+                isOpen={isQuickAddOpen}
+                onClose={() => setIsQuickAddOpen(false)}
+                seasonId={seasonId}
+                teamId={formData.team_id}
+                teamName={selectedTeamName}
+            />
         </form>
     )
 }
@@ -327,6 +374,7 @@ export default function AddGoalDialog({
     isOpen, 
     onClose, 
     matchId, 
+    seasonId,
     homeTeamId, 
     homeTeamName, 
     awayTeamId, 
@@ -362,6 +410,7 @@ export default function AddGoalDialog({
                     <AddGoalForm 
                         onClose={onClose}
                         matchId={matchId}
+                        seasonId={seasonId}
                         homeTeamId={homeTeamId}
                         homeTeamName={homeTeamName}
                         awayTeamId={awayTeamId}
