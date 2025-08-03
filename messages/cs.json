@@ -92,14 +92,52 @@
 		},
 		"quickActions": {
 			"title": "Rychlé akce",
-			"addTeam": "Přidat nový tým",
-			"addTeamDescription": "Zaregistrovat nový tým v systému",
-			"addPlayer": "Přidat nového hráče",
-			"addPlayerDescription": "Zaregistrovat nový profil hráče",
-			"createEvent": "Vytvořit událost",
-			"createEventDescription": "Nastavit nový turnaj nebo ligu",
+			"addTeam": "Rychle přidat tým",
+			"addTeamDescription": "Rychle vytvořit nový tým",
+			"addPlayer": "Rychle přidat hráče",
+			"addPlayerDescription": "Rychle vytvořit nového hráče",
+			"createEvent": "Rychle vytvořit událost",
+			"createEventDescription": "Rychle vytvořit novou událost",
 			"viewReports": "Zobrazit zprávy",
 			"viewReportsDescription": "Přístup k analytice a statistikám"
+		},
+		"quickCreate": {
+			"team": {
+				"title": "Rychle přidat tým",
+				"namePlaceholder": "Název týmu",
+				"selectCountry": "Vyberte zemi",
+				"creating": "Vytváří se...",
+				"createButton": "Vytvořit tým",
+				"cancel": "Zrušit",
+				"validation": {
+					"nameRequired": "Název týmu je povinný",
+					"countryRequired": "Země je povinná"
+				}
+			},
+			"player": {
+				"title": "Rychle přidat hráče",
+				"namePlaceholder": "Jméno hráče",
+				"selectCountry": "Vyberte zemi",
+				"creating": "Vytváří se...",
+				"createButton": "Vytvořit hráče",
+				"cancel": "Zrušit",
+				"validation": {
+					"nameRequired": "Jméno hráče je povinné",
+					"countryRequired": "Země je povinná"
+				}
+			},
+			"event": {
+				"title": "Rychle vytvořit událost",
+				"namePlaceholder": "Název události",
+				"selectCountry": "Vyberte hostitelskou zemi",
+				"creating": "Vytváří se...",
+				"createButton": "Vytvořit událost",
+				"cancel": "Zrušit",
+				"validation": {
+					"nameRequired": "Název události je povinný",
+					"countryRequired": "Hostitelská země je povinná"
+				}
+			}
 		}
 	},
 	"Management": {

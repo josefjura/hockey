@@ -92,14 +92,52 @@
 		},
 		"quickActions": {
 			"title": "Quick Actions",
-			"addTeam": "Add New Team",
-			"addTeamDescription": "Register a new team in the system",
-			"addPlayer": "Add New Player",
-			"addPlayerDescription": "Register a new player profile",
-			"createEvent": "Create Event",
-			"createEventDescription": "Set up a new tournament or league",
+			"addTeam": "Quick Add Team",
+			"addTeamDescription": "Create a new team quickly",
+			"addPlayer": "Quick Add Player",
+			"addPlayerDescription": "Create a new player quickly",
+			"createEvent": "Quick Create Event",
+			"createEventDescription": "Create a new event quickly",
 			"viewReports": "View Reports",
 			"viewReportsDescription": "Access analytics and statistics"
+		},
+		"quickCreate": {
+			"team": {
+				"title": "Quick Add Team",
+				"namePlaceholder": "Team name",
+				"selectCountry": "Select country",
+				"creating": "Creating...",
+				"createButton": "Create Team",
+				"cancel": "Cancel",
+				"validation": {
+					"nameRequired": "Team name is required",
+					"countryRequired": "Country is required"
+				}
+			},
+			"player": {
+				"title": "Quick Add Player",
+				"namePlaceholder": "Player name",
+				"selectCountry": "Select country",
+				"creating": "Creating...",
+				"createButton": "Create Player",
+				"cancel": "Cancel",
+				"validation": {
+					"nameRequired": "Player name is required",
+					"countryRequired": "Country is required"
+				}
+			},
+			"event": {
+				"title": "Quick Create Event",
+				"namePlaceholder": "Event name",
+				"selectCountry": "Select host country",
+				"creating": "Creating...",
+				"createButton": "Create Event",
+				"cancel": "Cancel",
+				"validation": {
+					"nameRequired": "Event name is required",
+					"countryRequired": "Host country is required"
+				}
+			}
 		}
 	},
 	"Management": {
