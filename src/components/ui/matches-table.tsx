@@ -154,11 +154,13 @@ export default function MatchesTable({
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm font-medium text-gray-900">
-                                        {match.home_score_unidentified} - {match.away_score_unidentified}
+                                        {match.home_score_total} - {match.away_score_total}
                                     </div>
-                                    <div className="text-xs text-gray-500">
-                                        (unidentified goals)
-                                    </div>
+                                    {(match.home_score_unidentified > 0 || match.away_score_unidentified > 0) && (
+                                        <div className="text-xs text-gray-500">
+                                            ({match.home_score_unidentified} - {match.away_score_unidentified} unidentified)
+                                        </div>
+                                    )}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center space-x-1">

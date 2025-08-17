@@ -5,6 +5,8 @@ export interface Match {
 	away_team_id: string;
 	home_score_unidentified: number;
 	away_score_unidentified: number;
+	home_score_total: number;
+	away_score_total: number;
 	match_date: string | null;
 	status: string;
 	venue: string | null;

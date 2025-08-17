@@ -14,8 +14,8 @@ interface MatchCreateDialogProps {
 }
 
 function MatchCreateForm({ onClose }: { onClose: () => void }) {
-    const teamsData = useSuspenseQuery(teamQueries.all())
-    const seasonsData = useSuspenseQuery(seasonQueries.all())
+    const { data: teamsData } = useSuspenseQuery(teamQueries.all())
+    const { data: seasonsData } = useSuspenseQuery(seasonQueries.all())
     
     const [formData, setFormData] = useState<CreateMatchRequest>({
         season_id: '',
