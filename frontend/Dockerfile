@@ -4,8 +4,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile --production
 
 # Build stage
 FROM node:20-alpine AS builder
@@ -19,7 +19,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Runtime stage
 FROM node:20-alpine AS runner
