@@ -1,6 +1,19 @@
-# Hockey Management System - Frontend
+# Hockey Management System - Monorepo
 
-A modern web application for managing hockey tournaments, teams, players, and seasons built with Next.js 15.
+A modern full-stack web application for managing hockey tournaments, teams, players, and seasons. Built with a Rust backend API and Next.js frontend.
+
+## 🏗️ Project Structure
+
+This is a monorepo containing:
+
+- **Frontend**: Next.js 15 application with TypeScript and Tailwind CSS
+- **Backend**: Rust API server with SQLx and Axum
+
+```
+├── frontend/           # Next.js frontend application
+├── backend/           # Rust API server
+└── .github/workflows/ # CI/CD pipelines
+```
 
 ## 🚀 Features
 
@@ -11,9 +24,11 @@ A modern web application for managing hockey tournaments, teams, players, and se
 - **Form Validation** with real-time feedback
 - **Search & Pagination** for all data tables
 - **Authentication System** with session management
+- **RESTful API** with OpenAPI documentation
 
 ## 🛠️ Tech Stack
 
+### Frontend
 - **Framework**: [Next.js 15](https://nextjs.org/) with App Router
 - **Language**: TypeScript
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
@@ -21,7 +36,35 @@ A modern web application for managing hockey tournaments, teams, players, and se
 - **State Management**: [TanStack Query](https://tanstack.com/query) for server state
 - **Forms**: [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) validation
 - **Internationalization**: [next-intl](https://next-intl-docs.vercel.app/)
-- **UI Components**: [Headless UI](https://headlessui.com/)
+
+### Backend
+- **Framework**: [Axum](https://github.com/tokio-rs/axum) for async web server
+- **Language**: Rust (edition 2021)
+- **Database**: SQLite with [SQLx](https://github.com/launchbadge/sqlx)
+- **Authentication**: bcrypt for password hashing
+- **API Documentation**: [aide](https://github.com/tamasfe/aide) for OpenAPI
+- **Validation**: Serde for JSON serialization
+
+## 🐳 CI/CD & Deployment
+
+The project uses GitHub Actions for automated building and deployment:
+
+### Docker Images
+- **Frontend**: Built and pushed to `ghcr.io/josefjura/hockey/frontend`
+- **Backend**: Built and pushed to `ghcr.io/josefjura/hockey/backend`
+
+### Build Process
+- Automated builds on push to `master` branch
+- Multi-stage Docker builds for optimized images
+- Container registry with GitHub Container Registry
+- Signed container images with cosign
+
+### Recent Fixes Applied
+- ✅ Fixed Next.js async params type compatibility
+- ✅ Resolved Docker build context and Dockerfile location issues  
+- ✅ Removed SQLx compile-time macros for offline builds
+- ✅ Updated to Rust nightly for edition2024 dependency support
+- ✅ Fixed git submodule configuration issues
 
 ## 📋 Prerequisites
 
@@ -30,36 +73,57 @@ A modern web application for managing hockey tournaments, teams, players, and se
 
 ## 🚀 Getting Started
 
-### Installation
+### Prerequisites
+- Node.js 18+ (for frontend)
+- Rust 1.81+ or nightly (for backend)
+- SQLite (for database)
 
+### Development Setup
+
+#### Backend API Server
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd hockey/frontend
+cd backend
+
+# Install dependencies and run migrations
+cargo run
+
+# API will be available at http://localhost:8080
+# OpenAPI docs at http://localhost:8080/api-docs
+```
+
+#### Frontend Application
+```bash
+cd frontend
 
 # Install dependencies
 yarn install
 
 # Start development server
 yarn dev
+
+# App will be available at http://localhost:3000
 ```
 
-The application will be available at `http://localhost:3000`
+### Production Build
 
-### Development Commands
-
+#### Using Docker
 ```bash
-# Development server with Turbopack
-yarn dev
+# Build backend
+docker build -t hockey-backend ./backend
 
-# Build for production  
+# Build frontend  
+docker build -t hockey-frontend ./frontend
+```
+
+#### Manual Build
+```bash
+# Backend
+cd backend
+cargo build --release
+
+# Frontend
+cd frontend
 yarn build
-
-# Start production server
-yarn start
-
-# Run linting
-yarn lint
 ```
 
 ## 🔐 Authentication
@@ -112,10 +176,46 @@ The application uses a consistent design system with:
 
 ## 🔧 Environment Variables
 
+### Frontend (.env.local)
 ```bash
 NEXTAUTH_SECRET=your-nextauth-secret
 NEXTAUTH_URL=http://localhost:3000
 BACKEND_URL=http://localhost:8080
+```
+
+### Backend (.env)
+```bash
+DATABASE_URL=sqlite:./database.db
+RUST_LOG=info
+```
+
+## 🚨 Troubleshooting
+
+### Common Build Issues
+
+#### "Type 'MatchDetailsProps' does not satisfy the constraint 'PageProps'"
+- **Cause**: Next.js 13+ requires async params in page components
+- **Solution**: Use `params: Promise<{ id: string }>` and await the params
+
+#### "failed to read dockerfile: open Dockerfile: no such file or directory"
+- **Cause**: Docker build context or file path issues
+- **Solution**: Ensure workflow uses correct context and file paths
+
+#### "feature `edition2024` is required"
+- **Cause**: Dependencies using experimental Rust edition
+- **Solution**: Use Rust nightly or downgrade dependencies to edition2021
+
+#### SQLx macro errors during Docker build
+- **Cause**: SQLx macros require database access at compile time
+- **Solution**: Replace with regular `sqlx::query_as()` calls with `.bind()`
+
+### Git Submodule Issues
+If you encounter submodule errors:
+```bash
+# Remove broken submodule entry
+git rm --cached backend
+git add backend/
+git commit -m "Fix: Convert submodule to regular directory"
 ```
 
 ## 🏗️ Architecture Patterns
