@@ -1,0 +1,34 @@
+# Hockey Backend with MinIO Storage
+version: '3.8'
+
+services:
+  server:
+    build: .
+    container_name: hockey-backend
+    env_file:
+      - .env
+    ports:
+      - 3001:3001
+    # Backend doesn't need to wait for MinIO - frontend handles uploads directly
+
+  minio:
+    image: minio/minio:latest
+    container_name: hockey-minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin123}
+    ports:
+      - "9000:9000"   # MinIO API
+      - "9001:9001"   # MinIO Console (Web UI)
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  minio_data:

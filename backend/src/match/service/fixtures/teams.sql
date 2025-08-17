@@ -1,0 +1,1 @@
+INSERT INTO team (name, country_id, logo_path) VALUES ('Team A', 1, NULL), (NULL, 2, NULL);

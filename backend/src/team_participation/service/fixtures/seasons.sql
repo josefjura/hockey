@@ -1,0 +1,1 @@
+INSERT INTO season (year, display_name, event_id) VALUES (2024, '2024 Season', 1), (2025, NULL, 2);
