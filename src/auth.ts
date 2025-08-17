@@ -4,6 +4,7 @@ import { getUserFromDb } from "@/utils/password"
 import type { NextAuthConfig } from "next-auth"
 
 export const config = {
+	secret: process.env.NEXTAUTH_SECRET,
 	providers: [
 		Credentials({
 			credentials: {
