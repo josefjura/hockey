@@ -7,7 +7,6 @@
 
 # Rust build artifacts
 target/
-Cargo.lock
 
 # Environment files
 .env
