@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.81-alpine AS builder
+FROM rustlang/rust:nightly-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache musl-dev
@@ -30,7 +30,7 @@ RUN apk add --no-cache ca-certificates
 
 # Create non-root user
 RUN addgroup -g 1001 -S appuser && \
-    adduser -S appuser -u 1001 -G appuser
+	adduser -S appuser -u 1001 -G appuser
 
 # Create data directory
 RUN mkdir -p /app/data && chown appuser:appuser /app/data
