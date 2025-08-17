@@ -34,18 +34,18 @@ function MatchScoreboard({ match, stats }: { match: Match; stats: MatchWithStats
         }
     }
 
-    const getStatusColor = (status: string) => {
+    const getStatusVariant = (status: string) => {
         switch (status.toLowerCase()) {
             case 'scheduled':
-                return 'blue'
+                return 'info'
             case 'in_progress':
-                return 'yellow'
+                return 'warning'
             case 'finished':
-                return 'green'
+                return 'success'
             case 'cancelled':
-                return 'red'
+                return 'error'
             default:
-                return 'gray'
+                return 'default'
         }
     }
 
@@ -103,7 +103,7 @@ function MatchScoreboard({ match, stats }: { match: Match; stats: MatchWithStats
                 {/* VS and Status */}
                 <div className="text-center">
                     <div className="text-xl text-blue-200 mb-2">VS</div>
-                    <Badge color={getStatusColor(match.status)} className="text-lg px-4 py-2">
+                    <Badge variant={getStatusVariant(match.status)} className="text-lg px-4 py-2">
                         {getStatusDisplay(match.status)}
                     </Badge>
                 </div>

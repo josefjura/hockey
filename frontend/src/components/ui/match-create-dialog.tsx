@@ -61,10 +61,10 @@ function MatchCreateForm({ onClose }: { onClose: () => void }) {
         if (formData.home_team_id === formData.away_team_id) {
             newErrors.away_team_id = 'Away team must be different from home team'
         }
-        if (formData.home_score_unidentified < 0) {
+        if (formData.home_score_unidentified !== undefined && formData.home_score_unidentified < 0) {
             newErrors.home_score_unidentified = 'Score cannot be negative'
         }
-        if (formData.away_score_unidentified < 0) {
+        if (formData.away_score_unidentified !== undefined && formData.away_score_unidentified < 0) {
             newErrors.away_score_unidentified = 'Score cannot be negative'
         }
 
@@ -191,7 +191,7 @@ function MatchCreateForm({ onClose }: { onClose: () => void }) {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs text-gray-600 mb-1">
-                            {formData.home_team_id ? teams.find(t => t.id === formData.home_team_id)?.name || 'Home Team' : 'Home Team'}
+                            {formData.home_team_id ? teams.find(t => t.id === parseInt(formData.home_team_id))?.name || 'Home Team' : 'Home Team'}
                         </label>
                         <input
                             type="number"
@@ -208,7 +208,7 @@ function MatchCreateForm({ onClose }: { onClose: () => void }) {
                     </div>
                     <div>
                         <label className="block text-xs text-gray-600 mb-1">
-                            {formData.away_team_id ? teams.find(t => t.id === formData.away_team_id)?.name || 'Away Team' : 'Away Team'}
+                            {formData.away_team_id ? teams.find(t => t.id === parseInt(formData.away_team_id))?.name || 'Away Team' : 'Away Team'}
                         </label>
                         <input
                             type="number"

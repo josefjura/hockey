@@ -85,7 +85,7 @@ export default function MatchEditDialog({ isOpen, onClose, match }: MatchEditDia
                 if (value !== undefined && value !== '' && value !== null) {
                     if (key === 'match_date' && value) {
                         // Convert datetime-local to ISO string
-                        updateData[key as keyof UpdateMatchRequest] = new Date(value as string).toISOString()
+                        (updateData as Record<string, unknown>)[key] = new Date(value as string).toISOString()
                     } else {
                         (updateData as Record<string, unknown>)[key] = value
                     }

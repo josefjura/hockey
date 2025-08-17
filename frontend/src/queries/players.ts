@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
 // Validation function for paginated response
-const validatePaginatedResponse = <T>(data: any): PaginatedResponse<T> => {
+const validatePaginatedResponse = <T>(data: unknown): PaginatedResponse<T> => {
 	if (!data || typeof data !== 'object') {
 		throw new Error('API response is not an object');
 	}
@@ -23,7 +23,7 @@ const validatePaginatedResponse = <T>(data: any): PaginatedResponse<T> => {
 		}
 	}
 	
-	if (!Array.isArray(data.items)) {
+	if (!Array.isArray((data as Record<string, unknown>).items)) {
 		throw new Error('API response items field is not an array');
 	}
 	

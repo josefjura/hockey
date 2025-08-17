@@ -69,13 +69,13 @@ export default function EventEditDialog({ isOpen, onClose, event }: EventEditDia
 
     try {
       await updateEventMutation.mutateAsync({
-        id: event.id,
+        id: parseInt(event.id),
         name: data.name,
         country_id: data.country_id || null,
       })
       onClose()
       reset()
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }

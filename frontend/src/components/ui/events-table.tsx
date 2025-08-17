@@ -40,8 +40,6 @@ export default function EventsTable({
   currentPage,
   pageSize,
   totalPages,
-  hasNext,
-  hasPrevious,
   onPageChange,
   onEdit
 }: EventsTableProps) {
@@ -49,11 +47,11 @@ export default function EventsTable({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const deleteEventMutation = useDeleteEvent()
 
-  const handleDelete = async (event: Event) => {
+  const handleDelete = React.useCallback(async (event: Event) => {
     if (window.confirm(`Are you sure you want to delete event "${event.name}"?`)) {
-      deleteEventMutation.mutate(event.id)
+      deleteEventMutation.mutate(parseInt(event.id))
     }
-  }
+  }, [deleteEventMutation])
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {
@@ -140,7 +138,7 @@ export default function EventsTable({
       ),
       size: 100,
     }),
-  ], [onEdit, deleteEventMutation.isPending])
+  ], [onEdit, deleteEventMutation.isPending, handleDelete])
 
   const table = useReactTable({
     data,

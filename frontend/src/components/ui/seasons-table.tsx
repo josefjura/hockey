@@ -38,8 +38,6 @@ export default function SeasonsTable({
   currentPage,
   pageSize,
   totalPages,
-  hasNext,
-  hasPrevious,
   onPageChange,
   onEdit
 }: SeasonsTableProps) {
@@ -47,11 +45,11 @@ export default function SeasonsTable({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const deleteSeasonMutation = useDeleteSeason()
 
-  const handleDelete = async (season: Season) => {
+  const handleDelete = React.useCallback(async (season: Season) => {
     if (window.confirm(`Are you sure you want to delete season ${season.year}${season.display_name ? ` "${season.display_name}"` : ''}?`)) {
       deleteSeasonMutation.mutate(season.id)
     }
-  }
+  }, [deleteSeasonMutation])
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {
@@ -137,7 +135,7 @@ export default function SeasonsTable({
       ),
       size: 100,
     }),
-  ], [onEdit, deleteSeasonMutation.isPending])
+  ], [onEdit, deleteSeasonMutation.isPending, handleDelete])
 
   const table = useReactTable({
     data,

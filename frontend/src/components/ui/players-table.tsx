@@ -40,8 +40,6 @@ export default function PlayersTable({
   currentPage,
   pageSize,
   totalPages,
-  hasNext,
-  hasPrevious,
   onPageChange,
   onEdit
 }: PlayersTableProps) {
@@ -50,11 +48,11 @@ export default function PlayersTable({
   
   const deletePlayerMutation = useDeletePlayer()
 
-  const handleDeletePlayer = (player: Player) => {
+  const handleDeletePlayer = React.useCallback((player: Player) => {
     if (window.confirm(`Are you sure you want to delete player "${player.name}"?`)) {
       deletePlayerMutation.mutate(player.id)
     }
-  }
+  }, [deletePlayerMutation])
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {
@@ -138,7 +136,7 @@ export default function PlayersTable({
       ),
       size: 100,
     }),
-  ], [onEdit, deletePlayerMutation.isPending])
+  ], [onEdit, deletePlayerMutation.isPending, handleDeletePlayer])
 
   const table = useReactTable({
     data: data || [],

@@ -13,6 +13,7 @@
 # Build outputs
 **/target/           # Rust builds
 **/.next/            # Next.js builds
+frontend/.next/      # Next.js builds (explicit)
 **/out/              # Next.js exports
 **/build/            # General builds
 **/dist/             # Distribution builds

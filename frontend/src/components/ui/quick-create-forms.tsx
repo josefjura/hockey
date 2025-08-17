@@ -4,28 +4,27 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Users, Activity, Trophy, Check, AlertCircle } from 'lucide-react'
+import { Users, Activity, Trophy } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { countryQueries } from '@/queries/countries'
 import { useCreateTeam } from '@/queries/teams'
 import { useCreatePlayer } from '@/queries/players'
 import { useCreateEvent } from '@/queries/events'
-import { getCountryFlag } from '@/utils/countryFlag'
-import Image from 'next/image'
+// Removed unused imports
 
 // Validation schemas - we'll create these inside components to access translations
-const createQuickTeamSchema = (t: any) => z.object({
+const createQuickTeamSchema = (t: (key: string) => string) => z.object({
   name: z.string().min(1, t('Dashboard.quickCreate.team.validation.nameRequired')),
   country_id: z.string().min(1, t('Dashboard.quickCreate.team.validation.countryRequired')),
 })
 
-const createQuickPlayerSchema = (t: any) => z.object({
+const createQuickPlayerSchema = (t: (key: string) => string) => z.object({
   name: z.string().min(1, t('Dashboard.quickCreate.player.validation.nameRequired')),
   country_id: z.string().min(1, t('Dashboard.quickCreate.player.validation.countryRequired')),
 })
 
-const createQuickEventSchema = (t: any) => z.object({
+const createQuickEventSchema = (t: (key: string) => string) => z.object({
   name: z.string().min(1, t('Dashboard.quickCreate.event.validation.nameRequired')),
   country_id: z.string().min(1, t('Dashboard.quickCreate.event.validation.countryRequired')),
 })
@@ -58,7 +57,7 @@ export function QuickCreateTeam({ onSuccess }: QuickCreateTeamProps) {
       reset()
       setIsExpanded(false)
       onSuccess?.()
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }
@@ -161,7 +160,7 @@ export function QuickCreatePlayer({ onSuccess }: QuickCreateTeamProps) {
       reset()
       setIsExpanded(false)
       onSuccess?.()
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }
@@ -264,7 +263,7 @@ export function QuickCreateEvent({ onSuccess }: QuickCreateTeamProps) {
       reset()
       setIsExpanded(false)
       onSuccess?.()
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }

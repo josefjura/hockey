@@ -18,7 +18,7 @@ function SeasonsTableWrapper({ searchTerm, eventId, page, pageSize, onPageChange
     page: number
     pageSize: number
     onPageChange: (page: number) => void
-    onEdit?: (season: any) => void
+    onEdit?: (season: unknown) => void
 }) {
     const { data } = useSuspenseQuery(seasonQueries.list(searchTerm, eventId, page, pageSize))
 
@@ -83,7 +83,7 @@ export default function SeasonsPage() {
     }
 
     // Handle edit (placeholder for future implementation)
-    const handleEdit = (season: any) => {
+    const handleEdit = (season: unknown) => {
         // TODO: Implement edit functionality
         console.log('Edit season:', season)
     }

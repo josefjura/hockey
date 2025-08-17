@@ -77,7 +77,7 @@ export default function PlayerEditDialog({ isOpen, onClose, player }: PlayerEdit
       })
       onClose()
       reset()
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }

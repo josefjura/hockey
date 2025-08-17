@@ -69,13 +69,13 @@ export default function TeamEditDialog({ isOpen, onClose, team }: TeamEditDialog
 
     try {
       await updateTeamMutation.mutateAsync({
-        id: team.id,
+        id: parseInt(team.id),
         name: data.name || null,
         country_id: data.country_id,
       })
       onClose()
       reset()
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }

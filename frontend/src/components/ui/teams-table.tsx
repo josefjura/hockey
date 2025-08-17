@@ -40,8 +40,6 @@ export default function TeamsTable({
   currentPage,
   pageSize,
   totalPages,
-  hasNext,
-  hasPrevious,
   onPageChange,
   onEdit
 }: TeamsTableProps) {
@@ -49,11 +47,11 @@ export default function TeamsTable({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const deleteTeamMutation = useDeleteTeam()
 
-  const handleDelete = async (team: Team) => {
+  const handleDelete = React.useCallback(async (team: Team) => {
     if (window.confirm(`Are you sure you want to delete team "${team.name || 'National Team'}"?`)) {
-      deleteTeamMutation.mutate(team.id)
+      deleteTeamMutation.mutate(parseInt(team.id))
     }
-  }
+  }, [deleteTeamMutation])
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {
@@ -137,7 +135,7 @@ export default function TeamsTable({
       ),
       size: 100,
     }),
-  ], [onEdit, deleteTeamMutation.isPending])
+  ], [onEdit, deleteTeamMutation.isPending, handleDelete])
 
   const table = useReactTable({
     data,

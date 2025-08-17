@@ -26,8 +26,6 @@ export default function MatchesTable({
     loading = false,
     currentPage,
     totalPages,
-    hasNext,
-    hasPrevious,
     onPageChange,
     onEdit,
     onViewDetails,
@@ -57,18 +55,18 @@ export default function MatchesTable({
         }
     }
 
-    const getStatusBadgeColor = (status: string) => {
+    const getStatusBadgeVariant = (status: string) => {
         switch (status.toLowerCase()) {
             case 'scheduled':
-                return 'blue'
+                return 'info'
             case 'in_progress':
-                return 'yellow'
+                return 'warning'
             case 'finished':
-                return 'green'
+                return 'success'
             case 'cancelled':
-                return 'red'
+                return 'error'
             default:
-                return 'gray'
+                return 'default'
         }
     }
 
@@ -177,7 +175,7 @@ export default function MatchesTable({
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <Badge color={getStatusBadgeColor(match.status)}>
+                                    <Badge variant={getStatusBadgeVariant(match.status)}>
                                         {getStatusDisplay(match.status)}
                                     </Badge>
                                 </td>
@@ -226,8 +224,6 @@ export default function MatchesTable({
             <Pager
                 currentPage={currentPage}
                 totalPages={totalPages}
-                hasNext={hasNext}
-                hasPrevious={hasPrevious}
                 onPageChange={onPageChange}
             />
         </div>

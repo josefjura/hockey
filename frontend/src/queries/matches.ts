@@ -86,7 +86,7 @@ export const createMatch = async (matchData: CreateMatchRequest): Promise<{ id: 
 };
 
 export const updateMatch = async (id: string, matchData: UpdateMatchRequest): Promise<string> => {
-	const requestBody: Record<string, any> = {};
+	const requestBody: Record<string, unknown> = {};
 
 	if (matchData.season_id !== undefined) requestBody.season_id = parseInt(matchData.season_id);
 	if (matchData.home_team_id !== undefined) requestBody.home_team_id = parseInt(matchData.home_team_id);
@@ -251,7 +251,7 @@ export const useCreateMatch = () => {
 
 	return useMutation({
 		mutationFn: createMatch,
-		onSuccess: (data, variables) => {
+		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['matches'] });
 			toast.success(`Match created successfully`);
 		},
@@ -322,7 +322,7 @@ export const useIdentifyGoal = () => {
 	return useMutation({
 		mutationFn: ({ matchId, ...eventData }: { matchId: string } & CreateScoreEventRequest) =>
 			identifyGoal(matchId, eventData),
-		onSuccess: (data, variables) => {
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'score-events'] });
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'stats'] });
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId] });
