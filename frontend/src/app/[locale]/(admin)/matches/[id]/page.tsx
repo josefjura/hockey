@@ -1,9 +1,10 @@
 import MatchDetailsPage from "@/ui/pages/match-details-page";
 
 interface MatchDetailsProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
-export default function MatchDetails({ params }: MatchDetailsProps) {
-  return <MatchDetailsPage matchId={params.id} />;
+export default async function MatchDetails({ params }: MatchDetailsProps) {
+  const { id } = await params;
+  return <MatchDetailsPage matchId={id} />;
 }
