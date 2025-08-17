@@ -1,15 +1,13 @@
 name: Backend Deployment
 
 on:
-  release:
-    types: [published]
   workflow_dispatch: # Allow manual triggers
   push:
+    branches:
+      - master
     paths:
       - 'backend/**'
-    branches:
-      - main
-      - master
+      - '.github/workflows/backend-deploy.yml'  # Rebuild if workflow changes
 
 env:
   REGISTRY: ghcr.io

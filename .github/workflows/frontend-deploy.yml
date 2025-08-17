@@ -1,15 +1,13 @@
 name: Frontend Deployment
 
 on:
-  release:
-    types: [published]
   workflow_dispatch: # Allow manual triggers
   push:
+    branches:
+      - master
     paths:
       - 'frontend/**'
-    branches:
-      - main
-      - master
+      - '.github/workflows/frontend-deploy.yml'  # Rebuild if workflow changes
 
 env:
   REGISTRY: ghcr.io
