@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --production
+RUN yarn install --frozen-lockfile
 
 # Build stage
 FROM node:20-alpine AS builder
@@ -16,7 +16,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Disable Next.js telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
 RUN yarn build
@@ -44,11 +44,11 @@ USER nextjs
 EXPOSE 3000
 
 # Set hostname to listen on all interfaces
-ENV HOSTNAME "0.0.0.0"
-ENV PORT 3000
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 
 # Disable Next.js telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Run the application with dumb-init
 CMD ["dumb-init", "node", "server.js"]
