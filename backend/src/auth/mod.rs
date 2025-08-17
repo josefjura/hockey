@@ -27,7 +27,7 @@ pub struct LoginResponse {
     pub token: String,
 }
 
-#[derive(Debug, Serialize, JsonSchema)]
+#[derive(Debug, Serialize, JsonSchema, sqlx::FromRow)]
 pub struct User {
     pub id: Option<i64>,
     pub email: String,

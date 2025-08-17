@@ -12,20 +12,21 @@ pub async fn authenticate_user(
     email: &str,
     password: &str,
 ) -> Result<User, AppError> {
-    let user = sqlx::query_as!(
-        User,
+    let user = sqlx::query_as::<_, User>(
         "SELECT id, email, name FROM users WHERE email = ?",
-        email
     )
+    .bind(email)
     .fetch_optional(db)
     .await?;
 
     let user = user.ok_or_else(|| AppError::unauthorized())?;
 
-    let password_hash: String =
-        sqlx::query_scalar!("SELECT password_hash FROM users WHERE email = ?", email)
-            .fetch_one(db)
-            .await?;
+    let password_hash: String = sqlx::query_scalar(
+        "SELECT password_hash FROM users WHERE email = ?"
+    )
+    .bind(email)
+    .fetch_one(db)
+    .await?;
 
     if !verify(password, &password_hash)? {
         return Err(AppError::unauthorized());

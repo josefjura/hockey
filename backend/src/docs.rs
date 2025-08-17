@@ -48,7 +48,7 @@ async fn serve_docs(Extension(api): Extension<Arc<OpenApi>>) -> impl IntoApiResp
 pub fn api_docs(api: TransformOpenApi) -> TransformOpenApi {
     api.title("Jura Hockey API")
         .summary("Hockey games and players catalogization API")
-        .description(include_str!("../README.md"))
+        .description("Hockey games and players catalogization API")
         .tag(Tag {
             name: "event".into(),
             description: Some("Event Management".into()),
