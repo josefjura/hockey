@@ -1,9 +1,9 @@
+import { API_URL } from "@/lib/config";
 import { Match, MatchWithStats, ScoreEvent, CreateMatchRequest, UpdateMatchRequest, CreateScoreEventRequest } from "@/types/match";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
-const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
 // Match API functions
 export const fetchMatchList = async (

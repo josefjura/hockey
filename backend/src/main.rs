@@ -1,7 +1,9 @@
 use anyhow::Context;
 use clap::Parser;
 use dotenvy::dotenv;
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::ConnectOptions;
+use std::str::FromStr;
 
 use crate::config::Config;
 
@@ -38,11 +40,22 @@ async fn main() -> Result<(), anyhow::Error> {
 
     aide::generate::extract_schemas(true);
 
+    // Set up SQLite connection options with auto-creation
+    let connection_options = SqliteConnectOptions::from_str(&config.database_url)?
+        .create_if_missing(true)
+        .log_statements(tracing::log::LevelFilter::Debug);
+
     let db = SqlitePoolOptions::new()
         .max_connections(50)
-        .connect(&config.database_url)
+        .connect_with(connection_options)
         .await
         .context("could not connect to database_url")?;
+
+    // Run migrations
+    sqlx::migrate!("./migrations")
+        .run(&db)
+        .await
+        .context("could not run database migrations")?;
 
     http::serve(config, db).await;
 

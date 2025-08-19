@@ -16,8 +16,9 @@ RUN mkdir src && echo "fn main() {}" > src/main.rs
 # Build dependencies (this layer will be cached)
 RUN cargo build --release && rm -f target/release/deps/jura_hockey*
 
-# Copy source code
+# Copy source code and migrations
 COPY src ./src
+COPY migrations ./migrations
 
 # Build the application
 RUN cargo build --release
@@ -35,8 +36,9 @@ RUN addgroup -g 1001 -S appuser && \
 # Create data directory
 RUN mkdir -p /app/data && chown appuser:appuser /app/data
 
-# Copy binary from builder stage
+# Copy binary and migrations from builder stage
 COPY --from=builder /app/target/release/jura_hockey /usr/local/bin/jura_hockey
+COPY --from=builder /app/migrations /app/migrations
 
 # Switch to non-root user
 USER appuser

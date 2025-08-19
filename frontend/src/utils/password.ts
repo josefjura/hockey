@@ -1,3 +1,5 @@
+import { API_URL } from "@/lib/config";
+
 // Note: This is a simple implementation for demo purposes
 // In production, password hashing should be done on the server side
 export function saltAndHashPassword(password: string): string {
@@ -15,9 +17,8 @@ interface User {
 
 export async function getUserFromDb(email: string, passwordHash: string): Promise<User | null> {
 	try {
-		const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8080';
 		// Call the backend login endpoint
-		const response = await fetch(`${backendUrl}/auth/login`, {
+		const response = await fetch(`${API_URL}/auth/login`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

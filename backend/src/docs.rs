@@ -2,14 +2,14 @@ use std::sync::Arc;
 
 use aide::{
     axum::{
-        ApiRouter, IntoApiResponse,
         routing::{get, get_with},
+        ApiRouter, IntoApiResponse,
     },
     openapi::{OpenApi, Tag},
     scalar::Scalar,
     transform::TransformOpenApi,
 };
-use axum::{Extension, Json, response::IntoResponse};
+use axum::{response::IntoResponse, Extension, Json};
 use uuid::Uuid;
 
 pub fn docs_routes() -> ApiRouter {

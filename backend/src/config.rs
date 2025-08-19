@@ -12,7 +12,7 @@
 /// directory where the application is started.
 ///
 /// See `.env.sample` in the repository root for details.
-#[derive(clap::Parser)]
+#[derive(clap::Parser, Clone)]
 pub struct Config {
     /// The connection URL for the Postgres database this application should use.
     #[clap(long, env)]
@@ -32,4 +32,17 @@ pub struct Config {
     /// The port to bind the server to.
     #[clap(long, env, default_value = "8080")]
     pub port: u16,
+
+    /// CORS allowed origins (comma-separated list or "*" for all)
+    /// Example: "http://localhost:3000,http://localhost:4000,https://yourdomain.com"
+    #[clap(long, env, default_value = "*")]
+    pub cors_origins: String,
+
+    /// CORS allowed methods (comma-separated list)
+    #[clap(long, env, default_value = "GET,POST,PUT,DELETE,OPTIONS")]
+    pub cors_methods: String,
+
+    /// CORS allowed headers (comma-separated list or "*" for all)
+    #[clap(long, env, default_value = "*")]
+    pub cors_headers: String,
 }

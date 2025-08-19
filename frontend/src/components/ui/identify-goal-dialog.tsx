@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense } from 'react'
+import { API_URL } from "@/lib/config"
 import { X, Target, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useIdentifyGoal } from '@/queries/matches'
@@ -69,7 +70,7 @@ function IdentifyGoalForm({
         queryFn: async () => {
             if (!formData.team_id || !seasonId) return []
             
-            const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8080'}/season/${seasonId}/team/${formData.team_id}/players`)
+            const response = await fetch(`${API_URL}/season/${seasonId}/team/${formData.team_id}/players`)
             if (!response.ok) {
                 if (response.status === 404) {
                     return [] // No players in roster yet

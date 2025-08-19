@@ -15,8 +15,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Disable Next.js telemetry
+# Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME="0.0.0.0"
 
 # Build the application
 RUN yarn build
@@ -45,7 +46,6 @@ EXPOSE 3000
 
 # Set hostname to listen on all interfaces
 ENV HOSTNAME="0.0.0.0"
-ENV PORT=3000
 
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1

@@ -1,0 +1,19 @@
+# Docker ignore file for root directory
+.env
+.env.local
+.env.*.local
+.git
+.gitignore
+README.md
+docker-compose*.yaml
+.dockerignore
+
+# Backend specific (when building from root)
+backend/target/
+backend/.env
+
+# Frontend specific (when building from root)  
+frontend/node_modules/
+frontend/.next/
+frontend/.env*
+frontend/out/

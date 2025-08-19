@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use aide::{axum::ApiRouter, openapi::OpenApi};
-use axum::Extension;
+use axum::{Extension, http::Method};
 use sqlx::SqlitePool;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
@@ -37,6 +37,60 @@ impl ApiContext {
     }
 }
 
+fn create_cors_layer(config: &Config) -> CorsLayer {
+    let mut cors = CorsLayer::new();
+    
+    // Configure origins
+    if config.cors_origins == "*" {
+        cors = cors.allow_origin(Any);
+    } else {
+        let origins: Result<Vec<_>, _> = config.cors_origins
+            .split(',')
+            .map(|s| s.trim().parse::<axum::http::HeaderValue>())
+            .collect();
+        if let Ok(origins) = origins {
+            cors = cors.allow_origin(origins);
+        } else {
+            tracing::warn!("Invalid CORS origins configuration, falling back to allowing any origin");
+            cors = cors.allow_origin(Any);
+        }
+    }
+    
+    // Configure methods
+    if config.cors_methods == "*" {
+        cors = cors.allow_methods(Any);
+    } else {
+        let methods: Result<Vec<_>, _> = config.cors_methods
+            .split(',')
+            .map(|s| s.trim().parse::<Method>())
+            .collect();
+        if let Ok(methods) = methods {
+            cors = cors.allow_methods(methods);
+        } else {
+            tracing::warn!("Invalid CORS methods configuration, falling back to allowing any method");
+            cors = cors.allow_methods(Any);
+        }
+    }
+    
+    // Configure headers
+    if config.cors_headers == "*" {
+        cors = cors.allow_headers(Any);
+    } else {
+        let headers: Result<Vec<_>, _> = config.cors_headers
+            .split(',')
+            .map(|s| s.trim().parse::<axum::http::HeaderName>())
+            .collect();
+        if let Ok(headers) = headers {
+            cors = cors.allow_headers(headers);
+        } else {
+            tracing::warn!("Invalid CORS headers configuration, falling back to allowing any header");
+            cors = cors.allow_headers(Any);
+        }
+    }
+    
+    cors
+}
+
 pub async fn serve(config: Config, db: SqlitePool) {
     let bind_addr = format!("{}:{}", config.host, config.port);
     let mut api = OpenApi::default();
@@ -63,14 +117,9 @@ pub async fn serve(config: Config, db: SqlitePool) {
         .nest_api_service("/docs", docs_routes())
         .finish_api_with(&mut api, api_docs)
         .layer(Extension(Arc::new(api)))
-        .layer(
-            CorsLayer::new()
-                .allow_origin(Any)
-                .allow_methods(Any)
-                .allow_headers(Any),
-        )
+        .layer(create_cors_layer(&config))
         .layer(Extension(ApiContext {
-            config: Arc::new(config),
+            config: Arc::new(config.clone()),
             db,
         }));
 

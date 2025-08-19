@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  hockey-backend:
+    image: ghcr.io/josefjura/hockey/backend:latest
+    container_name: hockey_server
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hockey-server.rule=Host(`api.hockey.joseforge.cz`)"
+      - "traefik.http.routers.hockey-server.entrypoints=websecure"
+      - "traefik.http.routers.hockey-server.tls.certresolver=myresolver"
+      - "traefik.http.services.hockey-server.loadbalancer.server.port=8080"
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - DATABASE_URL=sqlite:/app/data/hockey.db?mode=rwc
+      - HMAC_KEY=7f3a9b2c8d4e1f6a9b2c8d4e1f6a9b2c8d4e1f6a9b2c8d4e1f6a9b2c
+      - RUST_LOG=info,jura_hockey=debug
+
+      - CORS_ORIGINS=https://hockey.joseforge.cz
+      - CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
+      - CORS_HEADERS=Content-Type,Authorization
+    volumes:
+      - /home/beardo/data/hockey:/app/data
+    restart: always
+
+  hockey-frontend:
+    image: ghcr.io/josefjura/hockey/frontend:latest
+    container_name: hockey_web
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hockey-web.rule=Host(`hockey.joseforge.cz`)"
+      - "traefik.http.routers.hockey-web.entrypoints=websecure"
+      - "traefik.http.routers.hockey-web.tls.certresolver=myresolver"
+      - "traefik.http.services.hockey-web.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https?://www\\.(.+)"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}"
+      - "traefik.http.routers.hockey-web.middlewares=www-redirect"
+      - "com.centurylinklabs.watchtower.enable=true"
+    environment:
+      - NEXTAUTH_URL=https://hockey.joseforge.cz
+      - NEXTAUTH_URL_INTERNAL=http://hockey_web:3000
+      - NEXTAUTH_SECRET=k9m2p5r8s1t4u7v0w3x6y9z2a5b8c1d4e7f0g3h6i9j2k5l8m1n4o7p0
+      - AUTH_TRUST_HOST=true
+      - HOCKEY_BACKEND_URL=http://hockey-backend:8080
+      - HOCKEY_NEXT_PUBLIC_API_URL=https://api.hockey.joseforge.cz
+      - HOCKEY_NEXT_PUBLIC_ENV=production
+    depends_on:
+      - hockey-backend
+    restart: always
+
+networks:
+  traefik-net:
+    external: true

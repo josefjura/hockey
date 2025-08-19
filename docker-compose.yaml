@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  hockey-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hockey-backend
+    environment:
+      - "DATABASE_URL=sqlite:///app/data/hockey.db"
+      - HMAC_KEY=${HOCKEY_HMAC_KEY:-your-secret-hmac-key-change-this-in-production}
+      - RUST_LOG=info
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:4000}
+      - CORS_METHODS=${CORS_METHODS:-GET,POST,PUT,DELETE,OPTIONS}
+      - CORS_HEADERS=${CORS_HEADERS:-*}
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "9080:8080"
+    networks:
+      - hockey-network
+    restart: unless-stopped
+
+  hockey-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hockey-frontend
+    environment:
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-secret-nextauth-key-change-this-in-production}
+      - AUTH_TRUST_HOST=true
+      - HOCKEY_BACKEND_URL=${HOCKEY_BACKEND_URL:-http://hockey-backend:8080}
+    ports:
+      - "4000:3000"
+    depends_on:
+      - hockey-backend
+    networks:
+      - hockey-network
+    restart: unless-stopped
+
+# Volumes section removed - using host directory mapping instead
+
+networks:
+  hockey-network:
+    driver: bridge

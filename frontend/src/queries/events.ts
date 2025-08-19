@@ -1,9 +1,9 @@
+import { API_URL } from "@/lib/config";
 import { Event } from "@/types/event";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
-const API_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
 export const fetchEventList = async (page: number = 0, searchTerm?: string, pageSize: number = 20): Promise<PaginatedResponse<Event>> => {
 	const params = new URLSearchParams({
