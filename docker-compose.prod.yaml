@@ -46,8 +46,8 @@ services:
       - NEXTAUTH_SECRET=k9m2p5r8s1t4u7v0w3x6y9z2a5b8c1d4e7f0g3h6i9j2k5l8m1n4o7p0
       - AUTH_TRUST_HOST=true
       - HOCKEY_BACKEND_URL=http://hockey-backend:8080
-      - HOCKEY_NEXT_PUBLIC_API_URL=https://api.hockey.joseforge.cz
-      - HOCKEY_NEXT_PUBLIC_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.hockey.joseforge.cz
+      - NEXT_PUBLIC_ENV=production
     depends_on:
       - hockey-backend
     restart: always
