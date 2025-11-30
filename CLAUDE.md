@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a hockey management application with a Rust backend (Axum + SQLx) and Next.js frontend. The system manages hockey tournaments, teams, players, and their relationships across seasons and events.
 
+### ⚠️ Active Migration
+
+The project is currently undergoing an **OAuth2 Authentication Migration** to resolve critical security vulnerabilities. All migration tasks are tracked in GitHub Issues under the "OAuth2 Authentication Migration" milestone.
+
+**View tasks**: `gh issue list --milestone "OAuth2 Authentication Migration"`
+**Documentation**: See `README_AUTH_MIGRATION.md` for workflow and details
+
+When working on authentication-related code, always check if there's an open issue for it first.
+
 ## Architecture
 
 ### Backend (Rust)

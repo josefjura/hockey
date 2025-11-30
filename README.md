@@ -2,6 +2,14 @@
 
 A modern full-stack web application for managing hockey tournaments, teams, players, and seasons. Built with a Rust backend API and Next.js frontend.
 
+## ⚠️ Active Migration
+
+This project is currently undergoing an **OAuth2 Authentication Migration** to resolve critical security vulnerabilities.
+
+- **Track progress**: [View GitHub Milestone](https://github.com/josefjura/hockey/milestone/1)
+- **Get started**: See `README_AUTH_MIGRATION.md` for complete workflow
+- **Quick view**: `gh issue list --milestone "OAuth2 Authentication Migration"`
+
 ## 🏗️ Project Structure
 
 This is a monorepo containing:
