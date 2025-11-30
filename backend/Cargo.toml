@@ -35,3 +35,4 @@ bcrypt = "0.15"
 thiserror = "1.0"
 tower-http = { version = "0.6", features = ["cors"] }
 axum-test = "17.3.0"
+chrono = { version = "0.4", features = ["serde"] }

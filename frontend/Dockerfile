@@ -32,8 +32,8 @@ RUN yarn build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init for proper signal handling and wget for health checks
+RUN apk add --no-cache dumb-init wget
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \

@@ -1,11 +1,15 @@
 use std::sync::Arc;
+use tokio::signal;
 
 use aide::{axum::ApiRouter, openapi::OpenApi};
-use axum::{Extension, http::Method};
+use axum::{Extension, http::Method, response::Json};
+use axum::extract::State;
+use axum::routing::get;
+use serde_json::{json, Value};
 use sqlx::SqlitePool;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::{
     auth::auth_routes,
@@ -91,6 +95,62 @@ fn create_cors_layer(config: &Config) -> CorsLayer {
     cors
 }
 
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {
+            info!("Received Ctrl+C, shutting down gracefully...");
+        },
+        _ = terminate => {
+            info!("Received SIGTERM, shutting down gracefully...");
+        },
+    }
+}
+
+async fn health_check(State(ctx): State<ApiContext>) -> Json<Value> {
+    // Simple health check - verify database connection
+    let db_status = match sqlx::query("SELECT 1").execute(&ctx.db).await {
+        Ok(_) => "healthy",
+        Err(_) => "unhealthy",
+    };
+    
+    Json(json!({
+        "status": if db_status == "healthy" { "ok" } else { "error" },
+        "database": db_status,
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }))
+}
+
+async fn readiness_check(State(ctx): State<ApiContext>) -> Json<Value> {
+    // More comprehensive readiness check
+    let db_ready = match sqlx::query("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").fetch_one(&ctx.db).await {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+    
+    Json(json!({
+        "ready": db_ready,
+        "database": if db_ready { "ready" } else { "not_ready" },
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }))
+}
+
 pub async fn serve(config: Config, db: SqlitePool) {
     let bind_addr = format!("{}:{}", config.host, config.port);
     let mut api = OpenApi::default();
@@ -103,6 +163,11 @@ pub async fn serve(config: Config, db: SqlitePool) {
     // It does look nicer than the mess of `move || {}` closures you have to do with Actix-web,
     // which, I suspect, largely has to do with how it manages its own worker threads instead of
     // letting Tokio do it.
+    let api_context = ApiContext {
+        config: Arc::new(config.clone()),
+        db,
+    };
+
     let app = ApiRouter::new()
         //.nest_api_service("/todo", todo_routes(state.clone()))
         .nest_api_service("/auth", auth_routes())
@@ -116,17 +181,25 @@ pub async fn serve(config: Config, db: SqlitePool) {
         .nest_api_service("/season", season_routes())
         .nest_api_service("/docs", docs_routes())
         .finish_api_with(&mut api, api_docs)
+        .route("/health", get(health_check))
+        .route("/ready", get(readiness_check))
         .layer(Extension(Arc::new(api)))
         .layer(create_cors_layer(&config))
-        .layer(Extension(ApiContext {
-            config: Arc::new(config.clone()),
-            db,
-        }));
+        .layer(Extension(api_context.clone()))
+        .with_state(api_context);
 
     let listener = TcpListener::bind(&bind_addr).await.unwrap();
 
     info!("Server running at http://{}", bind_addr);
-    axum::serve(listener, app.into_make_service())
-        .await
-        .unwrap();
+    
+    // Create the server with graceful shutdown
+    let server = axum::serve(listener, app.into_make_service())
+        .with_graceful_shutdown(shutdown_signal());
+    
+    // Run the server
+    if let Err(e) = server.await {
+        warn!("Server error: {}", e);
+    } else {
+        info!("Server shutdown gracefully");
+    }
 }

@@ -26,8 +26,8 @@ RUN cargo build --release
 # Runtime stage
 FROM alpine:3.19
 
-# Install runtime dependencies
-RUN apk add --no-cache ca-certificates
+# Install runtime dependencies including dumb-init for signal handling
+RUN apk add --no-cache ca-certificates dumb-init wget
 
 # Create non-root user
 RUN addgroup -g 1001 -S appuser && \
@@ -49,5 +49,5 @@ WORKDIR /app
 # Expose port
 EXPOSE 8080
 
-# Run the application
-CMD ["jura_hockey"]
+# Run the application with dumb-init for proper signal handling
+CMD ["dumb-init", "jura_hockey"]
