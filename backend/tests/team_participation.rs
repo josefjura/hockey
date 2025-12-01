@@ -16,7 +16,7 @@ async fn create_test_server(pool: SqlitePool) -> TestServer {
             "/api/team-participations/{id}",
             get(test_get_team_participation_endpoint),
         )
-        .layer(Extension(ApiContext::new(pool, config)));
+        .layer(Extension(ApiContext::new(pool, config).unwrap()));
 
     TestServer::new(app).unwrap()
 }
@@ -35,7 +35,7 @@ async fn test_get_team_participation_endpoint(
 #[sqlx::test(fixtures("team_participation_deps"))]
 async fn business_logic_create_team_participation_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Get the actual IDs created by the fixtures
     let team_id: i64 = sqlx::query_scalar("SELECT id FROM team LIMIT 1")
@@ -67,7 +67,7 @@ async fn business_logic_create_team_participation_validation(pool: SqlitePool) {
 #[sqlx::test(fixtures("team_participations"))]
 async fn business_logic_get_nonexistent_team_participation_returns_error(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test getting a participation that doesn't exist
     let result = TeamParticipationBusinessLogic::get_team_participation(&ctx, 999).await;
@@ -81,7 +81,7 @@ async fn business_logic_get_nonexistent_team_participation_returns_error(pool: S
 #[sqlx::test(fixtures("team_participation_deps"))]
 async fn business_logic_find_or_create_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test with invalid team ID
     let result =
@@ -128,7 +128,7 @@ async fn http_database_error_returns_500(pool: SqlitePool) {
 #[sqlx::test(fixtures("team_participation_deps"))]
 async fn service_layer_database_operations(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Get the actual IDs created by the fixtures
     let team_id: i64 = sqlx::query_scalar("SELECT id FROM team LIMIT 1")
@@ -189,7 +189,7 @@ async fn service_layer_database_operations(pool: SqlitePool) {
 #[sqlx::test(fixtures("team_participation_deps"))]
 async fn business_logic_find_or_create_new_participation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Get the actual IDs created by the fixtures
     let team_ids: Vec<i64> = sqlx::query_scalar("SELECT id FROM team ORDER BY id")

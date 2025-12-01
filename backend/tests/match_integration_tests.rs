@@ -18,7 +18,7 @@ async fn create_test_server(pool: SqlitePool) -> TestServer {
 
     let app = Router::new()
         .route("/api/matches/{id}", get(test_get_match_endpoint))
-        .layer(Extension(ApiContext::new(pool, config)));
+        .layer(Extension(ApiContext::new(pool, config).unwrap()));
 
     TestServer::new(app).unwrap()
 }
@@ -46,7 +46,7 @@ async fn test_get_match_endpoint(
 #[sqlx::test]
 async fn business_logic_get_nonexistent_match_returns_error(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test business logic directly - no HTTP involved
     let result = MatchBusinessLogic::get_match(&ctx, 99999).await;
@@ -61,7 +61,7 @@ async fn business_logic_get_nonexistent_match_returns_error(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_create_match_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid season ID
     let result = MatchBusinessLogic::create_match(&ctx, -1, 1, 2, 0, 0, None, None, None).await;
@@ -126,7 +126,7 @@ async fn business_logic_create_match_validation(pool: SqlitePool) {
 #[sqlx::test(fixtures("match_deps"))]
 async fn business_logic_match_date_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Get the actual IDs created by the fixtures
     let season_id: i64 = sqlx::query_scalar("SELECT id FROM season LIMIT 1")
@@ -188,7 +188,7 @@ async fn business_logic_match_date_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_status_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test empty status
     let result =
@@ -225,7 +225,7 @@ async fn business_logic_status_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_venue_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test empty venue
     let result =
@@ -251,7 +251,7 @@ async fn business_logic_venue_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_score_event_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid team ID (without checking match existence first)
     // This tests validation logic independent of database state
@@ -281,7 +281,7 @@ async fn business_logic_score_event_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_score_event_validation_with_match(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool.clone(), config);
+    let ctx = ApiContext::new(pool.clone(), config).unwrap();
 
     // Create the necessary tables and data first
     sqlx::query(

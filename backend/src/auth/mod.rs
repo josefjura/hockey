@@ -3,9 +3,9 @@ use aide::{
     transform::TransformOperation,
 };
 use axum::{extract::Extension, http::StatusCode, response::Json};
+use chrono::{Duration, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::http::ApiContext;
 
@@ -23,10 +23,18 @@ pub struct LoginRequest {
 
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct LoginResponse {
+    /// OAuth2 access token (JWT)
+    pub access_token: String,
+    /// Token type (always "Bearer")
+    pub token_type: String,
+    /// Access token expiration time in seconds
+    pub expires_in: i64,
+    /// Refresh token for obtaining new access tokens
+    pub refresh_token: String,
+    /// User information
     pub user_id: i64,
     pub email: String,
     pub name: Option<String>,
-    pub token: String,
 }
 
 #[derive(Debug, Serialize, JsonSchema, sqlx::FromRow)]
@@ -41,7 +49,12 @@ pub fn auth_routes() -> ApiRouter {
 }
 
 fn login_docs(op: TransformOperation) -> TransformOperation {
-    op.description("User login").tag("auth")
+    op.description("User login - Returns OAuth2-compliant JWT tokens")
+        .tag("auth")
+        .response::<200, Json<LoginResponse>>()
+        .response_with::<401, Json<String>, _>(|res| {
+            res.description("Invalid credentials")
+        })
 }
 
 async fn login(
@@ -50,14 +63,54 @@ async fn login(
 ) -> impl IntoApiResponse {
     match authenticate_user(&ctx.db, &req.email, &req.password).await {
         Ok(user) => {
-            // Generate a simple token (in production, use JWT or proper session management)
-            let token = Uuid::new_v4().to_string();
+            let user_id = user.id.unwrap_or(0);
+
+            // Generate JWT access and refresh tokens
+            let access_token = match ctx.jwt_manager.generate_access_token(
+                user_id,
+                &user.email,
+                user.name.clone(),
+            ) {
+                Ok(token) => token,
+                Err(err) => {
+                    return Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(format!("Failed to generate access token: {:?}", err)),
+                    ));
+                }
+            };
+
+            let refresh_token = match ctx.jwt_manager.generate_refresh_token(
+                user_id,
+                &user.email,
+                user.name.clone(),
+            ) {
+                Ok(token) => token,
+                Err(err) => {
+                    return Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(format!("Failed to generate refresh token: {:?}", err)),
+                    ));
+                }
+            };
+
+            // Store refresh token in database (expires in 7 days)
+            let expires_at = Utc::now() + Duration::days(7);
+            if let Err(err) = store_refresh_token(&ctx.db, &refresh_token, user_id, expires_at).await {
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(format!("Failed to store refresh token: {:?}", err)),
+                ));
+            }
 
             let response = LoginResponse {
-                user_id: user.id.unwrap_or(0),
+                access_token,
+                token_type: "Bearer".to_string(),
+                expires_in: 900, // 15 minutes in seconds
+                refresh_token,
+                user_id,
                 email: user.email,
                 name: user.name,
-                token,
             };
 
             Ok((StatusCode::OK, Json(response)))

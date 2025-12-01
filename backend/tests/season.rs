@@ -18,7 +18,7 @@ async fn create_test_server(pool: SqlitePool) -> TestServer {
 
     let app = Router::new()
         .route("/api/seasons/{id}", get(test_get_season_endpoint))
-        .layer(Extension(ApiContext::new(pool, config)));
+        .layer(Extension(ApiContext::new(pool, config).unwrap()));
 
     TestServer::new(app).unwrap()
 }
@@ -46,7 +46,7 @@ async fn test_get_season_endpoint(
 #[sqlx::test]
 async fn business_logic_get_nonexistent_season_returns_error(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test business logic directly - no HTTP involved
     let result = SeasonBusinessLogic::get_season(&ctx, 99999).await;
@@ -61,7 +61,7 @@ async fn business_logic_get_nonexistent_season_returns_error(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_create_season_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid year (too early)
     let result = SeasonBusinessLogic::create_season(&ctx, 1899, None, 1).await;
@@ -107,7 +107,7 @@ async fn business_logic_create_season_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_display_name_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test empty display name
     let result = SeasonBusinessLogic::create_season(&ctx, 2024, Some("".to_string()), 1).await;
@@ -142,7 +142,7 @@ async fn business_logic_display_name_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_update_season_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid season ID
     let result = SeasonBusinessLogic::update_season(&ctx, 0, 2024, None, 1).await;
@@ -166,7 +166,7 @@ async fn business_logic_update_season_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_delete_season_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid season ID
     let result = SeasonBusinessLogic::delete_season(&ctx, 0).await;
@@ -190,7 +190,7 @@ async fn business_logic_delete_season_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_list_seasons_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid year filter (too early)
     let result = SeasonBusinessLogic::list_seasons(&ctx, Some(1899), None, None).await;
@@ -226,7 +226,7 @@ async fn business_logic_list_seasons_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_get_players_for_team_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid season ID
     let result = SeasonBusinessLogic::get_players_for_team_in_season(&ctx, 0, 1).await;

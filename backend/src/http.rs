@@ -12,7 +12,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tracing::{info, warn};
 
 use crate::{
-    auth::auth_routes,
+    auth::{auth_routes, JwtManager},
     config::Config,
     country::routes::country_routes,
     docs::{api_docs, docs_routes},
@@ -30,14 +30,18 @@ pub struct ApiContext {
     #[allow(dead_code)]
     pub config: Arc<Config>,
     pub db: SqlitePool,
+    pub jwt_manager: Arc<JwtManager>,
 }
 
 impl ApiContext {
-    pub fn new(db: SqlitePool, config: Config) -> Self {
-        Self {
+    pub fn new(db: SqlitePool, config: Config) -> Result<Self, Box<dyn std::error::Error>> {
+        let jwt_manager = JwtManager::new(&config.jwt_private_key_path, &config.jwt_public_key_path)?;
+
+        Ok(Self {
             config: Arc::new(config),
             db,
-        }
+            jwt_manager: Arc::new(jwt_manager),
+        })
     }
 }
 
@@ -175,9 +179,13 @@ pub async fn serve(config: Config, db: SqlitePool) {
     // It does look nicer than the mess of `move || {}` closures you have to do with Actix-web,
     // which, I suspect, largely has to do with how it manages its own worker threads instead of
     // letting Tokio do it.
+    let jwt_manager = JwtManager::new(&config.jwt_private_key_path, &config.jwt_public_key_path)
+        .expect("Failed to initialize JWT manager");
+
     let api_context = ApiContext {
         config: Arc::new(config.clone()),
         db,
+        jwt_manager: Arc::new(jwt_manager),
     };
 
     let app = ApiRouter::new()
