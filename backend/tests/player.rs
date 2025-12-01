@@ -18,7 +18,7 @@ async fn create_test_server(pool: SqlitePool) -> TestServer {
 
     let app = Router::new()
         .route("/api/players/{id}", get(test_get_player_endpoint))
-        .layer(Extension(ApiContext::new(pool, config)));
+        .layer(Extension(ApiContext::new(pool, config).unwrap()));
 
     TestServer::new(app).unwrap()
 }
@@ -46,7 +46,7 @@ async fn test_get_player_endpoint(
 #[sqlx::test]
 async fn business_logic_get_nonexistent_player_returns_error(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test business logic directly - no HTTP involved
     let result = PlayerBusinessLogic::get_player(&ctx, 99999).await;
@@ -61,7 +61,7 @@ async fn business_logic_get_nonexistent_player_returns_error(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_create_player_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid player name (empty)
     let result = PlayerBusinessLogic::create_player(&ctx, "".to_string(), 1, None).await;
@@ -117,7 +117,7 @@ async fn business_logic_create_player_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_photo_path_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test empty photo path
     let result = PlayerBusinessLogic::create_player(
@@ -201,7 +201,7 @@ async fn business_logic_photo_path_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_update_player_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid player ID
     let result =
@@ -227,7 +227,7 @@ async fn business_logic_update_player_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_delete_player_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid player ID
     let result = PlayerBusinessLogic::delete_player(&ctx, 0).await;
@@ -251,7 +251,7 @@ async fn business_logic_delete_player_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_list_players_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test invalid country ID filter
     let result = PlayerBusinessLogic::list_players(&ctx, None, Some(0), None).await;

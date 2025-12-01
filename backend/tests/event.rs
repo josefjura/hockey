@@ -17,7 +17,7 @@ async fn create_test_server(pool: SqlitePool) -> TestServer {
 
     let app = Router::new()
         .route("/api/events/{id}", get(test_get_event_endpoint))
-        .layer(Extension(ApiContext::new(pool, config)));
+        .layer(Extension(ApiContext::new(pool, config).unwrap()));
 
     TestServer::new(app).unwrap()
 }
@@ -45,7 +45,7 @@ async fn test_get_event_endpoint(
 #[sqlx::test(fixtures("events"))]
 async fn business_logic_get_nonexistent_event_returns_error(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test business logic directly - no HTTP involved
     let result = EventBusinessLogic::get_event(&ctx, 99999).await;
@@ -60,7 +60,7 @@ async fn business_logic_get_nonexistent_event_returns_error(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_create_event_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test empty name validation
     let result = EventBusinessLogic::create_event(&ctx, "".to_string(), None).await;
@@ -91,7 +91,7 @@ async fn business_logic_create_event_validation(pool: SqlitePool) {
 #[sqlx::test]
 async fn business_logic_successful_creation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test successful creation
     let result =

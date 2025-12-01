@@ -16,7 +16,7 @@ async fn create_test_server(pool: SqlitePool) -> TestServer {
             "/api/player-contracts/{id}",
             get(test_get_player_contract_endpoint),
         )
-        .layer(Extension(ApiContext::new(pool, config)));
+        .layer(Extension(ApiContext::new(pool, config).unwrap()));
 
     TestServer::new(app).unwrap()
 }
@@ -35,7 +35,7 @@ async fn test_get_player_contract_endpoint(
 #[sqlx::test(fixtures("player_contract_deps"))]
 async fn business_logic_create_player_contract_validation(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Get the actual IDs created by the fixtures
     let team_participation_id: i64 =
@@ -68,7 +68,7 @@ async fn business_logic_create_player_contract_validation(pool: SqlitePool) {
 #[sqlx::test(fixtures("player_contracts"))]
 async fn business_logic_get_nonexistent_player_contract_returns_error(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Test getting a contract that doesn't exist
     let result = PlayerContractBusinessLogic::get_player_contract(&ctx, 999).await;
@@ -113,7 +113,7 @@ async fn http_database_error_returns_500(pool: SqlitePool) {
 #[sqlx::test(fixtures("player_contract_deps"))]
 async fn service_layer_database_operations(pool: SqlitePool) {
     let config = Config::test_config();
-    let ctx = ApiContext::new(pool, config);
+    let ctx = ApiContext::new(pool, config).unwrap();
 
     // Get the actual IDs created by the fixtures
     let team_participation_id: i64 =
