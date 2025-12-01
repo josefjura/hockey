@@ -9,8 +9,10 @@ use uuid::Uuid;
 
 use crate::http::ApiContext;
 
+mod jwt;
 mod service;
 
+pub use jwt::*;
 pub use service::*;
 
 #[derive(Debug, Deserialize, JsonSchema)]
