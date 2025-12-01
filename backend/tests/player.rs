@@ -1,4 +1,4 @@
-use axum::{Extension, Json, Router, extract::Path, routing::get};
+use axum::{extract::Path, routing::get, Extension, Json, Router};
 use axum_test::TestServer;
 use serde_json::Value;
 use sqlx::SqlitePool;
@@ -14,10 +14,7 @@ use jura_hockey::{
 
 /// Creates a test server with a simple endpoint for testing
 async fn create_test_server(pool: SqlitePool) -> TestServer {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-hmac-key".to_string(),
-    };
+    let config = Config::test_config();
 
     let app = Router::new()
         .route("/api/players/{id}", get(test_get_player_endpoint))
@@ -48,10 +45,7 @@ async fn test_get_player_endpoint(
 
 #[sqlx::test]
 async fn business_logic_get_nonexistent_player_returns_error(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test business logic directly - no HTTP involved
@@ -66,10 +60,7 @@ async fn business_logic_get_nonexistent_player_returns_error(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_create_player_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test invalid player name (empty)
@@ -125,10 +116,7 @@ async fn business_logic_create_player_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_photo_path_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test empty photo path
@@ -212,10 +200,7 @@ async fn business_logic_photo_path_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_update_player_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test invalid player ID
@@ -241,10 +226,7 @@ async fn business_logic_update_player_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_delete_player_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test invalid player ID
@@ -268,10 +250,7 @@ async fn business_logic_delete_player_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_list_players_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test invalid country ID filter

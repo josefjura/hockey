@@ -1,28 +1,25 @@
+use axum::{extract::Path, routing::get, Extension, Json, Router};
 use axum_test::TestServer;
-use axum::{Extension, Json, Router, extract::Path, routing::get};
 use serde_json::Value;
 use sqlx::SqlitePool;
 
 // Import necessary modules from the crate
 use jura_hockey::{
-    config::Config, 
-    http::ApiContext,
+    config::Config,
     errors::AppError,
-    r#match::{business::MatchBusinessLogic, service},
+    http::ApiContext,
     r#match::service::CreateMatchEntity,
+    r#match::{business::MatchBusinessLogic, service},
 };
 
 /// Creates a test server with a simple endpoint for testing
 async fn create_test_server(pool: SqlitePool) -> TestServer {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-hmac-key".to_string(),
-    };
-    
+    let config = Config::test_config();
+
     let app = Router::new()
         .route("/api/matches/{id}", get(test_get_match_endpoint))
         .layer(Extension(ApiContext::new(pool, config)));
-    
+
     TestServer::new(app).unwrap()
 }
 
@@ -31,10 +28,10 @@ async fn test_get_match_endpoint(
     Extension(ctx): Extension<ApiContext>,
     Path(id): Path<String>,
 ) -> Result<Json<Value>, AppError> {
-    let match_id: i64 = id.parse().map_err(|_| {
-        AppError::invalid_input("Invalid match ID format")
-    })?;
-    
+    let match_id: i64 = id
+        .parse()
+        .map_err(|_| AppError::invalid_input("Invalid match ID format"))?;
+
     // Use the business logic layer directly
     match MatchBusinessLogic::get_match(&ctx, match_id).await {
         Ok(match_data) => Ok(Json(serde_json::to_value(match_data).unwrap())),
@@ -48,15 +45,12 @@ async fn test_get_match_endpoint(
 
 #[sqlx::test]
 async fn business_logic_get_nonexistent_match_returns_error(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
-    
+
     // Test business logic directly - no HTTP involved
     let result = MatchBusinessLogic::get_match(&ctx, 99999).await;
-    
+
     assert!(result.is_err());
     match result.unwrap_err() {
         AppError::MatchNotFound { id } => assert_eq!(id, 99999),
@@ -66,90 +60,90 @@ async fn business_logic_get_nonexistent_match_returns_error(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_create_match_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
-    
+
     // Test invalid season ID
     let result = MatchBusinessLogic::create_match(&ctx, -1, 1, 2, 0, 0, None, None, None).await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Season ID must be positive")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Season ID must be positive"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test invalid home team ID
     let result = MatchBusinessLogic::create_match(&ctx, 1, -1, 2, 0, 0, None, None, None).await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Home team ID must be positive")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Home team ID must be positive"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test invalid away team ID
     let result = MatchBusinessLogic::create_match(&ctx, 1, 1, -1, 0, 0, None, None, None).await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Away team ID must be positive")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Away team ID must be positive"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test same team for home and away
     let result = MatchBusinessLogic::create_match(&ctx, 1, 1, 1, 0, 0, None, None, None).await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Home team and away team must be different")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Home team and away team must be different"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test negative scores
     let result = MatchBusinessLogic::create_match(&ctx, 1, 1, 2, -1, 0, None, None, None).await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Home score cannot be negative")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Home score cannot be negative"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     let result = MatchBusinessLogic::create_match(&ctx, 1, 1, 2, 0, -1, None, None, None).await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Away score cannot be negative")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Away score cannot be negative"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
 }
 
 #[sqlx::test]
 async fn business_logic_match_date_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
-    
+
     // Test empty match date
-    let result = MatchBusinessLogic::create_match(
-        &ctx, 
-        1, 1, 2, 0, 0, 
-        Some("".to_string()), 
-        None, 
-        None
-    ).await;
+    let result =
+        MatchBusinessLogic::create_match(&ctx, 1, 1, 2, 0, 0, Some("".to_string()), None, None)
+            .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Match date cannot be empty")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Match date cannot be empty"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test invalid date format
-    let result = MatchBusinessLogic::create_match(
-        &ctx, 
-        1, 1, 2, 0, 0, 
-        Some("abc".to_string()), 
-        None, 
-        None
-    ).await;
+    let result =
+        MatchBusinessLogic::create_match(&ctx, 1, 1, 2, 0, 0, Some("abc".to_string()), None, None)
+            .await;
     assert!(result.is_err());
     match result.unwrap_err() {
         AppError::InvalidInput { message } => assert!(message.contains("ISO 8601 format")),
@@ -159,34 +153,34 @@ async fn business_logic_match_date_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_status_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
-    
+
     // Test empty status
-    let result = MatchBusinessLogic::create_match(
-        &ctx, 
-        1, 1, 2, 0, 0, 
-        None, 
-        Some("".to_string()), 
-        None
-    ).await;
+    let result =
+        MatchBusinessLogic::create_match(&ctx, 1, 1, 2, 0, 0, None, Some("".to_string()), None)
+            .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Match status cannot be empty")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Match status cannot be empty"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test invalid status
     let result = MatchBusinessLogic::create_match(
-        &ctx, 
-        1, 1, 2, 0, 0, 
-        None, 
-        Some("invalid_status".to_string()), 
-        None
-    ).await;
+        &ctx,
+        1,
+        1,
+        2,
+        0,
+        0,
+        None,
+        Some("invalid_status".to_string()),
+        None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
         AppError::InvalidInput { message } => assert!(message.contains("Invalid match status")),
@@ -196,35 +190,23 @@ async fn business_logic_status_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_venue_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
-    
+
     // Test empty venue
-    let result = MatchBusinessLogic::create_match(
-        &ctx, 
-        1, 1, 2, 0, 0, 
-        None, 
-        None, 
-        Some("".to_string())
-    ).await;
+    let result =
+        MatchBusinessLogic::create_match(&ctx, 1, 1, 2, 0, 0, None, None, Some("".to_string()))
+            .await;
     assert!(result.is_err());
     match result.unwrap_err() {
         AppError::InvalidInput { message } => assert!(message.contains("Venue cannot be empty")),
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test long venue name
     let long_venue = "A".repeat(201);
-    let result = MatchBusinessLogic::create_match(
-        &ctx, 
-        1, 1, 2, 0, 0, 
-        None, 
-        None, 
-        Some(long_venue)
-    ).await;
+    let result =
+        MatchBusinessLogic::create_match(&ctx, 1, 1, 2, 0, 0, None, None, Some(long_venue)).await;
     assert!(result.is_err());
     match result.unwrap_err() {
         AppError::InvalidInput { message } => assert!(message.contains("200 characters")),
@@ -234,17 +216,26 @@ async fn business_logic_venue_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_score_event_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
-    
+
     // Test invalid team ID (without checking match existence first)
     // This tests validation logic independent of database state
-    
-    // Test invalid period  
-    let result = MatchBusinessLogic::create_score_event(&ctx, 1, 1, None, None, None, Some(0), None, None, None).await;
+
+    // Test invalid period
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        1,
+        1,
+        None,
+        None,
+        None,
+        Some(0),
+        None,
+        None,
+        None,
+    )
+    .await;
     assert!(result.is_err());
     // Should return MatchNotFound first since we validate match existence before other validation
     match result.unwrap_err() {
@@ -255,24 +246,24 @@ async fn business_logic_score_event_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_score_event_validation_with_match(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool.clone(), config);
-    
+
     // Create the necessary tables and data first
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS event (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create event table");
 
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS season (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             year INTEGER NOT NULL,
@@ -280,34 +271,40 @@ async fn business_logic_score_event_validation_with_match(pool: SqlitePool) {
             event_id INTEGER NOT NULL,
             FOREIGN KEY (event_id) REFERENCES event (id)
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create season table");
 
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS country (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create country table");
 
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS team (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             country_id INTEGER,
             FOREIGN KEY (country_id) REFERENCES country (id)
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create team table");
 
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS match (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             season_id INTEGER NOT NULL,
@@ -324,7 +321,8 @@ async fn business_logic_score_event_validation_with_match(pool: SqlitePool) {
             FOREIGN KEY (home_team_id) REFERENCES team (id),
             FOREIGN KEY (away_team_id) REFERENCES team (id)
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create match table");
@@ -344,17 +342,21 @@ async fn business_logic_score_event_validation_with_match(pool: SqlitePool) {
         .execute(&pool)
         .await
         .expect("Failed to insert test country");
-    
-    sqlx::query("INSERT OR IGNORE INTO team (id, name, country_id) VALUES (1, 'Test Home Team', 1)")
-        .execute(&pool)
-        .await
-        .expect("Failed to insert test home team");
-        
-    sqlx::query("INSERT OR IGNORE INTO team (id, name, country_id) VALUES (2, 'Test Away Team', 1)")
-        .execute(&pool)
-        .await
-        .expect("Failed to insert test away team");
-    
+
+    sqlx::query(
+        "INSERT OR IGNORE INTO team (id, name, country_id) VALUES (1, 'Test Home Team', 1)",
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to insert test home team");
+
+    sqlx::query(
+        "INSERT OR IGNORE INTO team (id, name, country_id) VALUES (2, 'Test Away Team', 1)",
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to insert test away team");
+
     // Create a match
     let match_id = service::create_match(
         &pool,
@@ -368,75 +370,190 @@ async fn business_logic_score_event_validation_with_match(pool: SqlitePool) {
             status: Some("scheduled".to_string()),
             venue: None,
         },
-    ).await.expect("Failed to create match");
-    
+    )
+    .await
+    .expect("Failed to create match");
+
     // Now test validation with an existing match
-    
+
     // Test invalid team ID
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, -1, None, None, None, None, None, None, None).await;
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx, match_id, -1, None, None, None, None, None, None, None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
         AppError::InvalidInput { message } => assert!(message.contains("Team ID must be positive")),
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test invalid period
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, 1, None, None, None, Some(0), None, None, None).await;
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        match_id,
+        1,
+        None,
+        None,
+        None,
+        Some(0),
+        None,
+        None,
+        None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Period must be between 1 and 5")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Period must be between 1 and 5"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, 1, None, None, None, Some(6), None, None, None).await;
+
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        match_id,
+        1,
+        None,
+        None,
+        None,
+        Some(6),
+        None,
+        None,
+        None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Period must be between 1 and 5")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Period must be between 1 and 5"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test invalid time
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, 1, None, None, None, None, Some(-1), None, None).await;
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        match_id,
+        1,
+        None,
+        None,
+        None,
+        None,
+        Some(-1),
+        None,
+        None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Time minutes must be between 0 and 60")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Time minutes must be between 0 and 60"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, 1, None, None, None, None, None, Some(60), None).await;
+
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        match_id,
+        1,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(60),
+        None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Time seconds must be between 0 and 59")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Time seconds must be between 0 and 59"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test invalid goal type
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, 1, None, None, None, None, None, None, Some("invalid_type".to_string())).await;
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        match_id,
+        1,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some("invalid_type".to_string()),
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
         AppError::InvalidInput { message } => assert!(message.contains("Invalid goal type")),
         _ => panic!("Expected InvalidInput error"),
     }
-    
+
     // Test same player for scorer and assist
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, 1, Some(1), Some(1), None, None, None, None, None).await;
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        match_id,
+        1,
+        Some(1),
+        Some(1),
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Scorer and first assist cannot be the same player")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Scorer and first assist cannot be the same player"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, 1, Some(1), None, Some(1), None, None, None, None).await;
+
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        match_id,
+        1,
+        Some(1),
+        None,
+        Some(1),
+        None,
+        None,
+        None,
+        None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("Scorer and second assist cannot be the same player")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("Scorer and second assist cannot be the same player"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
-    
-    let result = MatchBusinessLogic::create_score_event(&ctx, match_id, 1, None, Some(1), Some(1), None, None, None, None).await;
+
+    let result = MatchBusinessLogic::create_score_event(
+        &ctx,
+        match_id,
+        1,
+        None,
+        Some(1),
+        Some(1),
+        None,
+        None,
+        None,
+        None,
+    )
+    .await;
     assert!(result.is_err());
     match result.unwrap_err() {
-        AppError::InvalidInput { message } => assert!(message.contains("First and second assist cannot be the same player")),
+        AppError::InvalidInput { message } => {
+            assert!(message.contains("First and second assist cannot be the same player"))
+        }
         _ => panic!("Expected InvalidInput error"),
     }
 }
@@ -448,12 +565,12 @@ async fn business_logic_score_event_validation_with_match(pool: SqlitePool) {
 #[sqlx::test]
 async fn http_get_nonexistent_match_returns_404(pool: SqlitePool) {
     let server = create_test_server(pool).await;
-    
+
     let response = server.get("/api/matches/99999").await;
-    
+
     // Test HTTP status code
     response.assert_status(axum::http::StatusCode::NOT_FOUND);
-    
+
     // Test error response structure
     let error_body: Value = response.json();
     assert_eq!(error_body["error"], "Match not found with id: 99999");
@@ -464,12 +581,12 @@ async fn http_get_nonexistent_match_returns_404(pool: SqlitePool) {
 #[sqlx::test]
 async fn http_invalid_match_id_returns_400(pool: SqlitePool) {
     let server = create_test_server(pool).await;
-    
+
     let response = server.get("/api/matches/not-a-number").await;
-    
+
     // Test HTTP status code
     response.assert_status(axum::http::StatusCode::BAD_REQUEST);
-    
+
     // Test error response structure
     let error_body: Value = response.json();
     assert_eq!(error_body["error"], "Invalid input");
@@ -480,15 +597,15 @@ async fn http_invalid_match_id_returns_400(pool: SqlitePool) {
 async fn http_database_error_returns_500(pool: SqlitePool) {
     let pool_clone = pool.clone();
     let server = create_test_server(pool).await;
-    
+
     // Close the connection pool to simulate database failure
     pool_clone.close().await;
-    
+
     let response = server.get("/api/matches/1").await;
-    
+
     // Should return 500 Internal Server Error
     response.assert_status(axum::http::StatusCode::INTERNAL_SERVER_ERROR);
-    
+
     let error_body: Value = response.json();
     assert_eq!(error_body["error"], "Internal server error");
     assert!(error_body["error_id"].is_string());
@@ -502,7 +619,7 @@ async fn http_database_error_returns_500(pool: SqlitePool) {
 async fn service_layer_get_match_by_id(pool: SqlitePool) {
     // Test the service layer directly
     let result = service::get_match_by_id(&pool, 99999).await;
-    
+
     // Should succeed but return None (no match found)
     assert!(result.is_ok());
     assert!(result.unwrap().is_none());
@@ -511,17 +628,20 @@ async fn service_layer_get_match_by_id(pool: SqlitePool) {
 #[sqlx::test]
 async fn service_layer_database_operations(pool: SqlitePool) {
     // Create the necessary tables based on migrations
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS event (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create event table");
 
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS season (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             year INTEGER NOT NULL,
@@ -529,12 +649,14 @@ async fn service_layer_database_operations(pool: SqlitePool) {
             event_id INTEGER NOT NULL,
             FOREIGN KEY (event_id) REFERENCES event (id)
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create season table");
 
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS country (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -547,12 +669,14 @@ async fn service_layer_database_operations(pool: SqlitePool) {
             created_at TEXT,
             updated_at TEXT
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create country table");
 
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS team (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -562,12 +686,14 @@ async fn service_layer_database_operations(pool: SqlitePool) {
             updated_at TEXT,
             FOREIGN KEY (country_id) REFERENCES country (id)
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create team table");
 
-    sqlx::query(r#"
+    sqlx::query(
+        r#"
         CREATE TABLE IF NOT EXISTS match (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             season_id INTEGER NOT NULL,
@@ -584,7 +710,8 @@ async fn service_layer_database_operations(pool: SqlitePool) {
             FOREIGN KEY (home_team_id) REFERENCES team (id),
             FOREIGN KEY (away_team_id) REFERENCES team (id)
         )
-    "#)
+    "#,
+    )
     .execute(&pool)
     .await
     .expect("Failed to create match table");
@@ -600,21 +727,27 @@ async fn service_layer_database_operations(pool: SqlitePool) {
         .await
         .expect("Failed to insert test season");
 
-    sqlx::query("INSERT OR IGNORE INTO country (id, name, iso2Code) VALUES (1, 'Test Country', 'TC')")
-        .execute(&pool)
-        .await
-        .expect("Failed to insert test country");
-    
-    sqlx::query("INSERT OR IGNORE INTO team (id, name, country_id) VALUES (1, 'Test Home Team', 1)")
-        .execute(&pool)
-        .await
-        .expect("Failed to insert test home team");
-        
-    sqlx::query("INSERT OR IGNORE INTO team (id, name, country_id) VALUES (2, 'Test Away Team', 1)")
-        .execute(&pool)
-        .await
-        .expect("Failed to insert test away team");
-    
+    sqlx::query(
+        "INSERT OR IGNORE INTO country (id, name, iso2Code) VALUES (1, 'Test Country', 'TC')",
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to insert test country");
+
+    sqlx::query(
+        "INSERT OR IGNORE INTO team (id, name, country_id) VALUES (1, 'Test Home Team', 1)",
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to insert test home team");
+
+    sqlx::query(
+        "INSERT OR IGNORE INTO team (id, name, country_id) VALUES (2, 'Test Away Team', 1)",
+    )
+    .execute(&pool)
+    .await
+    .expect("Failed to insert test away team");
+
     // Create a match
     let match_id = service::create_match(
         &pool,
@@ -628,21 +761,26 @@ async fn service_layer_database_operations(pool: SqlitePool) {
             status: Some("finished".to_string()),
             venue: Some("Test Arena".to_string()),
         },
-    ).await.expect("Failed to create match");
-    
+    )
+    .await
+    .expect("Failed to create match");
+
     // Retrieve the match
     let match_data = service::get_match_by_id(&pool, match_id)
         .await
         .expect("Failed to get match")
         .expect("Match should exist");
-    
+
     assert_eq!(match_data.id, match_id);
     assert_eq!(match_data.season_id, 1);
     assert_eq!(match_data.home_team_id, 1);
     assert_eq!(match_data.away_team_id, 2);
     assert_eq!(match_data.home_score_unidentified, 2);
     assert_eq!(match_data.away_score_unidentified, 1);
-    assert_eq!(match_data.match_date, Some("2024-01-15T20:00:00".to_string()));
+    assert_eq!(
+        match_data.match_date,
+        Some("2024-01-15T20:00:00".to_string())
+    );
     assert_eq!(match_data.status, "finished");
     assert_eq!(match_data.venue, Some("Test Arena".to_string()));
     assert_eq!(match_data.season_name, "Test Season");

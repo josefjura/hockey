@@ -2,8 +2,8 @@ use crate::{
     common::paging::{PagedResponse, Paging},
     errors::AppError,
     event::{
-        Event,
         service::{self, CreateEventEntity, EventFilters, UpdateEventEntity},
+        Event,
     },
     http::ApiContext,
 };

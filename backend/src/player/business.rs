@@ -2,7 +2,7 @@ use crate::{
     common::paging::{PagedResult, Paging},
     errors::AppError,
     http::ApiContext,
-    player::{Player, service},
+    player::{service, Player},
 };
 
 /// Business logic layer for player operations
@@ -292,25 +292,21 @@ mod tests {
 
     #[test]
     fn test_validate_player_data_success() {
-        assert!(
-            PlayerBusinessLogic::validate_player_data(
-                "Test Player",
-                1,
-                &Some("/images/player.jpg".to_string())
-            )
-            .is_ok()
-        );
+        assert!(PlayerBusinessLogic::validate_player_data(
+            "Test Player",
+            1,
+            &Some("/images/player.jpg".to_string())
+        )
+        .is_ok());
 
         assert!(PlayerBusinessLogic::validate_player_data("Test Player", 1, &None).is_ok());
 
-        assert!(
-            PlayerBusinessLogic::validate_player_data(
-                "Test Player",
-                1,
-                &Some("https://example.com/player.jpg".to_string())
-            )
-            .is_ok()
-        );
+        assert!(PlayerBusinessLogic::validate_player_data(
+            "Test Player",
+            1,
+            &Some("https://example.com/player.jpg".to_string())
+        )
+        .is_ok());
     }
 
     #[test]
@@ -332,10 +328,12 @@ mod tests {
             PlayerBusinessLogic::validate_player_data("Test Player", 1, &Some("".to_string()))
                 .is_err()
         );
-        assert!(
-            PlayerBusinessLogic::validate_player_data("Test Player", 1, &Some("   ".to_string()))
-                .is_err()
-        );
+        assert!(PlayerBusinessLogic::validate_player_data(
+            "Test Player",
+            1,
+            &Some("   ".to_string())
+        )
+        .is_err());
 
         // Long photo path
         let long_path = "A".repeat(256);
@@ -344,13 +342,11 @@ mod tests {
         );
 
         // Invalid photo path format
-        assert!(
-            PlayerBusinessLogic::validate_player_data(
-                "Test Player",
-                1,
-                &Some("invalid-path".to_string())
-            )
-            .is_err()
-        );
+        assert!(PlayerBusinessLogic::validate_player_data(
+            "Test Player",
+            1,
+            &Some("invalid-path".to_string())
+        )
+        .is_err());
     }
 }

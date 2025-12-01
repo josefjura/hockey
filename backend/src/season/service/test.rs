@@ -11,7 +11,7 @@ async fn create_season(db: sqlx::SqlitePool) {
         .await
         .unwrap();
     assert!(id > 0);
-    
+
     // Verify audit columns are set
     let created_season = crate::season::service::get_season_by_id(&db, id)
         .await
@@ -25,7 +25,9 @@ async fn create_season(db: sqlx::SqlitePool) {
 #[sqlx::test(fixtures("events", "get_seasons"))]
 async fn get_seasons(db: sqlx::SqlitePool) {
     let filters = SeasonFilters::default();
-    let seasons = crate::season::service::get_seasons(&db, &filters, None).await.unwrap();
+    let seasons = crate::season::service::get_seasons(&db, &filters, None)
+        .await
+        .unwrap();
     assert!(!seasons.items.is_empty());
     assert_eq!(seasons.items.len(), 2); // Assuming the fixture has 2 seasons
     for season in &seasons.items {
@@ -83,16 +85,18 @@ async fn update_season(db: sqlx::SqlitePool) {
         .unwrap();
     let original_created_at = original_season.created_at.clone();
     let original_updated_at = original_season.updated_at.clone();
-    
+
     // Add a small delay to ensure updated_at timestamp is different
     tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-    
+
     let update_data = UpdateSeasonEntity {
         year: 2026,
         display_name: Some("Updated Season".to_string()),
         event_id: 2,
     };
-    let result = crate::season::service::update_season(&db, 1, update_data).await.unwrap();
+    let result = crate::season::service::update_season(&db, 1, update_data)
+        .await
+        .unwrap();
     assert!(result);
 
     // Verify the season is updated
@@ -103,7 +107,7 @@ async fn update_season(db: sqlx::SqlitePool) {
     assert_eq!(season.year, 2026);
     assert_eq!(season.display_name, Some("Updated Season".to_string()));
     assert_eq!(season.event_id, 2);
-    
+
     // Verify audit columns: created_at should remain the same, updated_at should change
     assert_eq!(season.created_at, original_created_at);
     assert_ne!(season.updated_at, original_updated_at);
@@ -113,19 +117,25 @@ async fn update_season(db: sqlx::SqlitePool) {
 async fn get_seasons_with_filters(db: sqlx::SqlitePool) {
     // Test filtering by year
     let filters = SeasonFilters::new(Some(2024), None);
-    let seasons = crate::season::service::get_seasons(&db, &filters, None).await.unwrap();
+    let seasons = crate::season::service::get_seasons(&db, &filters, None)
+        .await
+        .unwrap();
     assert_eq!(seasons.items.len(), 1);
     assert_eq!(seasons.items[0].year, 2024);
 
     // Test filtering by event_id
     let filters = SeasonFilters::new(None, Some(1));
-    let seasons = crate::season::service::get_seasons(&db, &filters, None).await.unwrap();
+    let seasons = crate::season::service::get_seasons(&db, &filters, None)
+        .await
+        .unwrap();
     assert_eq!(seasons.items.len(), 1);
     assert_eq!(seasons.items[0].event_id, 1);
 
     // Test filtering by both
     let filters = SeasonFilters::new(Some(2025), Some(2));
-    let seasons = crate::season::service::get_seasons(&db, &filters, None).await.unwrap();
+    let seasons = crate::season::service::get_seasons(&db, &filters, None)
+        .await
+        .unwrap();
     assert_eq!(seasons.items.len(), 1);
     assert_eq!(seasons.items[0].year, 2025);
     assert_eq!(seasons.items[0].event_id, 2);
@@ -152,24 +162,24 @@ async fn get_players_for_team_in_season(db: sqlx::SqlitePool) {
     let players = crate::season::service::get_players_for_team_in_season(&db, 1, 1)
         .await
         .unwrap();
-    
+
     assert_eq!(players.len(), 1);
     assert_eq!(players[0].name, "Player A");
     assert_eq!(players[0].nationality, "Country A");
-    
+
     // Get players for team 2 in season 2
     let players = crate::season::service::get_players_for_team_in_season(&db, 2, 2)
         .await
         .unwrap();
-    
+
     assert_eq!(players.len(), 1);
     assert_eq!(players[0].name, "Player B");
     assert_eq!(players[0].nationality, "Country B");
-    
+
     // Test with non-existent combination
     let players = crate::season::service::get_players_for_team_in_season(&db, 1, 2)
         .await
         .unwrap();
-    
+
     assert_eq!(players.len(), 0);
 }

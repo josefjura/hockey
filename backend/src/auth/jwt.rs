@@ -157,13 +157,12 @@ impl JwtManager {
         let mut validation = Validation::new(Algorithm::RS256);
         validation.validate_exp = true;
 
-        let token_data = decode::<Claims>(token, &self.decoding_key, &validation)
-            .map_err(|e| match e.kind() {
-                jsonwebtoken::errors::ErrorKind::ExpiredSignature => {
-                    JwtManagerError::TokenExpired
-                }
+        let token_data = decode::<Claims>(token, &self.decoding_key, &validation).map_err(|e| {
+            match e.kind() {
+                jsonwebtoken::errors::ErrorKind::ExpiredSignature => JwtManagerError::TokenExpired,
                 _ => JwtManagerError::InvalidToken,
-            })?;
+            }
+        })?;
 
         Ok(token_data.claims)
     }
@@ -215,8 +214,7 @@ mod tests {
 
     fn create_test_jwt_manager() -> JwtManager {
         // Use the actual RSA keys from the project
-        JwtManager::new("jwt_private.pem", "jwt_public.pem")
-            .expect("Failed to create JwtManager")
+        JwtManager::new("jwt_private.pem", "jwt_public.pem").expect("Failed to create JwtManager")
     }
 
     #[test]
@@ -331,7 +329,10 @@ mod tests {
 
         let now = Utc::now().timestamp();
         assert!(claims.exp > now, "Token expiration should be in the future");
-        assert!(claims.iat <= now, "Token issued time should be in the past or now");
+        assert!(
+            claims.iat <= now,
+            "Token issued time should be in the past or now"
+        );
     }
 
     #[test]
