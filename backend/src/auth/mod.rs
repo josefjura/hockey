@@ -27,6 +27,12 @@ pub struct RefreshRequest {
     pub refresh_token: String,
 }
 
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct LogoutRequest {
+    /// Refresh token to revoke
+    pub refresh_token: String,
+}
+
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct LoginResponse {
     /// OAuth2 access token (JWT)
@@ -66,6 +72,7 @@ pub fn auth_routes() -> ApiRouter {
     ApiRouter::new()
         .api_route("/login", post_with(login, login_docs))
         .api_route("/refresh", post_with(refresh, refresh_docs))
+        .api_route("/logout", post_with(logout, logout_docs))
 }
 
 fn login_docs(op: TransformOperation) -> TransformOperation {
@@ -83,6 +90,17 @@ fn refresh_docs(op: TransformOperation) -> TransformOperation {
         .response::<200, Json<RefreshResponse>>()
         .response_with::<401, Json<String>, _>(|res| {
             res.description("Invalid or expired refresh token")
+        })
+}
+
+fn logout_docs(op: TransformOperation) -> TransformOperation {
+    op.description("User logout - Revokes the refresh token to prevent future token refreshes")
+        .tag("auth")
+        .response_with::<200, Json<String>, _>(|res| {
+            res.description("Successfully logged out")
+        })
+        .response_with::<401, Json<String>, _>(|res| {
+            res.description("Invalid refresh token")
         })
 }
 
@@ -229,6 +247,20 @@ async fn refresh(
     };
 
     Ok((StatusCode::OK, Json(response)))
+}
+
+async fn logout(
+    Extension(ctx): Extension<ApiContext>,
+    Json(req): Json<LogoutRequest>,
+) -> impl IntoApiResponse {
+    // Revoke the refresh token
+    match revoke_refresh_token(&ctx.db, &req.refresh_token).await {
+        Ok(_) => Ok((StatusCode::OK, Json("Successfully logged out".to_string()))),
+        Err(_) => Err((
+            StatusCode::UNAUTHORIZED,
+            Json("Invalid refresh token".to_string()),
+        )),
+    }
 }
 
 #[cfg(test)]
