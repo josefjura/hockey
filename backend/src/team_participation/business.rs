@@ -2,8 +2,8 @@ use crate::{
     errors::AppError,
     http::ApiContext,
     team_participation::{
-        TeamParticipation,
         service::{self, CreateTeamParticipationEntity},
+        TeamParticipation,
     },
 };
 

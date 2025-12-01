@@ -3,8 +3,8 @@ use crate::{
     errors::AppError,
     http::ApiContext,
     team::{
-        Team, TeamDetail, TeamList,
         service::{self, CreateTeamEntity, TeamFilters, UpdateTeamEntity},
+        Team, TeamDetail, TeamList,
     },
 };
 

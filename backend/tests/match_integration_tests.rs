@@ -1,4 +1,4 @@
-use axum::{Extension, Json, Router, extract::Path, routing::get};
+use axum::{extract::Path, routing::get, Extension, Json, Router};
 use axum_test::TestServer;
 use serde_json::Value;
 use sqlx::SqlitePool;
@@ -9,15 +9,12 @@ use jura_hockey::{
     errors::AppError,
     http::ApiContext,
     r#match::service::CreateMatchEntity,
-    r#match::{Match, business::MatchBusinessLogic, service},
+    r#match::{business::MatchBusinessLogic, service, Match},
 };
 
 /// Creates a test server with a simple endpoint for testing
 async fn create_test_server(pool: SqlitePool) -> TestServer {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-hmac-key".to_string(),
-    };
+    let config = Config::test_config();
 
     let app = Router::new()
         .route("/api/matches/{id}", get(test_get_match_endpoint))
@@ -48,10 +45,7 @@ async fn test_get_match_endpoint(
 
 #[sqlx::test]
 async fn business_logic_get_nonexistent_match_returns_error(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test business logic directly - no HTTP involved
@@ -66,10 +60,7 @@ async fn business_logic_get_nonexistent_match_returns_error(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_create_match_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test invalid season ID
@@ -134,10 +125,7 @@ async fn business_logic_create_match_validation(pool: SqlitePool) {
 
 #[sqlx::test(fixtures("match_deps"))]
 async fn business_logic_match_date_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Get the actual IDs created by the fixtures
@@ -199,10 +187,7 @@ async fn business_logic_match_date_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_status_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test empty status
@@ -239,10 +224,7 @@ async fn business_logic_status_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_venue_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test empty venue
@@ -268,10 +250,7 @@ async fn business_logic_venue_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_score_event_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test invalid team ID (without checking match existence first)
@@ -301,10 +280,7 @@ async fn business_logic_score_event_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_score_event_validation_with_match(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool.clone(), config);
 
     // Create the necessary tables and data first

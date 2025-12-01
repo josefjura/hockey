@@ -2,9 +2,9 @@ use std::sync::Arc;
 use tokio::signal;
 
 use aide::{axum::ApiRouter, openapi::OpenApi};
-use axum::{Extension, http::Method, response::Json};
 use axum::extract::State;
 use axum::routing::get;
+use axum::{http::Method, response::Json, Extension};
 use serde_json::{json, Value};
 use sqlx::SqlitePool;
 use tokio::net::TcpListener;
@@ -17,9 +17,9 @@ use crate::{
     country::routes::country_routes,
     docs::{api_docs, docs_routes},
     event::routes::event_routes,
-    r#match::routes::match_routes,
     player::routes::player_routes,
     player_contract::routes::player_contract_routes,
+    r#match::routes::match_routes,
     season::routes::season_routes,
     team::routes::team_routes,
     team_participation::routes::team_participation_routes,
@@ -43,55 +43,64 @@ impl ApiContext {
 
 fn create_cors_layer(config: &Config) -> CorsLayer {
     let mut cors = CorsLayer::new();
-    
+
     // Configure origins
     if config.cors_origins == "*" {
         cors = cors.allow_origin(Any);
     } else {
-        let origins: Result<Vec<_>, _> = config.cors_origins
+        let origins: Result<Vec<_>, _> = config
+            .cors_origins
             .split(',')
             .map(|s| s.trim().parse::<axum::http::HeaderValue>())
             .collect();
         if let Ok(origins) = origins {
             cors = cors.allow_origin(origins);
         } else {
-            tracing::warn!("Invalid CORS origins configuration, falling back to allowing any origin");
+            tracing::warn!(
+                "Invalid CORS origins configuration, falling back to allowing any origin"
+            );
             cors = cors.allow_origin(Any);
         }
     }
-    
+
     // Configure methods
     if config.cors_methods == "*" {
         cors = cors.allow_methods(Any);
     } else {
-        let methods: Result<Vec<_>, _> = config.cors_methods
+        let methods: Result<Vec<_>, _> = config
+            .cors_methods
             .split(',')
             .map(|s| s.trim().parse::<Method>())
             .collect();
         if let Ok(methods) = methods {
             cors = cors.allow_methods(methods);
         } else {
-            tracing::warn!("Invalid CORS methods configuration, falling back to allowing any method");
+            tracing::warn!(
+                "Invalid CORS methods configuration, falling back to allowing any method"
+            );
             cors = cors.allow_methods(Any);
         }
     }
-    
+
     // Configure headers
     if config.cors_headers == "*" {
         cors = cors.allow_headers(Any);
     } else {
-        let headers: Result<Vec<_>, _> = config.cors_headers
+        let headers: Result<Vec<_>, _> = config
+            .cors_headers
             .split(',')
             .map(|s| s.trim().parse::<axum::http::HeaderName>())
             .collect();
         if let Ok(headers) = headers {
             cors = cors.allow_headers(headers);
         } else {
-            tracing::warn!("Invalid CORS headers configuration, falling back to allowing any header");
+            tracing::warn!(
+                "Invalid CORS headers configuration, falling back to allowing any header"
+            );
             cors = cors.allow_headers(Any);
         }
     }
-    
+
     cors
 }
 
@@ -129,7 +138,7 @@ async fn health_check(State(ctx): State<ApiContext>) -> Json<Value> {
         Ok(_) => "healthy",
         Err(_) => "unhealthy",
     };
-    
+
     Json(json!({
         "status": if db_status == "healthy" { "ok" } else { "error" },
         "database": db_status,
@@ -139,11 +148,14 @@ async fn health_check(State(ctx): State<ApiContext>) -> Json<Value> {
 
 async fn readiness_check(State(ctx): State<ApiContext>) -> Json<Value> {
     // More comprehensive readiness check
-    let db_ready = match sqlx::query("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").fetch_one(&ctx.db).await {
+    let db_ready = match sqlx::query("SELECT COUNT(*) FROM sqlite_master WHERE type='table'")
+        .fetch_one(&ctx.db)
+        .await
+    {
         Ok(_) => true,
         Err(_) => false,
     };
-    
+
     Json(json!({
         "ready": db_ready,
         "database": if db_ready { "ready" } else { "not_ready" },
@@ -191,11 +203,11 @@ pub async fn serve(config: Config, db: SqlitePool) {
     let listener = TcpListener::bind(&bind_addr).await.unwrap();
 
     info!("Server running at http://{}", bind_addr);
-    
+
     // Create the server with graceful shutdown
-    let server = axum::serve(listener, app.into_make_service())
-        .with_graceful_shutdown(shutdown_signal());
-    
+    let server =
+        axum::serve(listener, app.into_make_service()).with_graceful_shutdown(shutdown_signal());
+
     // Run the server
     if let Err(e) = server.await {
         warn!("Server error: {}", e);

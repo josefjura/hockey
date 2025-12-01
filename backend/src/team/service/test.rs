@@ -240,16 +240,12 @@ async fn get_team_detail_success(db: sqlx::SqlitePool) {
 
     // Verify roster players in 2024
     let roster_2024 = &season_2024.roster;
-    assert!(
-        roster_2024
-            .iter()
-            .any(|p| p.player_name == "John Doe" && p.country_name == "Canada")
-    );
-    assert!(
-        roster_2024
-            .iter()
-            .any(|p| p.player_name == "Mike Johnson" && p.country_name == "Finland")
-    );
+    assert!(roster_2024
+        .iter()
+        .any(|p| p.player_name == "John Doe" && p.country_name == "Canada"));
+    assert!(roster_2024
+        .iter()
+        .any(|p| p.player_name == "Mike Johnson" && p.country_name == "Finland"));
 
     // Verify 2023 season participation
     let season_2023 = &team_detail.participations[1];
@@ -259,16 +255,12 @@ async fn get_team_detail_success(db: sqlx::SqlitePool) {
 
     // Verify roster players in 2023
     let roster_2023 = &season_2023.roster;
-    assert!(
-        roster_2023
-            .iter()
-            .any(|p| p.player_name == "John Doe" && p.country_name == "Canada")
-    );
-    assert!(
-        roster_2023
-            .iter()
-            .any(|p| p.player_name == "Jane Smith" && p.country_name == "Sweden")
-    );
+    assert!(roster_2023
+        .iter()
+        .any(|p| p.player_name == "John Doe" && p.country_name == "Canada"));
+    assert!(roster_2023
+        .iter()
+        .any(|p| p.player_name == "Jane Smith" && p.country_name == "Sweden"));
 }
 
 #[sqlx::test(fixtures("team_detail"))]

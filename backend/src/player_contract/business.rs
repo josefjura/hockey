@@ -2,8 +2,8 @@ use crate::{
     errors::AppError,
     http::ApiContext,
     player_contract::{
-        PlayerContract,
         service::{self, CreatePlayerContractEntity},
+        PlayerContract,
     },
 };
 

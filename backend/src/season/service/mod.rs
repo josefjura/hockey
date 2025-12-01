@@ -92,7 +92,7 @@ pub async fn get_seasons(
 ) -> Result<PagedResult<SeasonWithEventEntity>, sqlx::Error> {
     // Build count query with WHERE 1=1 trick for cleaner filter additions
     let mut count_query_builder = sqlx::QueryBuilder::new(
-        "SELECT COUNT(*) as count FROM season s INNER JOIN event e ON s.event_id = e.id WHERE 1=1"
+        "SELECT COUNT(*) as count FROM season s INNER JOIN event e ON s.event_id = e.id WHERE 1=1",
     );
     apply_season_filters(&mut count_query_builder, filters);
 
@@ -113,10 +113,14 @@ pub async fn get_seasons(
     );
     apply_season_filters(&mut data_query_builder, filters);
     data_query_builder.push(" ORDER BY s.year DESC, s.id");
-    
+
     // Apply paging if provided
-    data_query_builder.push(" LIMIT ").push_bind(paging.page_size as i64);
-    data_query_builder.push(" OFFSET ").push_bind(paging.offset() as i64);
+    data_query_builder
+        .push(" LIMIT ")
+        .push_bind(paging.page_size as i64);
+    data_query_builder
+        .push(" OFFSET ")
+        .push_bind(paging.offset() as i64);
 
     let data_query = data_query_builder.build();
     let rows = data_query.fetch_all(db).await?;
@@ -137,7 +141,10 @@ pub async fn get_seasons(
     Ok(PagedResult::new(items, total, paging))
 }
 
-pub async fn get_season_by_id(db: &SqlitePool, id: i64) -> Result<Option<SeasonWithEventEntity>, sqlx::Error> {
+pub async fn get_season_by_id(
+    db: &SqlitePool,
+    id: i64,
+) -> Result<Option<SeasonWithEventEntity>, sqlx::Error> {
     let row = sqlx::query(
         "SELECT s.id, s.year, s.display_name, s.event_id, s.created_at, s.updated_at, e.name as event_name 
          FROM season s 
@@ -194,7 +201,7 @@ pub async fn get_seasons_list(db: &SqlitePool) -> Result<Vec<SeasonListItem>, sq
         "SELECT s.id, s.display_name as name, s.year, e.name as event_name 
          FROM season s 
          INNER JOIN event e ON s.event_id = e.id 
-         ORDER BY s.year DESC, e.name"
+         ORDER BY s.year DESC, e.name",
     )
     .fetch_all(db)
     .await?;
@@ -230,7 +237,7 @@ pub async fn get_players_for_team_in_season(
          INNER JOIN team_participation tp ON pc.team_participation_id = tp.id
          INNER JOIN country c ON p.country_id = c.id
          WHERE tp.season_id = ? AND tp.team_id = ?
-         ORDER BY p.name"
+         ORDER BY p.name",
     )
     .bind(season_id)
     .bind(team_id)

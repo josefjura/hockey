@@ -3,10 +3,10 @@ use crate::{
     errors::AppError,
     http::ApiContext,
     r#match::{
-        Match, MatchWithStats, ScoreEvent,
         service::{
             self, CreateMatchEntity, CreateScoreEventEntity, MatchFilters, UpdateMatchEntity,
         },
+        Match, MatchWithStats, ScoreEvent,
     },
 };
 

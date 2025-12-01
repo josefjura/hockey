@@ -2,7 +2,7 @@ use crate::{
     common::paging::{PagedResult, Paging},
     errors::AppError,
     http::ApiContext,
-    season::{PlayerDropdown, Season, SeasonList, service},
+    season::{service, PlayerDropdown, Season, SeasonList},
 };
 
 /// Business logic layer for season operations
@@ -344,10 +344,12 @@ mod tests {
 
     #[test]
     fn test_validate_season_data_success() {
-        assert!(
-            SeasonBusinessLogic::validate_season_data(2024, &Some("Test Season".to_string()), 1)
-                .is_ok()
-        );
+        assert!(SeasonBusinessLogic::validate_season_data(
+            2024,
+            &Some("Test Season".to_string()),
+            1
+        )
+        .is_ok());
 
         assert!(SeasonBusinessLogic::validate_season_data(2024, &None, 1).is_ok());
 

@@ -45,4 +45,40 @@ pub struct Config {
     /// CORS allowed headers (comma-separated list or "*" for all)
     #[clap(long, env, default_value = "*")]
     pub cors_headers: String,
+
+    /// Path to the RSA private key for JWT signing (PEM format)
+    #[clap(long, env, default_value = "jwt_private.pem")]
+    pub jwt_private_key_path: String,
+
+    /// Path to the RSA public key for JWT verification (PEM format)
+    #[clap(long, env, default_value = "jwt_public.pem")]
+    pub jwt_public_key_path: String,
+
+    /// Access token duration in minutes
+    #[clap(long, env, default_value = "15")]
+    pub jwt_access_token_duration_minutes: i64,
+
+    /// Refresh token duration in days
+    #[clap(long, env, default_value = "7")]
+    pub jwt_refresh_token_duration_days: i64,
+}
+
+impl Config {
+    /// Create a test configuration with sensible defaults
+    /// This is useful for integration tests
+    pub fn test_config() -> Self {
+        Self {
+            database_url: "sqlite::memory:".to_string(),
+            hmac_key: "test-hmac-key".to_string(),
+            host: "0.0.0.0".to_string(),
+            port: 8080,
+            cors_origins: "*".to_string(),
+            cors_methods: "GET,POST,PUT,DELETE,OPTIONS".to_string(),
+            cors_headers: "*".to_string(),
+            jwt_private_key_path: "jwt_private.pem".to_string(),
+            jwt_public_key_path: "jwt_public.pem".to_string(),
+            jwt_access_token_duration_minutes: 15,
+            jwt_refresh_token_duration_days: 7,
+        }
+    }
 }

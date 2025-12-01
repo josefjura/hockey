@@ -1,4 +1,4 @@
-use axum::{Extension, Json, Router, extract::Path, routing::get};
+use axum::{extract::Path, routing::get, Extension, Json, Router};
 use axum_test::TestServer;
 use serde_json::Value;
 use sqlx::SqlitePool;
@@ -13,10 +13,7 @@ use jura_hockey::{
 
 /// Creates a test server with a simple endpoint for testing events
 async fn create_test_server(pool: SqlitePool) -> TestServer {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-hmac-key".to_string(),
-    };
+    let config = Config::test_config();
 
     let app = Router::new()
         .route("/api/events/{id}", get(test_get_event_endpoint))
@@ -47,10 +44,7 @@ async fn test_get_event_endpoint(
 
 #[sqlx::test(fixtures("events"))]
 async fn business_logic_get_nonexistent_event_returns_error(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test business logic directly - no HTTP involved
@@ -65,10 +59,7 @@ async fn business_logic_get_nonexistent_event_returns_error(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_create_event_validation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test empty name validation
@@ -99,10 +90,7 @@ async fn business_logic_create_event_validation(pool: SqlitePool) {
 
 #[sqlx::test]
 async fn business_logic_successful_creation(pool: SqlitePool) {
-    let config = Config {
-        database_url: "sqlite::memory:".to_string(),
-        hmac_key: "test-key".to_string(),
-    };
+    let config = Config::test_config();
     let ctx = ApiContext::new(pool, config);
 
     // Test successful creation

@@ -69,13 +69,13 @@ impl<T> PagedResponse<T> {
 
     /// Create a new PagedResponse directly for documentation examples
     pub fn new(
-        items: Vec<T>, 
-        total: usize, 
-        page: usize, 
-        page_size: usize, 
-        total_pages: usize, 
-        has_next: bool, 
-        has_previous: bool
+        items: Vec<T>,
+        total: usize,
+        page: usize,
+        page_size: usize,
+        total_pages: usize,
+        has_next: bool,
+        has_previous: bool,
     ) -> Self {
         Self {
             items,

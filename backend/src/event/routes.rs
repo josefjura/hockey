@@ -1,15 +1,15 @@
 use aide::{
     axum::{
-        ApiRouter, IntoApiResponse,
         routing::{get_with, post_with},
+        ApiRouter, IntoApiResponse,
     },
     transform::TransformOperation,
 };
 use axum::{
-    Extension, Json,
     extract::{Path, Query},
     http::StatusCode,
     response::IntoResponse,
+    Extension, Json,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -93,10 +93,7 @@ async fn list_events(
     Extension(ctx): Extension<ApiContext>,
 ) -> impl IntoApiResponse {
     let filters = EventFilters::new(params.name, params.country_id);
-    let paging = Paging::new(
-        params.page.unwrap_or(1),
-        params.page_size.unwrap_or(15),
-    );
+    let paging = Paging::new(params.page.unwrap_or(1), params.page_size.unwrap_or(15));
 
     // 🎯 Route Handler: Only HTTP concerns
     match EventBusinessLogic::list_events(&ctx, filters, paging).await {
@@ -169,7 +166,14 @@ async fn update_event(
     Json(update_request): Json<UpdateEventRequest>,
 ) -> impl IntoApiResponse {
     // 🎯 Route Handler: Only HTTP concerns
-    match EventBusinessLogic::update_event(&ctx, event_id, update_request.name, update_request.country_id).await {
+    match EventBusinessLogic::update_event(
+        &ctx,
+        event_id,
+        update_request.name,
+        update_request.country_id,
+    )
+    .await
+    {
         Ok(_) => Ok((
             StatusCode::OK,
             Json("Event updated successfully".to_string()),
