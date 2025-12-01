@@ -74,4 +74,8 @@ next-env.d.ts
 **/tmp/
 **/temp/
 
+# JWT RSA keys - never commit these!
+**/jwt_private.pem
+**/jwt_public.pem
+
 data
