@@ -14,6 +14,7 @@ use axum::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::auth::AuthUser;
 use crate::common::paging::{PagedResponse, Paging};
 use crate::event::business::EventBusinessLogic;
 use crate::event::service::EventFilters;
@@ -70,6 +71,7 @@ struct UpdateEventRequest {
 
 async fn create_event(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Json(request): Json<CreateEventRequest>,
 ) -> impl IntoApiResponse {
     // 🎯 Route Handler: Only HTTP concerns
@@ -91,6 +93,7 @@ fn create_event_docs(op: TransformOperation) -> TransformOperation {
 async fn list_events(
     Query(params): Query<EventQueryParams>,
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
 ) -> impl IntoApiResponse {
     let filters = EventFilters::new(params.name, params.country_id);
     let paging = Paging::new(params.page.unwrap_or(1), params.page_size.unwrap_or(15));
@@ -134,6 +137,7 @@ struct SelectEvent {
 
 async fn get_event(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(event): Path<SelectEvent>,
 ) -> impl IntoApiResponse {
     // 🎯 Route Handler: Only HTTP concerns
@@ -162,6 +166,7 @@ fn get_event_docs(op: TransformOperation) -> TransformOperation {
 
 async fn update_event(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(event_id): Path<i64>,
     Json(update_request): Json<UpdateEventRequest>,
 ) -> impl IntoApiResponse {
@@ -194,6 +199,7 @@ fn update_event_docs(op: TransformOperation) -> TransformOperation {
 
 async fn delete_event(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(event): Path<SelectEvent>,
 ) -> impl IntoApiResponse {
     // 🎯 Route Handler: Only HTTP concerns

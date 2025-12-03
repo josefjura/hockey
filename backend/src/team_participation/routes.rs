@@ -9,6 +9,7 @@ use axum::{extract::Path, http::StatusCode, response::IntoResponse, Extension, J
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::auth::AuthUser;
 use crate::http::ApiContext;
 use crate::team_participation::business::TeamParticipationBusinessLogic;
 
@@ -53,6 +54,7 @@ struct TeamParticipationCreateResponse {
 
 async fn create_team_participation(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Json(participation): Json<CreateTeamParticipationRequest>,
 ) -> impl IntoApiResponse {
     match TeamParticipationBusinessLogic::create_team_participation(
@@ -76,7 +78,10 @@ fn create_team_participation_docs(op: TransformOperation) -> TransformOperation 
         .response::<201, Json<TeamParticipationCreateResponse>>()
 }
 
-async fn list_team_participation(Extension(ctx): Extension<ApiContext>) -> impl IntoApiResponse {
+async fn list_team_participation(
+    Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
+) -> impl IntoApiResponse {
     match TeamParticipationBusinessLogic::list_team_participations(&ctx).await {
         Ok(result) => Ok(Json(result)),
         Err(app_error) => Err(app_error.into_response()),
@@ -96,6 +101,7 @@ struct SelectTeamParticipation {
 
 async fn get_team_participation(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(participation): Path<SelectTeamParticipation>,
 ) -> impl IntoApiResponse {
     match TeamParticipationBusinessLogic::get_team_participation(&ctx, participation.id).await {
@@ -119,6 +125,7 @@ fn get_team_participation_docs(op: TransformOperation) -> TransformOperation {
 
 async fn delete_team_participation(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(participation): Path<SelectTeamParticipation>,
 ) -> impl IntoApiResponse {
     match TeamParticipationBusinessLogic::delete_team_participation(&ctx, participation.id).await {
@@ -138,6 +145,7 @@ fn delete_team_participation_docs(op: TransformOperation) -> TransformOperation 
 
 async fn find_or_create_team_participation_route(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Json(participation): Json<CreateTeamParticipationRequest>,
 ) -> impl IntoApiResponse {
     match TeamParticipationBusinessLogic::find_or_create_team_participation(

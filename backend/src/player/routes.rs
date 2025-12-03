@@ -14,6 +14,7 @@ use axum::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::auth::AuthUser;
 use crate::common::paging::{PagedResponse, Paging};
 use crate::http::ApiContext;
 use crate::player::business::PlayerBusinessLogic;
@@ -70,6 +71,7 @@ struct PlayerCreateResponse {
 
 async fn create_player(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Json(player): Json<CreatePlayerRequest>,
 ) -> impl IntoApiResponse {
     match PlayerBusinessLogic::create_player(
@@ -96,6 +98,7 @@ fn create_player_docs(op: TransformOperation) -> TransformOperation {
 
 async fn list_players(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Query(params): Query<PlayerQueryParams>,
 ) -> impl IntoApiResponse {
     let paging = Some(Paging::new(
@@ -128,6 +131,7 @@ struct SelectPlayer {
 
 async fn get_player(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(player): Path<SelectPlayer>,
 ) -> impl IntoApiResponse {
     match PlayerBusinessLogic::get_player(&ctx, player.id).await {
@@ -169,6 +173,7 @@ struct UpdatePlayerRequest {
 
 async fn update_player(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(player): Path<SelectPlayer>,
     Json(update_data): Json<UpdatePlayerRequest>,
 ) -> impl IntoApiResponse {
@@ -195,6 +200,7 @@ fn update_player_docs(op: TransformOperation) -> TransformOperation {
 
 async fn delete_player(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(player): Path<SelectPlayer>,
 ) -> impl IntoApiResponse {
     match PlayerBusinessLogic::delete_player(&ctx, player.id).await {

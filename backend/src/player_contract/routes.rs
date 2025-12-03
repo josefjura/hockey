@@ -9,6 +9,7 @@ use axum::{extract::Path, http::StatusCode, response::IntoResponse, Extension, J
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::auth::AuthUser;
 use crate::http::ApiContext;
 use crate::player_contract::business::PlayerContractBusinessLogic;
 
@@ -46,6 +47,7 @@ struct PlayerContractCreateResponse {
 
 async fn create_player_contract(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Json(participation): Json<CreatePlayerContractRequest>,
 ) -> impl IntoApiResponse {
     match PlayerContractBusinessLogic::create_player_contract(
@@ -69,7 +71,10 @@ fn create_player_contract_docs(op: TransformOperation) -> TransformOperation {
         .response::<201, Json<PlayerContractCreateResponse>>()
 }
 
-async fn list_player_contracts(Extension(ctx): Extension<ApiContext>) -> impl IntoApiResponse {
+async fn list_player_contracts(
+    Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
+) -> impl IntoApiResponse {
     match PlayerContractBusinessLogic::list_player_contracts(&ctx).await {
         Ok(result) => Ok(Json(result)),
         Err(app_error) => Err(app_error.into_response()),
@@ -89,6 +94,7 @@ struct SelectPlayerContract {
 
 async fn get_player_contract(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(contract): Path<SelectPlayerContract>,
 ) -> impl IntoApiResponse {
     match PlayerContractBusinessLogic::get_player_contract(&ctx, contract.id).await {
@@ -112,6 +118,7 @@ fn get_player_contract_docs(op: TransformOperation) -> TransformOperation {
 
 async fn delete_player_contract(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(contract): Path<SelectPlayerContract>,
 ) -> impl IntoApiResponse {
     match PlayerContractBusinessLogic::delete_player_contract(&ctx, contract.id).await {
