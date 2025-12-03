@@ -14,6 +14,7 @@ use axum::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::auth::AuthUser;
 use crate::common::paging::{PagedResponse, Paging};
 use crate::http::ApiContext;
 use crate::season::business::SeasonBusinessLogic;
@@ -78,6 +79,7 @@ struct SeasonCreateResponse {
 
 async fn create_season(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Json(season): Json<CreateSeasonRequest>,
 ) -> impl IntoApiResponse {
     match SeasonBusinessLogic::create_season(
@@ -104,6 +106,7 @@ fn create_season_docs(op: TransformOperation) -> TransformOperation {
 
 async fn list_seasons(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Query(params): Query<SeasonQueryParams>,
 ) -> impl IntoApiResponse {
     let paging = Some(Paging::new(
@@ -136,6 +139,7 @@ struct SelectSeason {
 
 async fn get_season(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(season): Path<SelectSeason>,
 ) -> impl IntoApiResponse {
     match SeasonBusinessLogic::get_season(&ctx, season.id).await {
@@ -174,6 +178,7 @@ struct UpdateSeasonRequest {
 
 async fn update_season(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(season): Path<SelectSeason>,
     Json(update_data): Json<UpdateSeasonRequest>,
 ) -> impl IntoApiResponse {
@@ -200,6 +205,7 @@ fn update_season_docs(op: TransformOperation) -> TransformOperation {
 
 async fn delete_season(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(season): Path<SelectSeason>,
 ) -> impl IntoApiResponse {
     match SeasonBusinessLogic::delete_season(&ctx, season.id).await {
@@ -215,7 +221,10 @@ fn delete_season_docs(op: TransformOperation) -> TransformOperation {
         .response_with::<404, (), _>(|res| res.description("The season was not found"))
 }
 
-async fn list_seasons_simple(Extension(ctx): Extension<ApiContext>) -> impl IntoApiResponse {
+async fn list_seasons_simple(
+    Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
+) -> impl IntoApiResponse {
     match SeasonBusinessLogic::get_seasons_list(&ctx).await {
         Ok(result) => Ok(Json(result)),
         Err(app_error) => Err(app_error.into_response()),
@@ -238,6 +247,7 @@ struct SeasonTeamParams {
 
 async fn get_season_team_players(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(params): Path<SeasonTeamParams>,
 ) -> impl IntoApiResponse {
     match SeasonBusinessLogic::get_players_for_team_in_season(

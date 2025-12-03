@@ -14,6 +14,7 @@ use axum::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::auth::AuthUser;
 use crate::common::paging::{PagedResponse, Paging};
 use crate::errors::AppError;
 use crate::http::ApiContext;
@@ -76,6 +77,7 @@ struct TeamCreateResponse {
 
 async fn create_team(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Json(request): Json<CreateTeamRequest>,
 ) -> impl IntoApiResponse {
     // 🎯 Route Handler: Only HTTP concerns
@@ -98,6 +100,7 @@ fn create_team_docs(op: TransformOperation) -> TransformOperation {
 
 async fn list_teams(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Query(params): Query<TeamQueryParams>,
 ) -> impl IntoApiResponse {
     let filters = TeamFilters::new(params.name, params.country_id);
@@ -123,6 +126,7 @@ struct SelectTeam {
 
 async fn get_team(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(team): Path<SelectTeam>,
 ) -> impl IntoApiResponse {
     // 🎯 Route Handler: Only HTTP concerns
@@ -163,6 +167,7 @@ struct UpdateTeamRequest {
 
 async fn update_team(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(team): Path<SelectTeam>,
     Json(update_data): Json<UpdateTeamRequest>,
 ) -> impl IntoApiResponse {
@@ -189,6 +194,7 @@ fn update_team_docs(op: TransformOperation) -> TransformOperation {
 
 async fn delete_team(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(team): Path<SelectTeam>,
 ) -> impl IntoApiResponse {
     match TeamBusinessLogic::delete_team(&ctx, team.id).await {
@@ -204,7 +210,10 @@ fn delete_team_docs(op: TransformOperation) -> TransformOperation {
         .response_with::<404, (), _>(|res| res.description("The team was not found"))
 }
 
-async fn list_teams_simple(Extension(ctx): Extension<ApiContext>) -> impl IntoApiResponse {
+async fn list_teams_simple(
+    Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
+) -> impl IntoApiResponse {
     match TeamBusinessLogic::get_teams_list(&ctx).await {
         Ok(result) => Ok(Json(result)),
         Err(err) => Err(err.into_response()),
@@ -220,6 +229,7 @@ fn list_teams_simple_docs(op: TransformOperation) -> TransformOperation {
 /// Get team detail with participations and roster
 async fn get_team_detail(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(id): Path<i64>,
 ) -> impl IntoApiResponse {
     match TeamBusinessLogic::get_team_detail(&ctx, id).await {

@@ -10,6 +10,7 @@ use axum::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::auth::AuthUser;
 use crate::common::paging::{PagedResponse, Paging};
 use crate::country::service::{self, CountryFilters};
 use crate::http::ApiContext;
@@ -44,6 +45,7 @@ pub struct CountryQueryParams {
 async fn list_countries(
     Query(params): Query<CountryQueryParams>, // This uses axum's Query
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
 ) -> impl IntoApiResponse {
     let filters = CountryFilters::new(
         params.enabled,
@@ -115,6 +117,7 @@ struct SelectCountry {
 
 async fn get_country(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(country): Path<SelectCountry>,
 ) -> impl IntoApiResponse {
     match service::get_country_by_id(&ctx.db, country.id).await {
@@ -151,6 +154,7 @@ fn get_country_docs(op: TransformOperation) -> TransformOperation {
 
 async fn update_country_status(
     Extension(ctx): Extension<ApiContext>,
+    Extension(_user): Extension<AuthUser>,
     Path(country_id): Path<i64>,
     Json(status): Json<bool>,
 ) -> impl IntoApiResponse {
