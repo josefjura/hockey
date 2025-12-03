@@ -13,11 +13,14 @@ mod jwt;
 mod middleware;
 mod service;
 
+#[cfg(test)]
+mod e2e_tests;
+
 pub use jwt::*;
 pub use middleware::*;
 pub use service::*;
 
-#[derive(Debug, Deserialize, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct LoginRequest {
     pub email: String,
     pub password: String,
