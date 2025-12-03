@@ -61,6 +61,10 @@ pub struct Config {
     /// Refresh token duration in days
     #[clap(long, env, default_value = "7")]
     pub jwt_refresh_token_duration_days: i64,
+
+    /// Environment mode (development, production)
+    #[clap(long, env, default_value = "development")]
+    pub environment: String,
 }
 
 impl Config {
@@ -79,6 +83,173 @@ impl Config {
             jwt_public_key_path: "jwt_public.pem".to_string(),
             jwt_access_token_duration_minutes: 15,
             jwt_refresh_token_duration_days: 7,
+            environment: "development".to_string(),
         }
+    }
+
+    /// Check if running in production mode
+    pub fn is_production(&self) -> bool {
+        self.environment.to_lowercase() == "production"
+    }
+
+    /// Validate CORS configuration
+    /// Returns an error if wildcard CORS is used in production mode
+    pub fn validate_cors(&self) -> Result<(), String> {
+        if self.is_production() {
+            if self.cors_origins.contains('*') {
+                return Err(
+                    "Wildcard CORS origins (*) are not allowed in production mode. \
+                     Please specify explicit origins (e.g., 'https://yourdomain.com,https://www.yourdomain.com')"
+                        .to_string(),
+                );
+            }
+
+            if self.cors_headers == "*" {
+                return Err(
+                    "Wildcard CORS headers (*) are not allowed in production mode. \
+                     Please specify explicit headers (e.g., 'content-type,authorization,x-requested-with')"
+                        .to_string(),
+                );
+            }
+
+            if self.cors_methods == "*" {
+                return Err(
+                    "Wildcard CORS methods (*) are not allowed in production mode. \
+                     Please specify explicit methods (e.g., 'GET,POST,PUT,DELETE,OPTIONS')"
+                        .to_string(),
+                );
+            }
+
+            // Validate that origins are properly formatted URLs
+            for origin in self.cors_origins.split(',') {
+                let trimmed = origin.trim();
+                if !trimmed.starts_with("http://") && !trimmed.starts_with("https://") {
+                    return Err(format!(
+                        "Invalid CORS origin '{}'. Origins must start with 'http://' or 'https://'",
+                        trimmed
+                    ));
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_production() {
+        let mut config = Config::test_config();
+
+        config.environment = "development".to_string();
+        assert!(!config.is_production());
+
+        config.environment = "production".to_string();
+        assert!(config.is_production());
+
+        config.environment = "PRODUCTION".to_string();
+        assert!(config.is_production());
+    }
+
+    #[test]
+    fn test_cors_validation_development() {
+        let mut config = Config::test_config();
+        config.environment = "development".to_string();
+
+        // Wildcards are allowed in development
+        config.cors_origins = "*".to_string();
+        config.cors_headers = "*".to_string();
+        config.cors_methods = "*".to_string();
+        assert!(config.validate_cors().is_ok());
+    }
+
+    #[test]
+    fn test_cors_validation_production_wildcard_origins() {
+        let mut config = Config::test_config();
+        config.environment = "production".to_string();
+        config.cors_origins = "*".to_string();
+
+        let result = config.validate_cors();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Wildcard CORS origins"));
+    }
+
+    #[test]
+    fn test_cors_validation_production_wildcard_headers() {
+        let mut config = Config::test_config();
+        config.environment = "production".to_string();
+        config.cors_origins = "https://example.com".to_string();
+        config.cors_headers = "*".to_string();
+
+        let result = config.validate_cors();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Wildcard CORS headers"));
+    }
+
+    #[test]
+    fn test_cors_validation_production_wildcard_methods() {
+        let mut config = Config::test_config();
+        config.environment = "production".to_string();
+        config.cors_origins = "https://example.com".to_string();
+        config.cors_headers = "content-type,authorization".to_string();
+        config.cors_methods = "*".to_string();
+
+        let result = config.validate_cors();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Wildcard CORS methods"));
+    }
+
+    #[test]
+    fn test_cors_validation_production_invalid_origin_format() {
+        let mut config = Config::test_config();
+        config.environment = "production".to_string();
+        config.cors_origins = "example.com".to_string();
+        config.cors_headers = "content-type,authorization".to_string();
+        config.cors_methods = "GET,POST,PUT,DELETE,OPTIONS".to_string();
+
+        let result = config.validate_cors();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid CORS origin"));
+    }
+
+    #[test]
+    fn test_cors_validation_production_valid_config() {
+        let mut config = Config::test_config();
+        config.environment = "production".to_string();
+        config.cors_origins = "https://example.com,https://www.example.com".to_string();
+        config.cors_headers = "content-type,authorization,x-requested-with".to_string();
+        config.cors_methods = "GET,POST,PUT,DELETE,OPTIONS".to_string();
+
+        let result = config.validate_cors();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cors_validation_production_mixed_origins() {
+        let mut config = Config::test_config();
+        config.environment = "production".to_string();
+        config.cors_origins = "https://example.com,*".to_string();
+        config.cors_headers = "content-type,authorization".to_string();
+        config.cors_methods = "GET,POST".to_string();
+
+        let result = config.validate_cors();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Wildcard CORS origins"));
+    }
+
+    #[test]
+    fn test_cors_validation_production_http_origin() {
+        let mut config = Config::test_config();
+        config.environment = "production".to_string();
+        config.cors_origins = "http://localhost:3000".to_string();
+        config.cors_headers = "content-type".to_string();
+        config.cors_methods = "GET,POST".to_string();
+
+        // http:// is allowed (for testing environments with production mode)
+        let result = config.validate_cors();
+        assert!(result.is_ok());
     }
 }

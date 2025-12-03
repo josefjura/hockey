@@ -40,6 +40,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
     aide::generate::extract_schemas(true);
 
+    // Validate CORS configuration
+    if let Err(e) = config.validate_cors() {
+        anyhow::bail!("CORS configuration error: {}", e);
+    }
+
     // Set up SQLite connection options with auto-creation
     let connection_options = SqliteConnectOptions::from_str(&config.database_url)?
         .create_if_missing(true)
