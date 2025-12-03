@@ -12,7 +12,22 @@ interface User {
 	id: string;
 	email: string;
 	name: string | null;
-	token: string;
+	accessToken: string;
+	refreshToken: string;
+	expiresAt: number;
+}
+
+/**
+ * OAuth2 Login Response from backend
+ */
+interface LoginResponse {
+	access_token: string;
+	token_type: string;
+	expires_in: number;
+	refresh_token: string;
+	user_id: number;
+	email: string;
+	name: string | null;
 }
 
 export async function getUserFromDb(email: string, passwordHash: string): Promise<User | null> {
@@ -30,14 +45,19 @@ export async function getUserFromDb(email: string, passwordHash: string): Promis
 			return null;
 		}
 
-		const data = await response.json();
+		const data: LoginResponse = await response.json();
+
+		// Calculate token expiration time (current time + expires_in seconds)
+		const expiresAt = Math.floor(Date.now() / 1000) + data.expires_in;
 
 		// Return user object in the format expected by NextAuth
 		return {
 			id: data.user_id.toString(),
 			email: data.email,
 			name: data.name,
-			token: data.token,
+			accessToken: data.access_token,
+			refreshToken: data.refresh_token,
+			expiresAt,
 		};
 	} catch (error) {
 		console.error('Login error:', error);
