@@ -31,7 +31,7 @@ This is a monorepo containing:
 - **Modern UI/UX** with responsive design
 - **Form Validation** with real-time feedback
 - **Search & Pagination** for all data tables
-- **Authentication System** with session management
+- **Secure Authentication** - OAuth2-inspired JWT with refresh tokens
 - **RESTful API** with OpenAPI documentation
 
 ## 🛠️ Tech Stack
@@ -49,7 +49,7 @@ This is a monorepo containing:
 - **Framework**: [Axum](https://github.com/tokio-rs/axum) for async web server
 - **Language**: Rust (edition 2021)
 - **Database**: SQLite with [SQLx](https://github.com/launchbadge/sqlx)
-- **Authentication**: bcrypt for password hashing
+- **Authentication**: JWT (RS256) with [jsonwebtoken](https://github.com/Keats/jsonwebtoken), bcrypt for password hashing
 - **API Documentation**: [aide](https://github.com/tamasfe/aide) for OpenAPI
 - **Validation**: Serde for JSON serialization
 
@@ -92,11 +92,21 @@ The project uses GitHub Actions for automated building and deployment:
 ```bash
 cd backend
 
+# Generate RSA keys for JWT (first time only)
+./scripts/generate_keys.sh
+
+# Create .env file from example
+cp .env.example .env
+# Edit .env and set your configuration
+
 # Install dependencies and run migrations
 cargo run
 
 # API will be available at http://localhost:8080
 # OpenAPI docs at http://localhost:8080/api-docs
+
+# Create an admin user (after first run)
+cargo run --bin create_admin
 ```
 
 #### Frontend Application
@@ -136,6 +146,38 @@ yarn build
 
 ## 🔐 Authentication
 
+The application uses a secure OAuth2-inspired JWT authentication system with access and refresh tokens.
+
+### Authentication Flow
+
+1. **Login**: User provides email/password credentials
+   - Backend validates credentials against bcrypt-hashed passwords
+   - Returns short-lived access token (15 min) and refresh token (7 days)
+   - Refresh token is stored hashed in the database
+
+2. **API Requests**: Client includes access token in Authorization header
+   - Format: `Authorization: Bearer <access_token>`
+   - Backend validates JWT signature using RSA public key
+   - Extracts user information from token claims
+
+3. **Token Refresh**: When access token expires
+   - Client sends refresh token to `/auth/refresh` endpoint
+   - Backend validates refresh token (checks expiration, revocation)
+   - Returns new access token and refresh token pair
+
+4. **Logout**: Client sends refresh token to `/auth/logout`
+   - Backend revokes the refresh token in database
+   - Client discards both tokens
+
+### Security Features
+
+- **RSA-256 JWT Signing**: Uses 4096-bit RSA key pairs for token signing/verification
+- **Bcrypt Password Hashing**: Passwords hashed with bcrypt (cost factor 12)
+- **Refresh Token Rotation**: New refresh token issued on each refresh
+- **Token Revocation**: Refresh tokens can be revoked (logout, security events)
+- **Short-lived Access Tokens**: 15-minute expiry reduces exposure window
+- **CORS Protection**: Configurable CORS with production mode validation
+
 ### Creating an Admin User
 
 For security reasons, no default admin credentials are provided. You must create an admin user using the CLI tool:
@@ -152,6 +194,74 @@ The tool will interactively prompt you for:
 - Name (optional)
 
 The password is securely hashed using bcrypt before being stored in the database.
+
+### JWT Key Generation
+
+Before running the backend, generate RSA key pairs for JWT signing:
+
+```bash
+cd backend
+./scripts/generate_keys.sh
+```
+
+This creates:
+- `jwt_private.pem`: Private key for signing tokens (4096-bit RSA)
+- `jwt_public.pem`: Public key for verifying tokens
+
+**Important**: These keys are gitignored and should never be committed. Backup them securely for production deployments.
+
+## 📡 API Usage
+
+### Authentication
+
+All API requests (except `/auth/login` and `/health`) require authentication via JWT bearer token:
+
+```bash
+# 1. Login to get tokens
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "your-password"
+  }'
+
+# Response:
+# {
+#   "access_token": "eyJ...",
+#   "refresh_token": "eyJ...",
+#   "token_type": "Bearer",
+#   "expires_in": 900
+# }
+
+# 2. Use access token for API requests
+curl http://localhost:8080/team \
+  -H "Authorization: Bearer eyJ..."
+
+# 3. Refresh access token when expired
+curl -X POST http://localhost:8080/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "eyJ..."
+  }'
+
+# 4. Logout (revoke refresh token)
+curl -X POST http://localhost:8080/auth/logout \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "eyJ..."
+  }'
+```
+
+### Token Lifetimes
+
+- **Access Token**: 15 minutes (configurable via `JWT_ACCESS_TOKEN_DURATION_MINUTES`)
+- **Refresh Token**: 7 days (configurable via `JWT_REFRESH_TOKEN_DURATION_DAYS`)
+
+### API Documentation
+
+Interactive API documentation is available at:
+- **Development**: http://localhost:8080/docs
+- **OpenAPI Spec**: http://localhost:8080/api-doc/openapi.json
 
 ## 🌍 Internationalization
 
@@ -197,18 +307,110 @@ The application uses a consistent design system with:
 
 ## 🔧 Environment Variables
 
-### Frontend (.env.local)
-```bash
-NEXTAUTH_SECRET=your-nextauth-secret
-NEXTAUTH_URL=http://localhost:3000
-BACKEND_URL=http://localhost:8080
-```
-
 ### Backend (.env)
+
+All backend configuration can be set via environment variables or `.env` file:
+
 ```bash
-DATABASE_URL=sqlite:./database.db
+# Database Configuration
+DATABASE_URL=sqlite:./data/hockey_data.db
+
+# JWT Authentication - RSA Keys
+JWT_PRIVATE_KEY_PATH=jwt_private.pem
+JWT_PUBLIC_KEY_PATH=jwt_public.pem
+
+# JWT Token Durations
+JWT_ACCESS_TOKEN_DURATION_MINUTES=15
+JWT_REFRESH_TOKEN_DURATION_DAYS=7
+
+# HMAC Key (legacy, kept for compatibility)
+HMAC_KEY=your-very-secure-hmac-key-for-jwt-signing-should-be-long-and-random
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8080
+
+# Environment Mode (development or production)
+# In production mode, wildcard CORS is rejected for security
+ENVIRONMENT=development
+
+# CORS Configuration
+# Development: wildcard allowed
+CORS_ORIGINS=*
+CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
+CORS_HEADERS=*
+
+# Production: specify explicit origins
+# ENVIRONMENT=production
+# CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+# CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
+# CORS_HEADERS=content-type,authorization,x-requested-with
+
+# Logging
 RUST_LOG=info
 ```
+
+### Frontend (.env.local)
+
+```bash
+# NextAuth Configuration
+NEXTAUTH_SECRET=your-secret-nextauth-key-change-this-in-production-min-32-chars
+NEXTAUTH_URL=http://localhost:3000
+AUTH_TRUST_HOST=true
+
+# Backend API URL
+HOCKEY_BACKEND_URL=http://localhost:8080
+
+# Optional: Custom API endpoint
+# NEXT_PUBLIC_API_URL=http://localhost:8080
+```
+
+### Docker Compose (.env)
+
+For Docker deployments, configure both services:
+
+```bash
+# Backend Configuration
+HOCKEY_HMAC_KEY=your-secret-hmac-key-change-this-in-production-min-32-chars
+DATABASE_URL=sqlite:///app/data/hockey.db
+CORS_ORIGINS=http://localhost:3000,http://localhost:4000
+CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
+CORS_HEADERS=*
+
+# Frontend Configuration
+NEXTAUTH_SECRET=your-secret-nextauth-key-change-this-in-production-min-32-chars
+HOCKEY_BACKEND_URL=http://hockey-backend:8080
+```
+
+### Environment Variable Reference
+
+#### Backend Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | - | SQLite database file path |
+| `JWT_PRIVATE_KEY_PATH` | Yes | `jwt_private.pem` | Path to RSA private key for JWT signing |
+| `JWT_PUBLIC_KEY_PATH` | Yes | `jwt_public.pem` | Path to RSA public key for JWT verification |
+| `JWT_ACCESS_TOKEN_DURATION_MINUTES` | No | `15` | Access token expiry in minutes |
+| `JWT_REFRESH_TOKEN_DURATION_DAYS` | No | `7` | Refresh token expiry in days |
+| `HMAC_KEY` | Yes | - | Legacy HMAC key (kept for compatibility) |
+| `HOST` | No | `0.0.0.0` | Server bind address |
+| `PORT` | No | `8080` | Server port |
+| `ENVIRONMENT` | No | `development` | Environment mode (`development` or `production`) |
+| `CORS_ORIGINS` | No | `*` | Allowed CORS origins (comma-separated or `*`) |
+| `CORS_METHODS` | No | `GET,POST,PUT,DELETE,OPTIONS` | Allowed HTTP methods |
+| `CORS_HEADERS` | No | `*` | Allowed request headers |
+| `RUST_LOG` | No | `info` | Logging level (`trace`, `debug`, `info`, `warn`, `error`) |
+
+#### Frontend Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `NEXTAUTH_SECRET` | Yes | - | Secret for NextAuth.js session encryption (min 32 chars) |
+| `NEXTAUTH_URL` | Yes | - | Full URL where the app is hosted |
+| `AUTH_TRUST_HOST` | No | `false` | Trust host header (useful for proxies) |
+| `HOCKEY_BACKEND_URL` | Yes | - | Backend API URL for server-side requests |
+| `NEXT_PUBLIC_API_URL` | No | - | Backend API URL for client-side requests (optional) |
 
 ## 🚨 Troubleshooting
 
