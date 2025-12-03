@@ -205,6 +205,7 @@ pub async fn serve(config: Config, db: SqlitePool) {
         .route("/ready", get(readiness_check))
         .layer(Extension(Arc::new(api)))
         .layer(create_cors_layer(&config))
+        .layer(Extension(api_context.jwt_manager.clone()))
         .layer(Extension(api_context.clone()))
         .with_state(api_context);
 
