@@ -6,21 +6,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a hockey management application with a Rust backend (Axum + SQLx) and Next.js frontend. The system manages hockey tournaments, teams, players, and their relationships across seasons and events.
 
-### ⚠️ Active Migration
+### Authentication System
 
-The project is currently undergoing an **OAuth2 Authentication Migration** to resolve critical security vulnerabilities. All migration tasks are tracked in GitHub Issues under the "OAuth2 Authentication Migration" milestone.
+The project uses a secure OAuth2-inspired JWT authentication system that was completed as part of the "OAuth2 Authentication Migration" milestone.
 
-**View tasks**: `gh issue list --milestone "OAuth2 Authentication Migration"`
-**Documentation**: See `README_AUTH_MIGRATION.md` for workflow and details
+**Key Features**:
+- RSA-256 JWT tokens (4096-bit keys)
+- Access tokens (15 min) and refresh tokens (7 days)
+- Bcrypt password hashing
+- Token revocation support
+- Production-ready CORS configuration
 
-When working on authentication-related code, always check if there's an open issue for it first.
+**Documentation**: See `DEPLOYMENT.md` for production setup and `README.md` for authentication flow details.
 
 ## Architecture
 
 ### Backend (Rust)
 - **Framework**: Axum web framework with aide for OpenAPI documentation
 - **Database**: SQLite with SQLx for type-safe queries
-- **Authentication**: JWT tokens with bcrypt password hashing
+- **Authentication**: OAuth2-inspired JWT (RS256) with refresh tokens and bcrypt password hashing
 - **API Documentation**: Auto-generated OpenAPI specs accessible at `/docs`
 - **Port**: Runs on port 8080 (configurable)
 
@@ -36,17 +40,19 @@ When working on authentication-related code, always check if there's an open iss
 The database follows a hierarchical structure:
 - `country` → `event` → `season` → `team_participation` → `player_contract`
 - Junction tables: `team_participation` (teams in seasons), `player_contract` (players in team participations)
-- Authentication: `users` table with bcrypt password hashing
+- Authentication: `users` table with bcrypt password hashing, `refresh_tokens` table for token management
 
 ## Development Commands
 
 ### Backend
 ```bash
 cd backend
+./scripts/generate_keys.sh   # Generate JWT RSA keys (first time only)
 cargo run                    # Start development server
 cargo build                  # Build the project
 cargo test                   # Run tests
 cargo check                  # Check code without building
+cargo run --bin create_admin # Create an admin user
 ```
 
 ### Frontend
@@ -69,11 +75,22 @@ cd backend
 
 ### Backend Environment Variables
 - `DATABASE_URL`: SQLite database file path
-- `HMAC_KEY`: JWT signing key for authentication
+- `HMAC_KEY`: Legacy HMAC key (kept for compatibility)
+- `JWT_PRIVATE_KEY_PATH`: Path to RSA private key for JWT signing (default: `jwt_private.pem`)
+- `JWT_PUBLIC_KEY_PATH`: Path to RSA public key for JWT verification (default: `jwt_public.pem`)
+- `JWT_ACCESS_TOKEN_DURATION_MINUTES`: Access token expiry in minutes (default: 15)
+- `JWT_REFRESH_TOKEN_DURATION_DAYS`: Refresh token expiry in days (default: 7)
+- `ENVIRONMENT`: Environment mode - `development` or `production` (affects CORS validation)
+- `CORS_ORIGINS`: Allowed CORS origins (comma-separated or `*` for development)
+- `CORS_METHODS`: Allowed HTTP methods (default: `GET,POST,PUT,DELETE,OPTIONS`)
+- `CORS_HEADERS`: Allowed request headers (comma-separated or `*` for development)
 
 ### Frontend Environment Variables
-- `NEXTAUTH_SECRET`: NextAuth.js secret key
+- `NEXTAUTH_SECRET`: NextAuth.js secret key (min 32 characters)
 - `NEXTAUTH_URL`: Application URL for NextAuth.js
+- `HOCKEY_BACKEND_URL`: Backend API URL for server-side requests
+
+See `DEPLOYMENT.md` for complete environment variable reference and production configuration.
 
 ## Key File Locations
 
@@ -81,10 +98,17 @@ cd backend
 - `src/main.rs`: Application entry point and OpenAPI configuration
 - `src/http.rs`: HTTP server setup and route configuration
 - `src/config.rs`: Configuration management
+- `src/auth/`: Authentication module with JWT, middleware, and refresh tokens
+  - `jwt.rs`: JWT manager for token creation and validation
+  - `middleware.rs`: JWT validation middleware for protected routes
+  - `service.rs`: Authentication service (login, token management)
+  - `routes.rs`: Auth endpoints (login, refresh, logout)
 - `src/*/routes.rs`: API route definitions for each domain
 - `src/*/service/mod.rs`: Business logic and database operations
 - `src/*/service/fixtures/*.sql`: SQL queries for each service
+- `src/bin/create_admin.rs`: CLI tool for creating admin users
 - `migrations/`: Database migration files (chronological order)
+- `scripts/generate_keys.sh`: Script to generate RSA key pairs for JWT
 
 ### Frontend Structure
 - `src/app/`: Next.js App Router pages and API routes
@@ -135,14 +159,20 @@ cd backend
 
 All API endpoints follow RESTful conventions:
 - `/auth/*`: Authentication endpoints
-- `/event/*`: Event management
-- `/country/*`: Country management
-- `/team/*`: Team management
-- `/player/*`: Player management
-- `/season/*`: Season management
-- `/team-participation/*`: Team participation management
-- `/player-contract/*`: Player contract management
+  - `POST /auth/login`: Login with email/password, returns access + refresh tokens
+  - `POST /auth/refresh`: Refresh access token using refresh token
+  - `POST /auth/logout`: Revoke refresh token
+- `/event/*`: Event management (protected)
+- `/country/*`: Country management (protected)
+- `/team/*`: Team management (protected)
+- `/player/*`: Player management (protected)
+- `/season/*`: Season management (protected)
+- `/team-participation/*`: Team participation management (protected)
+- `/player-contract/*`: Player contract management (protected)
 - `/docs`: OpenAPI documentation
+- `/health`: Health check endpoint (public)
+
+Protected endpoints require `Authorization: Bearer <access_token>` header.
 
 ## Development Workflow
 
