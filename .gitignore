@@ -79,4 +79,4 @@ next-env.d.ts
 **/jwt_private.pem
 **/jwt_public.pem
 
-data
+databackend/jura_hockey.db
