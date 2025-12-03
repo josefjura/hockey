@@ -22,76 +22,18 @@ mod tests {
         Extension, Router,
     };
     use chrono::{Duration, Utc};
-    use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
+    use sqlx::SqlitePool;
     use std::sync::Arc;
     use tower::ServiceExt;
 
     use crate::{
         auth::{
-            hash_password, require_auth, revoke_refresh_token, store_refresh_token,
-            validate_refresh_token, AuthUser, JwtManager, LoginRequest,
+            require_auth, revoke_refresh_token, store_refresh_token,
+            validate_refresh_token, AuthUser, JwtManager,
         },
         config::Config,
         http::ApiContext,
     };
-
-    /// Setup an in-memory test database with all required tables and a test user
-    async fn setup_test_db() -> SqlitePool {
-        let pool = SqlitePoolOptions::new()
-            .connect("sqlite::memory:")
-            .await
-            .expect("Failed to create in-memory database");
-
-        // Create users table
-        sqlx::query(
-            "CREATE TABLE users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT NOT NULL UNIQUE,
-                name TEXT,
-                password_hash TEXT NOT NULL
-            )",
-        )
-        .execute(&pool)
-        .await
-        .expect("Failed to create users table");
-
-        // Create refresh_tokens table
-        sqlx::query(
-            "CREATE TABLE refresh_tokens (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                token TEXT NOT NULL UNIQUE,
-                user_id INTEGER NOT NULL,
-                expires_at DATETIME NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                revoked_at DATETIME,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )",
-        )
-        .execute(&pool)
-        .await
-        .expect("Failed to create refresh_tokens table");
-
-        // Insert test users
-        let password_hash = hash_password("testpass123").unwrap();
-        sqlx::query("INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)")
-            .bind("test@example.com")
-            .bind("Test User")
-            .bind(&password_hash)
-            .execute(&pool)
-            .await
-            .expect("Failed to insert test user");
-
-        let password_hash2 = hash_password("anotherpass").unwrap();
-        sqlx::query("INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)")
-            .bind("user2@example.com")
-            .bind("Second User")
-            .bind(&password_hash2)
-            .execute(&pool)
-            .await
-            .expect("Failed to insert second test user");
-
-        pool
-    }
 
     /// Create a test JWT manager
     fn create_test_jwt_manager() -> JwtManager {
@@ -121,26 +63,22 @@ mod tests {
             .layer(Extension(ctx))
     }
 
-    #[tokio::test]
-    async fn test_e2e_complete_authentication_flow() {
-        // Setup
-        let db = setup_test_db().await;
+    #[sqlx::test(fixtures("auth_users"))]
+    async fn test_e2e_complete_authentication_flow(db: SqlitePool) {
         let ctx = create_test_context(db.clone());
         let jwt_manager = ctx.jwt_manager.clone();
 
         // Step 1: Login
         println!("\n=== Step 1: Login ===");
-        let login_req = LoginRequest {
-            email: "test@example.com".to_string(),
-            password: "testpass123".to_string(),
-        };
+        let email = "testuser@example.com";
+        let password = "testpassword123";
 
         // Simulate login by calling the auth logic directly
-        let authenticated = crate::auth::authenticate_user(&db, &login_req.email, &login_req.password)
+        let authenticated = crate::auth::authenticate_user(&db, email, password)
             .await
             .expect("Authentication should succeed");
 
-        assert_eq!(authenticated.email, "test@example.com");
+        assert_eq!(authenticated.email, email);
         assert_eq!(authenticated.name, Some("Test User".to_string()));
 
         let user_id = authenticated.id.unwrap();
@@ -176,7 +114,7 @@ mod tests {
             .await
             .unwrap();
         let body_str = String::from_utf8(body.to_vec()).unwrap();
-        assert!(body_str.contains("test@example.com"));
+        assert!(body_str.contains(email));
         println!("Protected endpoint access successful");
 
         // Step 3: Refresh token
@@ -265,9 +203,8 @@ mod tests {
         println!("\n=== Complete Flow Test Passed ===\n");
     }
 
-    #[tokio::test]
-    async fn test_protected_endpoint_rejects_unauthenticated() {
-        let db = setup_test_db().await;
+    #[sqlx::test(fixtures("auth_users"))]
+    async fn test_protected_endpoint_rejects_unauthenticated(db: SqlitePool) {
         let ctx = create_test_context(db);
         let app = create_protected_app(ctx);
 
@@ -332,16 +269,22 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn test_protected_endpoint_accepts_valid_token() {
-        let db = setup_test_db().await;
+    #[sqlx::test(fixtures("auth_users"))]
+    async fn test_protected_endpoint_accepts_valid_token(db: SqlitePool) {
+        // Query the actual user ID from the database BEFORE creating context
+        let user_id: i64 = sqlx::query_scalar("SELECT id FROM users WHERE email = ?")
+            .bind("testuser@example.com")
+            .fetch_one(&db)
+            .await
+            .expect("Should find test user");
+
         let ctx = create_test_context(db);
         let jwt_manager = ctx.jwt_manager.clone();
         let app = create_protected_app(ctx);
 
         // Generate valid access token
         let access_token = jwt_manager
-            .generate_access_token(1, "test@example.com", Some("Test User".to_string()))
+            .generate_access_token(user_id, "testuser@example.com", Some("Test User".to_string()))
             .unwrap();
 
         let request = Request::builder()
@@ -362,21 +305,19 @@ mod tests {
             .unwrap();
         let body_str = String::from_utf8(body.to_vec()).unwrap();
         assert!(
-            body_str.contains("user_id=1"),
+            body_str.contains(&format!("user_id={}", user_id)),
             "Should extract correct user_id"
         );
         assert!(
-            body_str.contains("email=test@example.com"),
+            body_str.contains("email=testuser@example.com"),
             "Should extract correct email"
         );
     }
 
-    #[tokio::test]
-    async fn test_invalid_credentials_login() {
-        let db = setup_test_db().await;
-
+    #[sqlx::test(fixtures("auth_users"))]
+    async fn test_invalid_credentials_login(db: SqlitePool) {
         // Test wrong password
-        let result = crate::auth::authenticate_user(&db, "test@example.com", "wrongpassword").await;
+        let result = crate::auth::authenticate_user(&db, "testuser@example.com", "wrongpassword").await;
         assert!(result.is_err(), "Should reject wrong password");
 
         // Test non-existent user
@@ -388,12 +329,18 @@ mod tests {
         assert!(result.is_err(), "Should reject empty credentials");
     }
 
-    #[tokio::test]
-    async fn test_token_refresh_rotation() {
-        let db = setup_test_db().await;
+    #[sqlx::test(fixtures("auth_users"))]
+    async fn test_token_refresh_rotation(db: SqlitePool) {
         let jwt_manager = create_test_jwt_manager();
-        let user_id = 1;
-        let email = "test@example.com";
+
+        // Query the actual user from the database
+        let user_id: i64 = sqlx::query_scalar("SELECT id FROM users WHERE email = ?")
+            .bind("testuser@example.com")
+            .fetch_one(&db)
+            .await
+            .expect("Should find test user");
+
+        let email = "testuser@example.com";
         let name = Some("Test User".to_string());
 
         // Generate and store initial refresh token
@@ -453,51 +400,63 @@ mod tests {
         // This does not affect the security of the actual refresh endpoint implementation.
     }
 
-    #[tokio::test]
-    async fn test_multiple_users_token_isolation() {
-        let db = setup_test_db().await;
+    #[sqlx::test(fixtures("auth_users"))]
+    async fn test_multiple_users_token_isolation(db: SqlitePool) {
         let jwt_manager = create_test_jwt_manager();
+
+        // Query actual user IDs from database
+        let user1_id: i64 = sqlx::query_scalar("SELECT id FROM users WHERE email = ?")
+            .bind("testuser@example.com")
+            .fetch_one(&db)
+            .await
+            .expect("Should find user 1");
+
+        let user2_id: i64 = sqlx::query_scalar("SELECT id FROM users WHERE email = ?")
+            .bind("admin@example.com")
+            .fetch_one(&db)
+            .await
+            .expect("Should find user 2");
 
         // User 1 tokens
         let user1_access = jwt_manager
-            .generate_access_token(1, "test@example.com", Some("Test User".to_string()))
+            .generate_access_token(user1_id, "testuser@example.com", Some("Test User".to_string()))
             .unwrap();
         let user1_refresh = jwt_manager
-            .generate_refresh_token(1, "test@example.com", Some("Test User".to_string()))
+            .generate_refresh_token(user1_id, "testuser@example.com", Some("Test User".to_string()))
             .unwrap();
 
         // User 2 tokens
         let user2_access = jwt_manager
-            .generate_access_token(2, "user2@example.com", Some("Second User".to_string()))
+            .generate_access_token(user2_id, "admin@example.com", Some("Admin User".to_string()))
             .unwrap();
         let user2_refresh = jwt_manager
-            .generate_refresh_token(2, "user2@example.com", Some("Second User".to_string()))
+            .generate_refresh_token(user2_id, "admin@example.com", Some("Admin User".to_string()))
             .unwrap();
 
         // Store refresh tokens
         let expires_at = Utc::now() + Duration::days(7);
-        store_refresh_token(&db, &user1_refresh, 1, expires_at)
+        store_refresh_token(&db, &user1_refresh, user1_id, expires_at)
             .await
             .unwrap();
-        store_refresh_token(&db, &user2_refresh, 2, expires_at)
+        store_refresh_token(&db, &user2_refresh, user2_id, expires_at)
             .await
             .unwrap();
 
         // Verify each user's access token contains correct information
         let user1_claims = jwt_manager.validate_access_token(&user1_access).unwrap();
-        assert_eq!(user1_claims.sub, "1");
-        assert_eq!(user1_claims.email, "test@example.com");
+        assert_eq!(user1_claims.sub, user1_id.to_string());
+        assert_eq!(user1_claims.email, "testuser@example.com");
 
         let user2_claims = jwt_manager.validate_access_token(&user2_access).unwrap();
-        assert_eq!(user2_claims.sub, "2");
-        assert_eq!(user2_claims.email, "user2@example.com");
+        assert_eq!(user2_claims.sub, user2_id.to_string());
+        assert_eq!(user2_claims.email, "admin@example.com");
 
         // Verify refresh tokens are validated to correct users
-        let user1_id = validate_refresh_token(&db, &user1_refresh).await.unwrap();
-        assert_eq!(user1_id, 1);
+        let validated_user1_id = validate_refresh_token(&db, &user1_refresh).await.unwrap();
+        assert_eq!(validated_user1_id, user1_id);
 
-        let user2_id = validate_refresh_token(&db, &user2_refresh).await.unwrap();
-        assert_eq!(user2_id, 2);
+        let validated_user2_id = validate_refresh_token(&db, &user2_refresh).await.unwrap();
+        assert_eq!(validated_user2_id, user2_id);
 
         // Revoke user 1's refresh token
         revoke_refresh_token(&db, &user1_refresh).await.unwrap();
@@ -509,13 +468,20 @@ mod tests {
         assert!(validate_refresh_token(&db, &user2_refresh).await.is_ok());
     }
 
-    #[tokio::test]
-    async fn test_access_token_expiration() {
+    #[sqlx::test(fixtures("auth_users"))]
+    async fn test_access_token_expiration(db: SqlitePool) {
         let jwt_manager = create_test_jwt_manager();
+
+        // Query actual user from database
+        let user_id: i64 = sqlx::query_scalar("SELECT id FROM users WHERE email = ?")
+            .bind("testuser@example.com")
+            .fetch_one(&db)
+            .await
+            .expect("Should find test user");
 
         // Generate a token
         let access_token = jwt_manager
-            .generate_access_token(1, "test@example.com", Some("Test User".to_string()))
+            .generate_access_token(user_id, "testuser@example.com", Some("Test User".to_string()))
             .unwrap();
 
         // Should be valid immediately
@@ -525,7 +491,7 @@ mod tests {
         // Verify claims
         let claims = claims.unwrap();
         assert_eq!(claims.token_type, "access");
-        assert_eq!(claims.email, "test@example.com");
+        assert_eq!(claims.email, "testuser@example.com");
 
         // Note: We can't easily test actual expiration without waiting 15 minutes
         // or mocking time, but we verify the expiration is set correctly
@@ -540,9 +506,9 @@ mod tests {
         );
     }
 
-    #[tokio::test]
+    #[sqlx::test(fixtures("auth_users"))]
     #[ignore = "Known limitation: bcrypt-based JWT token storage may cause false matches between similar tokens"]
-    async fn test_logout_revokes_only_specified_token() {
+    async fn test_logout_revokes_only_specified_token(db: SqlitePool) {
         // NOTE: This test is ignored due to a known limitation in the current implementation.
         //
         // The refresh token storage system uses bcrypt to hash JWT tokens before storing them.
@@ -564,10 +530,16 @@ mod tests {
         // The test below demonstrates the expected behavior (multiple sessions with
         // independent token revocation):
 
-        let db = setup_test_db().await;
         let jwt_manager = create_test_jwt_manager();
-        let user_id = 1;
-        let email = "test@example.com";
+
+        // Query actual user from database
+        let user_id: i64 = sqlx::query_scalar("SELECT id FROM users WHERE email = ?")
+            .bind("testuser@example.com")
+            .fetch_one(&db)
+            .await
+            .expect("Should find test user");
+
+        let email = "testuser@example.com";
         let name = Some("Test User".to_string());
 
         // Create first refresh token
