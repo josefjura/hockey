@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/config";
+import { apiGet, apiPost } from "@/lib/api-client";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Player } from '@/types/player';
@@ -13,38 +13,18 @@ interface Country {
 
 // Team Participation API functions
 export const findOrCreateTeamParticipation = async (seasonId: string, teamId: string): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/team-participation/find-or-create`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			season_id: parseInt(seasonId),
-			team_id: parseInt(teamId),
-		}),
+	return apiPost<{ id: number }>('/team-participation/find-or-create', {
+		season_id: parseInt(seasonId),
+		team_id: parseInt(teamId),
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 // Player Contract API functions
 export const createPlayerContract = async (teamParticipationId: number, playerId: number): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/player-contract`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			team_participation_id: teamParticipationId,
-			player_id: playerId,
-		}),
+	return apiPost<{ id: number }>('/player-contract', {
+		team_participation_id: teamParticipationId,
+		player_id: playerId,
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 // Search existing players
@@ -58,12 +38,8 @@ export const searchPlayers = async (searchTerm: string): Promise<Array<{ id: num
 		params.append('name', searchTerm);
 	}
 
-	const response = await fetch(`${API_URL}/player?${params}`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
+	const data = await apiGet<PaginatedResponse<Player>>(`/player?${params}`);
 
-	const data: PaginatedResponse<Player> = await response.json();
 	// Convert from paginated response to simple array for search results
 	return data.items?.map((player: Player) => ({
 		id: parseInt(player.id),
@@ -85,11 +61,7 @@ export const addPlayerToRoster = async (
 		playerId = playerData.id;
 	} else {
 		// First, find the country by name
-		const countriesResponse = await fetch(`${API_URL}/country?page_size=250`); // Get more countries at once
-		if (!countriesResponse.ok) {
-			throw new Error('Failed to fetch countries');
-		}
-		const countriesData: PaginatedResponse<Country> = await countriesResponse.json();
+		const countriesData = await apiGet<PaginatedResponse<Country>>('/country?page_size=250');
 		const country = countriesData.items?.find((c: Country) =>
 			c.name.toLowerCase() === playerData.nationality.toLowerCase()
 		);
@@ -99,22 +71,10 @@ export const addPlayerToRoster = async (
 		}
 
 		// Create the player
-		const playerResponse = await fetch(`${API_URL}/player`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				name: playerData.name,
-				country_id: parseInt(country.id),
-			}),
+		const newPlayer = await apiPost<{ id: number }>('/player', {
+			name: playerData.name,
+			country_id: parseInt(country.id),
 		});
-
-		if (!playerResponse.ok) {
-			throw new Error('Failed to create player');
-		}
-
-		const newPlayer: { id: number } = await playerResponse.json();
 		playerId = newPlayer.id;
 	}
 

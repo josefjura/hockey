@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/config";
+import { apiGet, apiClient } from "@/lib/api-client";
 import { Country } from "@/types/country";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -14,34 +14,19 @@ export const fetchCountryList = async (page: number = 0, searchTerm?: string): P
 		params.append('name', searchTerm);
 	}
 
-	const response = await fetch(`${API_URL}/country?${params}`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<PaginatedResponse<Country>>(`/country?${params}`);
 };
 
 export const fetchCountryListAll = async (): Promise<Country[]> => {
-	const response = await fetch(`${API_URL}/country?page_size=200&enabled=true`); // Get all enabled countries
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	const data: PaginatedResponse<Country> = await response.json();
+	const data = await apiGet<PaginatedResponse<Country>>('/country?page_size=200&enabled=true');
 	return data.items;
 };
 
 export const updateCountryStatus = async (countryId: string, status: boolean) => {
-	const response = await fetch(`${API_URL}/country/${countryId}`, {
+	return apiClient(`/country/${countryId}`, {
 		method: 'PATCH',
-		headers: {
-			'Content-Type': 'application/json',
-		},
 		body: JSON.stringify(status),
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 }
 
 // Simple query configuration for country list (no details needed)

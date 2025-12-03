@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/config";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import { Player } from "@/types/player";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,23 +10,23 @@ const validatePaginatedResponse = <T>(data: unknown): PaginatedResponse<T> => {
 	if (!data || typeof data !== 'object') {
 		throw new Error('API response is not an object');
 	}
-	
+
 	// Check if it's an array (old format) instead of paginated response
 	if (Array.isArray(data)) {
 		throw new Error('API returned array instead of paginated response - backend may be outdated');
 	}
-	
+
 	const required = ['items', 'total', 'page', 'page_size', 'total_pages', 'has_next', 'has_previous'];
 	for (const field of required) {
 		if (!(field in data)) {
 			throw new Error(`Missing required field: ${field} in API response`);
 		}
 	}
-	
+
 	if (!Array.isArray((data as Record<string, unknown>).items)) {
 		throw new Error('API response items field is not an array');
 	}
-	
+
 	return data as PaginatedResponse<T>;
 };
 
@@ -40,55 +40,26 @@ export const fetchPlayerList = async (page: number = 0, searchTerm?: string, pag
 		params.append('name', searchTerm);
 	}
 
-	const response = await fetch(`${API_URL}/player?${params}`);
-	if (!response.ok) {
-		throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-	}
-	
-	const data = await response.json();
+	const data = await apiGet<PaginatedResponse<Player>>(`/player?${params}`);
 	return validatePaginatedResponse<Player>(data);
 };
 
 export const createPlayer = async (playerData: { name: string; country_id: string }): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/player`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			name: playerData.name,
-			country_id: parseInt(playerData.country_id),
-		}),
+	return apiPost<{ id: number }>('/player', {
+		name: playerData.name,
+		country_id: parseInt(playerData.country_id),
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const updatePlayer = async (id: string, playerData: { name: string; country_id: string }): Promise<void> => {
-	const response = await fetch(`${API_URL}/player/${id}`, {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			name: playerData.name,
-			country_id: parseInt(playerData.country_id),
-		}),
+	return apiPut<void>(`/player/${id}`, {
+		name: playerData.name,
+		country_id: parseInt(playerData.country_id),
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
 };
 
 export const deletePlayer = async (id: string): Promise<void> => {
-	const response = await fetch(`${API_URL}/player/${id}`, {
-		method: 'DELETE',
-	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
+	return apiDelete<void>(`/player/${id}`);
 };
 
 // Query configurations

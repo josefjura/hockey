@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/config";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import { Team } from "@/types/team";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,63 +15,29 @@ export const fetchTeamList = async (page: number = 0, searchTerm?: string, pageS
 		params.append('name', searchTerm);
 	}
 
-	const response = await fetch(`${API_URL}/team?${params}`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<PaginatedResponse<Team>>(`/team?${params}`);
 };
 
 export const fetchTeamListSimple = async (): Promise<Array<{id: number, name: string}>> => {
-	const response = await fetch(`${API_URL}/team/list`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<Array<{id: number, name: string}>>('/team/list');
 };
 
 export const createTeam = async (teamData: { name: string | null; country_id: string }): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/team`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			name: teamData.name || null,
-			country_id: parseInt(teamData.country_id),
-		}),
+	return apiPost<{ id: number }>('/team', {
+		name: teamData.name || null,
+		country_id: parseInt(teamData.country_id),
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const updateTeam = async (id: number, teamData: { name: string | null; country_id: string }): Promise<string> => {
-	const response = await fetch(`${API_URL}/team/${id}`, {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			name: teamData.name || null,
-			country_id: parseInt(teamData.country_id),
-		}),
+	return apiPut<string>(`/team/${id}`, {
+		name: teamData.name || null,
+		country_id: parseInt(teamData.country_id),
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const deleteTeam = async (id: number): Promise<string> => {
-	const response = await fetch(`${API_URL}/team/${id}`, {
-		method: 'DELETE',
-	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiDelete<string>(`/team/${id}`);
 };
 
 // Query configurations
