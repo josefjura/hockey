@@ -1,6 +1,7 @@
 use axum::{
-    extract::FromRequestParts,
+    extract::{FromRequestParts, Request},
     http::{header::AUTHORIZATION, request::Parts, StatusCode},
+    middleware::Next,
     response::{IntoResponse, Response},
     Json,
 };
@@ -114,6 +115,69 @@ where
     }
 }
 
+/// Middleware layer that validates JWT tokens on all requests
+/// This can be applied to route groups to enforce authentication
+pub async fn require_auth(mut request: Request, next: Next) -> Response {
+    // Extract JWT manager from extensions
+    let jwt_manager = match request.extensions().get::<Arc<JwtManager>>() {
+        Some(manager) => manager.clone(),
+        None => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json("JWT manager not configured"),
+            )
+                .into_response()
+        }
+    };
+
+    // Extract Authorization header
+    let auth_header = match request
+        .headers()
+        .get(AUTHORIZATION)
+        .and_then(|h| h.to_str().ok())
+    {
+        Some(header) => header,
+        None => {
+            return AuthError::MissingToken.into_response();
+        }
+    };
+
+    // Extract Bearer token
+    let token = match extract_bearer_token(auth_header) {
+        Ok(t) => t,
+        Err(e) => {
+            return e.into_response();
+        }
+    };
+
+    // Validate the token as an access token
+    let claims = match jwt_manager.validate_access_token(token) {
+        Ok(claims) => claims,
+        Err(e) => {
+            let error = match e {
+                super::jwt::JwtManagerError::TokenExpired => AuthError::TokenExpired,
+                _ => AuthError::InvalidToken,
+            };
+            return error.into_response();
+        }
+    };
+
+    // Convert claims to AuthUser and add to request extensions
+    let auth_user = match AuthUser::from_claims(claims) {
+        Ok(user) => user,
+        Err(e) => {
+            return e.into_response();
+        }
+    };
+
+    // Add the authenticated user to request extensions
+    // so handlers can access it if they need it
+    request.extensions_mut().insert(auth_user);
+
+    // Continue to the next middleware/handler
+    next.run(request).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -128,8 +192,7 @@ mod tests {
     use crate::auth::jwt::JwtManager;
 
     fn create_test_jwt_manager() -> JwtManager {
-        JwtManager::new("jwt_private.pem", "jwt_public.pem")
-            .expect("Failed to create JwtManager")
+        JwtManager::new("jwt_private.pem", "jwt_public.pem").expect("Failed to create JwtManager")
     }
 
     async fn protected_handler(user: AuthUser) -> String {
@@ -278,5 +341,53 @@ mod tests {
         let response = app.oneshot(request).await.unwrap();
         // Should be rejected because refresh tokens can't be used for API access
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn test_require_auth_layer_rejects_unauthenticated() {
+        let jwt_manager = Arc::new(create_test_jwt_manager());
+
+        async fn test_handler() -> String {
+            "Success".to_string()
+        }
+
+        let app = Router::new()
+            .route("/protected", get(test_handler))
+            .layer(axum::middleware::from_fn(require_auth))
+            .layer(Extension(jwt_manager));
+
+        let request = Request::builder()
+            .uri("/protected")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn test_require_auth_layer_accepts_authenticated() {
+        let jwt_manager = create_test_jwt_manager();
+        let token = jwt_manager
+            .generate_access_token(1, "test@example.com", Some("Test User".to_string()))
+            .unwrap();
+
+        async fn test_handler() -> String {
+            "Success".to_string()
+        }
+
+        let app = Router::new()
+            .route("/protected", get(test_handler))
+            .layer(axum::middleware::from_fn(require_auth))
+            .layer(Extension(Arc::new(jwt_manager)));
+
+        let request = Request::builder()
+            .uri("/protected")
+            .header("Authorization", format!("Bearer {}", token))
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }

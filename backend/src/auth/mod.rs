@@ -81,9 +81,7 @@ fn login_docs(op: TransformOperation) -> TransformOperation {
     op.description("User login - Returns OAuth2-compliant JWT tokens")
         .tag("auth")
         .response::<200, Json<LoginResponse>>()
-        .response_with::<401, Json<String>, _>(|res| {
-            res.description("Invalid credentials")
-        })
+        .response_with::<401, Json<String>, _>(|res| res.description("Invalid credentials"))
 }
 
 fn refresh_docs(op: TransformOperation) -> TransformOperation {
@@ -98,12 +96,8 @@ fn refresh_docs(op: TransformOperation) -> TransformOperation {
 fn logout_docs(op: TransformOperation) -> TransformOperation {
     op.description("User logout - Revokes the refresh token to prevent future token refreshes")
         .tag("auth")
-        .response_with::<200, Json<String>, _>(|res| {
-            res.description("Successfully logged out")
-        })
-        .response_with::<401, Json<String>, _>(|res| {
-            res.description("Invalid refresh token")
-        })
+        .response_with::<200, Json<String>, _>(|res| res.description("Successfully logged out"))
+        .response_with::<401, Json<String>, _>(|res| res.description("Invalid refresh token"))
 }
 
 async fn login(
@@ -115,19 +109,19 @@ async fn login(
             let user_id = user.id.unwrap_or(0);
 
             // Generate JWT access and refresh tokens
-            let access_token = match ctx.jwt_manager.generate_access_token(
-                user_id,
-                &user.email,
-                user.name.clone(),
-            ) {
-                Ok(token) => token,
-                Err(err) => {
-                    return Err((
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(format!("Failed to generate access token: {:?}", err)),
-                    ));
-                }
-            };
+            let access_token =
+                match ctx
+                    .jwt_manager
+                    .generate_access_token(user_id, &user.email, user.name.clone())
+                {
+                    Ok(token) => token,
+                    Err(err) => {
+                        return Err((
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Json(format!("Failed to generate access token: {:?}", err)),
+                        ));
+                    }
+                };
 
             let refresh_token = match ctx.jwt_manager.generate_refresh_token(
                 user_id,
@@ -145,7 +139,9 @@ async fn login(
 
             // Store refresh token in database (expires in 7 days)
             let expires_at = Utc::now() + Duration::days(7);
-            if let Err(err) = store_refresh_token(&ctx.db, &refresh_token, user_id, expires_at).await {
+            if let Err(err) =
+                store_refresh_token(&ctx.db, &refresh_token, user_id, expires_at).await
+            {
                 return Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(format!("Failed to store refresh token: {:?}", err)),
@@ -203,34 +199,34 @@ async fn refresh(
     }
 
     // Generate new access token
-    let access_token = match ctx.jwt_manager.generate_access_token(
-        user_id,
-        &claims.email,
-        claims.name.clone(),
-    ) {
-        Ok(token) => token,
-        Err(err) => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(format!("Failed to generate access token: {:?}", err)),
-            ));
-        }
-    };
+    let access_token =
+        match ctx
+            .jwt_manager
+            .generate_access_token(user_id, &claims.email, claims.name.clone())
+        {
+            Ok(token) => token,
+            Err(err) => {
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(format!("Failed to generate access token: {:?}", err)),
+                ));
+            }
+        };
 
     // Generate new refresh token
-    let new_refresh_token = match ctx.jwt_manager.generate_refresh_token(
-        user_id,
-        &claims.email,
-        claims.name.clone(),
-    ) {
-        Ok(token) => token,
-        Err(err) => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(format!("Failed to generate refresh token: {:?}", err)),
-            ));
-        }
-    };
+    let new_refresh_token =
+        match ctx
+            .jwt_manager
+            .generate_refresh_token(user_id, &claims.email, claims.name.clone())
+        {
+            Ok(token) => token,
+            Err(err) => {
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(format!("Failed to generate refresh token: {:?}", err)),
+                ));
+            }
+        };
 
     // Store new refresh token in database
     let expires_at = Utc::now() + Duration::days(7);
@@ -352,14 +348,20 @@ mod tests {
 
         // Verify token is valid before refresh
         let validation_before = validate_refresh_token(&db, &refresh_token).await;
-        assert!(validation_before.is_ok(), "Token should be valid before refresh");
+        assert!(
+            validation_before.is_ok(),
+            "Token should be valid before refresh"
+        );
 
         // Revoke the token (simulating what refresh endpoint does)
         revoke_refresh_token(&db, &refresh_token).await.unwrap();
 
         // Verify old token is revoked
         let validation_after = validate_refresh_token(&db, &refresh_token).await;
-        assert!(validation_after.is_err(), "Token should be revoked after use");
+        assert!(
+            validation_after.is_err(),
+            "Token should be revoked after use"
+        );
     }
 
     #[tokio::test]
