@@ -80,17 +80,40 @@ The development docker-compose file (`docker-compose.yaml`):
 
 ### CORS Configuration
 
-Proper CORS configuration is critical for security:
+Proper CORS configuration is critical for security. The backend now automatically enforces CORS restrictions in production mode.
+
+#### Production Mode Enforcement
+
+When `ENVIRONMENT=production`, the server will refuse to start if:
+- CORS origins contain wildcards (`*`)
+- CORS headers contain wildcards (`*`)
+- CORS methods contain wildcards (`*`)
+- Origins are not properly formatted URLs (must start with `http://` or `https://`)
+
+This prevents accidental deployment with insecure CORS settings.
+
+#### Configuration Examples
 
 ```bash
-# GOOD: Specific domain(s)
-CORS_ORIGINS=https://yourdomain.com
-
-# GOOD: Multiple specific domains
-CORS_ORIGINS=https://app.example.com,https://admin.example.com
-
-# BAD: Wildcard (only for development!)
+# Development mode - wildcards allowed
+ENVIRONMENT=development
 CORS_ORIGINS=*
+CORS_HEADERS=*
+CORS_METHODS=*
+
+# Production mode - explicit values required
+ENVIRONMENT=production
+CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+CORS_HEADERS=content-type,authorization,x-requested-with
+CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
+```
+
+#### Testing CORS Configuration
+
+```bash
+# Test that server fails with invalid production config
+ENVIRONMENT=production CORS_ORIGINS=* cargo run
+# Should fail with: "CORS configuration error: Wildcard CORS origins (*) are not allowed in production mode"
 ```
 
 ### Database Security
