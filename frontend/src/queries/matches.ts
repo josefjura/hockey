@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/config";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import { Match, MatchWithStats, ScoreEvent, CreateMatchRequest, UpdateMatchRequest, CreateScoreEventRequest } from "@/types/match";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -39,50 +39,28 @@ export const fetchMatchList = async (
 		params.append('date_to', filters.dateTo);
 	}
 
-	const response = await fetch(`${API_URL}/match?${params}`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<PaginatedResponse<Match>>(`/match?${params}`);
 };
 
 export const fetchMatchById = async (id: string): Promise<Match> => {
-	const response = await fetch(`${API_URL}/match/${id}`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<Match>(`/match/${id}`);
 };
 
 export const fetchMatchWithStats = async (id: string): Promise<MatchWithStats> => {
-	const response = await fetch(`${API_URL}/match/${id}/stats`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<MatchWithStats>(`/match/${id}/stats`);
 };
 
 export const createMatch = async (matchData: CreateMatchRequest): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/match`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			season_id: parseInt(matchData.season_id),
-			home_team_id: parseInt(matchData.home_team_id),
-			away_team_id: parseInt(matchData.away_team_id),
-			home_score_unidentified: matchData.home_score_unidentified || 0,
-			away_score_unidentified: matchData.away_score_unidentified || 0,
-			match_date: matchData.match_date || null,
-			status: matchData.status || 'scheduled',
-			venue: matchData.venue || null,
-		}),
+	return apiPost<{ id: number }>('/match', {
+		season_id: parseInt(matchData.season_id),
+		home_team_id: parseInt(matchData.home_team_id),
+		away_team_id: parseInt(matchData.away_team_id),
+		home_score_unidentified: matchData.home_score_unidentified || 0,
+		away_score_unidentified: matchData.away_score_unidentified || 0,
+		match_date: matchData.match_date || null,
+		status: matchData.status || 'scheduled',
+		venue: matchData.venue || null,
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const updateMatch = async (id: string, matchData: UpdateMatchRequest): Promise<string> => {
@@ -97,102 +75,50 @@ export const updateMatch = async (id: string, matchData: UpdateMatchRequest): Pr
 	if (matchData.status !== undefined) requestBody.status = matchData.status;
 	if (matchData.venue !== undefined) requestBody.venue = matchData.venue;
 
-	const response = await fetch(`${API_URL}/match/${id}`, {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify(requestBody),
-	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiPut<string>(`/match/${id}`, requestBody);
 };
 
 export const deleteMatch = async (id: string): Promise<string> => {
-	const response = await fetch(`${API_URL}/match/${id}`, {
-		method: 'DELETE',
-	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiDelete<string>(`/match/${id}`);
 };
 
 // Score Event API functions
 export const fetchScoreEventsForMatch = async (matchId: string): Promise<ScoreEvent[]> => {
-	const response = await fetch(`${API_URL}/match/${matchId}/score-events`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<ScoreEvent[]>(`/match/${matchId}/score-events`);
 };
 
 export const createScoreEvent = async (matchId: string, eventData: CreateScoreEventRequest): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/match/${matchId}/score-events`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			team_id: parseInt(eventData.team_id),
-			scorer_id: eventData.scorer_id ? parseInt(eventData.scorer_id) : null,
-			assist1_id: eventData.assist1_id ? parseInt(eventData.assist1_id) : null,
-			assist2_id: eventData.assist2_id ? parseInt(eventData.assist2_id) : null,
-			period: eventData.period || null,
-			time_minutes: eventData.time_minutes || null,
-			time_seconds: eventData.time_seconds || null,
-			goal_type: eventData.goal_type || null,
-		}),
+	return apiPost<{ id: number }>(`/match/${matchId}/score-events`, {
+		team_id: parseInt(eventData.team_id),
+		scorer_id: eventData.scorer_id ? parseInt(eventData.scorer_id) : null,
+		assist1_id: eventData.assist1_id ? parseInt(eventData.assist1_id) : null,
+		assist2_id: eventData.assist2_id ? parseInt(eventData.assist2_id) : null,
+		period: eventData.period || null,
+		time_minutes: eventData.time_minutes || null,
+		time_seconds: eventData.time_seconds || null,
+		goal_type: eventData.goal_type || null,
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const identifyGoal = async (matchId: string, eventData: CreateScoreEventRequest): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/match/${matchId}/identify-goal`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			team_id: parseInt(eventData.team_id),
-			scorer_id: eventData.scorer_id ? parseInt(eventData.scorer_id) : null,
-			assist1_id: eventData.assist1_id ? parseInt(eventData.assist1_id) : null,
-			assist2_id: eventData.assist2_id ? parseInt(eventData.assist2_id) : null,
-			period: eventData.period || null,
-			time_minutes: eventData.time_minutes || null,
-			time_seconds: eventData.time_seconds || null,
-			goal_type: eventData.goal_type || null,
-		}),
+	return apiPost<{ id: number }>(`/match/${matchId}/identify-goal`, {
+		team_id: parseInt(eventData.team_id),
+		scorer_id: eventData.scorer_id ? parseInt(eventData.scorer_id) : null,
+		assist1_id: eventData.assist1_id ? parseInt(eventData.assist1_id) : null,
+		assist2_id: eventData.assist2_id ? parseInt(eventData.assist2_id) : null,
+		period: eventData.period || null,
+		time_minutes: eventData.time_minutes || null,
+		time_seconds: eventData.time_seconds || null,
+		goal_type: eventData.goal_type || null,
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const deleteScoreEvent = async (matchId: string, eventId: string): Promise<string> => {
-	const response = await fetch(`${API_URL}/match/${matchId}/score-events/${eventId}`, {
-		method: 'DELETE',
-	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiDelete<string>(`/match/${matchId}/score-events/${eventId}`);
 };
 
 export const fetchPlayersForTeamSeason = async (seasonId: string, teamId: string): Promise<Array<{ id: number, name: string, nationality: string }>> => {
-	const response = await fetch(`${API_URL}/season/${seasonId}/team/${teamId}/players`);
-	if (!response.ok) {
-		const errorText = await response.text();
-		console.error(`Failed to fetch players for season ${seasonId}, team ${teamId}:`, response.status, errorText);
-		throw new Error(`Failed to fetch players: ${response.status} ${response.statusText}`);
-	}
-	return response.json();
+	return apiGet<Array<{ id: number, name: string, nationality: string }>>(`/season/${seasonId}/team/${teamId}/players`);
 };
 
 // Query configurations

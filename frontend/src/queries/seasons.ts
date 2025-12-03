@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/config";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import { Season } from "@/types/season";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,23 +10,23 @@ const validatePaginatedResponse = <T>(data: unknown): PaginatedResponse<T> => {
 	if (!data || typeof data !== 'object') {
 		throw new Error('API response is not an object');
 	}
-	
+
 	// Check if it's an array (old format) instead of paginated response
 	if (Array.isArray(data)) {
 		throw new Error('API returned array instead of paginated response - backend may be outdated');
 	}
-	
+
 	const required = ['items', 'total', 'page', 'page_size', 'total_pages', 'has_next', 'has_previous'];
 	for (const field of required) {
 		if (!(field in data)) {
 			throw new Error(`Missing required field: ${field} in API response`);
 		}
 	}
-	
+
 	if (!Array.isArray((data as Record<string, unknown>).items)) {
 		throw new Error('API response items field is not an array');
 	}
-	
+
 	return data as PaginatedResponse<T>;
 };
 
@@ -44,65 +44,32 @@ export const fetchSeasonList = async (page: number = 0, searchTerm?: string, eve
 		params.append('event_id', eventId);
 	}
 
-	const response = await fetch(`${API_URL}/season?${params}`);
-	if (!response.ok) {
-		throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-	}
-	
-	const data = await response.json();
+	const data = await apiGet<PaginatedResponse<Season>>(`/season?${params}`);
 	return validatePaginatedResponse<Season>(data);
 };
 
 export const fetchSeasonListSimple = async (): Promise<Array<{id: number, name: string, year: number, event_name: string}>> => {
-	const response = await fetch(`${API_URL}/season/list`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<Array<{id: number, name: string, year: number, event_name: string}>>('/season/list');
 };
 
 export const createSeason = async (seasonData: { year: number; display_name: string | null; event_id: string }): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/season`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			year: seasonData.year,
-			display_name: seasonData.display_name || null,
-			event_id: parseInt(seasonData.event_id),
-		}),
+	return apiPost<{ id: number }>('/season', {
+		year: seasonData.year,
+		display_name: seasonData.display_name || null,
+		event_id: parseInt(seasonData.event_id),
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const updateSeason = async (id: string, seasonData: { year: number; display_name: string | null; event_id: string }): Promise<void> => {
-	const response = await fetch(`${API_URL}/season/${id}`, {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			year: seasonData.year,
-			display_name: seasonData.display_name || null,
-			event_id: parseInt(seasonData.event_id),
-		}),
+	return apiPut<void>(`/season/${id}`, {
+		year: seasonData.year,
+		display_name: seasonData.display_name || null,
+		event_id: parseInt(seasonData.event_id),
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
 };
 
 export const deleteSeason = async (id: string): Promise<void> => {
-	const response = await fetch(`${API_URL}/season/${id}`, {
-		method: 'DELETE',
-	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
+	return apiDelete<void>(`/season/${id}`);
 };
 
 // Query configurations

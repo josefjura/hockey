@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/config";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import { Event } from "@/types/event";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,64 +15,30 @@ export const fetchEventList = async (page: number = 0, searchTerm?: string, page
 		params.append('name', searchTerm);
 	}
 
-	const response = await fetch(`${API_URL}/event?${params}`);
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiGet<PaginatedResponse<Event>>(`/event?${params}`);
 };
 
 export const fetchEventListAll = async (): Promise<Event[]> => {
-	const response = await fetch(`${API_URL}/event?page_size=200`); // Get all events
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	const data: PaginatedResponse<Event> = await response.json();
+	const data = await apiGet<PaginatedResponse<Event>>('/event?page_size=200');
 	return data.items;
 };
 
 export const createEvent = async (eventData: { name: string; country_id: string | null }): Promise<{ id: number }> => {
-	const response = await fetch(`${API_URL}/event`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			name: eventData.name,
-			country_id: eventData.country_id ? parseInt(eventData.country_id) : null,
-		}),
+	return apiPost<{ id: number }>('/event', {
+		name: eventData.name,
+		country_id: eventData.country_id ? parseInt(eventData.country_id) : null,
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const updateEvent = async (id: number, eventData: { name: string; country_id: string | null }): Promise<string> => {
-	const response = await fetch(`${API_URL}/event/${id}`, {
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			name: eventData.name,
-			country_id: eventData.country_id ? parseInt(eventData.country_id) : null,
-		}),
+	return apiPut<string>(`/event/${id}`, {
+		name: eventData.name,
+		country_id: eventData.country_id ? parseInt(eventData.country_id) : null,
 	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
 };
 
 export const deleteEvent = async (id: number): Promise<string> => {
-	const response = await fetch(`${API_URL}/event/${id}`, {
-		method: 'DELETE',
-	});
-	if (!response.ok) {
-		throw new Error('Network response was not ok');
-	}
-	return response.json();
+	return apiDelete<string>(`/event/${id}`);
 };
 
 // Query configurations
