@@ -12,7 +12,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tracing::{info, warn};
 
 use crate::{
-    auth::{auth_routes, JwtManager},
+    auth::{auth_routes, require_auth, JwtManager},
     config::Config,
     country::routes::country_routes,
     docs::{api_docs, docs_routes},
@@ -35,7 +35,8 @@ pub struct ApiContext {
 
 impl ApiContext {
     pub fn new(db: SqlitePool, config: Config) -> Result<Self, Box<dyn std::error::Error>> {
-        let jwt_manager = JwtManager::new(&config.jwt_private_key_path, &config.jwt_public_key_path)?;
+        let jwt_manager =
+            JwtManager::new(&config.jwt_private_key_path, &config.jwt_public_key_path)?;
 
         Ok(Self {
             config: Arc::new(config),
@@ -188,9 +189,13 @@ pub async fn serve(config: Config, db: SqlitePool) {
         jwt_manager: Arc::new(jwt_manager),
     };
 
-    let app = ApiRouter::new()
-        //.nest_api_service("/todo", todo_routes(state.clone()))
+    // Public routes - accessible without authentication
+    let public_routes = ApiRouter::new()
         .nest_api_service("/auth", auth_routes())
+        .nest_api_service("/docs", docs_routes());
+
+    // Protected routes - require JWT authentication
+    let protected_routes = ApiRouter::new()
         .nest_api_service("/event", event_routes())
         .nest_api_service("/country", country_routes())
         .nest_api_service("/team", team_routes())
@@ -199,7 +204,11 @@ pub async fn serve(config: Config, db: SqlitePool) {
         .nest_api_service("/player", player_routes())
         .nest_api_service("/player-contract", player_contract_routes())
         .nest_api_service("/season", season_routes())
-        .nest_api_service("/docs", docs_routes())
+        .layer(axum::middleware::from_fn(require_auth));
+
+    let app = ApiRouter::new()
+        .merge(public_routes)
+        .merge(protected_routes)
         .finish_api_with(&mut api, api_docs)
         .route("/health", get(health_check))
         .route("/ready", get(readiness_check))
