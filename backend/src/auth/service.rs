@@ -1,5 +1,6 @@
 use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::{DateTime, Utc};
+use sha2::{Digest, Sha256};
 use sqlx::SqlitePool;
 
 use crate::errors::AppError;
@@ -31,6 +32,19 @@ pub async fn authenticate_user(
     Ok(user)
 }
 
+/// Hashes a token using SHA-256
+///
+/// # Arguments
+/// * `token` - Token to hash
+///
+/// # Returns
+/// Hex-encoded SHA-256 hash of the token
+fn hash_token(token: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
 /// Stores a refresh token in the database with hashing
 ///
 /// # Arguments
@@ -44,8 +58,8 @@ pub async fn store_refresh_token(
     user_id: i64,
     expires_at: DateTime<Utc>,
 ) -> Result<(), AppError> {
-    // Hash the token before storing
-    let token_hash = hash(token, DEFAULT_COST).map_err(|e| AppError::Internal(e.into()))?;
+    // Hash the token before storing using SHA-256
+    let token_hash = hash_token(token);
 
     sqlx::query("INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES (?, ?, ?)")
         .bind(token_hash)
@@ -67,23 +81,21 @@ pub async fn store_refresh_token(
 /// * `Ok(user_id)` if token is valid and not expired/revoked
 /// * `Err(AppError)` if token is invalid, expired, or revoked
 pub async fn validate_refresh_token(db: &SqlitePool, token: &str) -> Result<i64, AppError> {
-    // Fetch all non-revoked tokens that haven't expired
-    let tokens: Vec<(String, i64)> = sqlx::query_as(
-        "SELECT token, user_id FROM refresh_tokens
-         WHERE revoked_at IS NULL
+    // Hash the provided token using SHA-256
+    let token_hash = hash_token(token);
+
+    // Look up the token hash in the database
+    let user_id: Option<i64> = sqlx::query_scalar(
+        "SELECT user_id FROM refresh_tokens
+         WHERE token = ?
+         AND revoked_at IS NULL
          AND expires_at > datetime('now')",
     )
-    .fetch_all(db)
+    .bind(token_hash)
+    .fetch_optional(db)
     .await?;
 
-    // Check each token hash against the provided token
-    for (token_hash, user_id) in tokens {
-        if verify(token, &token_hash).map_err(|e| AppError::Internal(e.into()))? {
-            return Ok(user_id);
-        }
-    }
-
-    Err(AppError::unauthorized())
+    user_id.ok_or_else(|| AppError::unauthorized())
 }
 
 /// Revokes a refresh token
@@ -92,24 +104,24 @@ pub async fn validate_refresh_token(db: &SqlitePool, token: &str) -> Result<i64,
 /// * `db` - Database pool
 /// * `token` - Raw refresh token to revoke
 pub async fn revoke_refresh_token(db: &SqlitePool, token: &str) -> Result<(), AppError> {
-    // Fetch all non-revoked tokens
-    let tokens: Vec<(i64, String)> =
-        sqlx::query_as("SELECT id, token FROM refresh_tokens WHERE revoked_at IS NULL")
-            .fetch_all(db)
-            .await?;
+    // Hash the provided token using SHA-256
+    let token_hash = hash_token(token);
 
-    // Find the matching token and revoke it
-    for (id, token_hash) in tokens {
-        if verify(token, &token_hash).map_err(|e| AppError::Internal(e.into()))? {
-            sqlx::query("UPDATE refresh_tokens SET revoked_at = datetime('now') WHERE id = ?")
-                .bind(id)
-                .execute(db)
-                .await?;
-            return Ok(());
-        }
+    // Revoke the token if it exists and is not already revoked
+    let result = sqlx::query(
+        "UPDATE refresh_tokens
+         SET revoked_at = datetime('now')
+         WHERE token = ? AND revoked_at IS NULL",
+    )
+    .bind(token_hash)
+    .execute(db)
+    .await?;
+
+    if result.rows_affected() == 0 {
+        return Err(AppError::unauthorized());
     }
 
-    Err(AppError::unauthorized())
+    Ok(())
 }
 
 /// Revokes all refresh tokens for a specific user
@@ -229,9 +241,9 @@ mod tests {
                 .await
                 .unwrap();
 
-        // The stored token should be hashed, not the raw token
+        // The stored token should be hashed with SHA-256, not the raw token
         assert_ne!(stored_token, token);
-        assert!(verify(token, &stored_token).unwrap());
+        assert_eq!(stored_token, hash_token(token));
     }
 
     #[tokio::test]
