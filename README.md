@@ -136,9 +136,22 @@ yarn build
 
 ## 🔐 Authentication
 
-Default login credentials:
-- Email: `admin@hockey.local`
-- Password: `admin123`
+### Creating an Admin User
+
+For security reasons, no default admin credentials are provided. You must create an admin user using the CLI tool:
+
+```bash
+cd backend
+cargo run --bin create_admin
+```
+
+The tool will interactively prompt you for:
+- Email address (must be valid format)
+- Password (minimum 8 characters, hidden input)
+- Password confirmation
+- Name (optional)
+
+The password is securely hashed using bcrypt before being stored in the database.
 
 ## 🌍 Internationalization
 

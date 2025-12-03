@@ -146,7 +146,6 @@ pub async fn cleanup_expired_tokens(db: &SqlitePool) -> Result<u64, AppError> {
     Ok(result.rows_affected())
 }
 
-#[cfg(test)]
 pub fn hash_password(password: &str) -> Result<String, AppError> {
     hash(password, DEFAULT_COST).map_err(|e| AppError::Internal(e.into()))
 }
