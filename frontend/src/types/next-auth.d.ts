@@ -7,11 +7,14 @@ declare module "next-auth" {
 		id: string
 		email: string
 		name?: string | null
-		token?: string
+		accessToken: string
+		refreshToken: string
+		expiresAt: number
 	}
 
 	interface Session extends DefaultSession {
 		accessToken?: string
+		error?: "RefreshAccessTokenError"
 		user: HockeyUser & DefaultSession["user"]
 	}
 }
@@ -19,6 +22,9 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
 	interface JWT extends DefaultJWT {
 		accessToken?: string
+		refreshToken?: string
+		expiresAt?: number
 		id?: string
+		error?: "RefreshAccessTokenError"
 	}
 }
