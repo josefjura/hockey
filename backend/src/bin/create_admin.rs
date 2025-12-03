@@ -33,11 +33,10 @@ async fn main() -> Result<(), AppError> {
     }
 
     // Check if user already exists
-    let existing_user: Option<(i64,)> =
-        sqlx::query_as("SELECT id FROM users WHERE email = ?")
-            .bind(&email)
-            .fetch_optional(&db)
-            .await?;
+    let existing_user: Option<(i64,)> = sqlx::query_as("SELECT id FROM users WHERE email = ?")
+        .bind(&email)
+        .fetch_optional(&db)
+        .await?;
 
     if existing_user.is_some() {
         eprintln!("Error: User with email '{}' already exists", email);
@@ -80,14 +79,12 @@ async fn main() -> Result<(), AppError> {
 
     // Insert user into database
     println!("Creating admin user...");
-    let result = sqlx::query(
-        "INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)"
-    )
-    .bind(&email)
-    .bind(&name)
-    .bind(&password_hash)
-    .execute(&db)
-    .await?;
+    let result = sqlx::query("INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)")
+        .bind(&email)
+        .bind(&name)
+        .bind(&password_hash)
+        .execute(&db)
+        .await?;
 
     let user_id = result.last_insert_rowid();
 

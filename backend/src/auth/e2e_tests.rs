@@ -28,8 +28,8 @@ mod tests {
 
     use crate::{
         auth::{
-            require_auth, revoke_refresh_token, store_refresh_token,
-            validate_refresh_token, AuthUser, JwtManager,
+            require_auth, revoke_refresh_token, store_refresh_token, validate_refresh_token,
+            AuthUser, JwtManager,
         },
         config::Config,
         http::ApiContext,
@@ -37,8 +37,7 @@ mod tests {
 
     /// Create a test JWT manager
     fn create_test_jwt_manager() -> JwtManager {
-        JwtManager::new("jwt_private.pem", "jwt_public.pem")
-            .expect("Failed to create JwtManager")
+        JwtManager::new("jwt_private.pem", "jwt_public.pem").expect("Failed to create JwtManager")
     }
 
     /// Create a test API context
@@ -284,7 +283,11 @@ mod tests {
 
         // Generate valid access token
         let access_token = jwt_manager
-            .generate_access_token(user_id, "testuser@example.com", Some("Test User".to_string()))
+            .generate_access_token(
+                user_id,
+                "testuser@example.com",
+                Some("Test User".to_string()),
+            )
             .unwrap();
 
         let request = Request::builder()
@@ -317,11 +320,13 @@ mod tests {
     #[sqlx::test(fixtures("auth_users"))]
     async fn test_invalid_credentials_login(db: SqlitePool) {
         // Test wrong password
-        let result = crate::auth::authenticate_user(&db, "testuser@example.com", "wrongpassword").await;
+        let result =
+            crate::auth::authenticate_user(&db, "testuser@example.com", "wrongpassword").await;
         assert!(result.is_err(), "Should reject wrong password");
 
         // Test non-existent user
-        let result = crate::auth::authenticate_user(&db, "nonexistent@example.com", "anypass").await;
+        let result =
+            crate::auth::authenticate_user(&db, "nonexistent@example.com", "anypass").await;
         assert!(result.is_err(), "Should reject non-existent user");
 
         // Test empty credentials
@@ -360,7 +365,10 @@ mod tests {
 
         // Verify old token is now revoked
         let check1 = validate_refresh_token(&db, &refresh_token).await;
-        assert!(check1.is_err(), "Old token should be revoked immediately after revoke");
+        assert!(
+            check1.is_err(),
+            "Old token should be revoked immediately after revoke"
+        );
 
         // Generate new refresh token with sufficient time delay to ensure different JWT
         // Note: JWT tokens generated within the same second may have identical `iat` claims
@@ -419,18 +427,34 @@ mod tests {
 
         // User 1 tokens
         let user1_access = jwt_manager
-            .generate_access_token(user1_id, "testuser@example.com", Some("Test User".to_string()))
+            .generate_access_token(
+                user1_id,
+                "testuser@example.com",
+                Some("Test User".to_string()),
+            )
             .unwrap();
         let user1_refresh = jwt_manager
-            .generate_refresh_token(user1_id, "testuser@example.com", Some("Test User".to_string()))
+            .generate_refresh_token(
+                user1_id,
+                "testuser@example.com",
+                Some("Test User".to_string()),
+            )
             .unwrap();
 
         // User 2 tokens
         let user2_access = jwt_manager
-            .generate_access_token(user2_id, "admin@example.com", Some("Admin User".to_string()))
+            .generate_access_token(
+                user2_id,
+                "admin@example.com",
+                Some("Admin User".to_string()),
+            )
             .unwrap();
         let user2_refresh = jwt_manager
-            .generate_refresh_token(user2_id, "admin@example.com", Some("Admin User".to_string()))
+            .generate_refresh_token(
+                user2_id,
+                "admin@example.com",
+                Some("Admin User".to_string()),
+            )
             .unwrap();
 
         // Store refresh tokens
@@ -481,7 +505,11 @@ mod tests {
 
         // Generate a token
         let access_token = jwt_manager
-            .generate_access_token(user_id, "testuser@example.com", Some("Test User".to_string()))
+            .generate_access_token(
+                user_id,
+                "testuser@example.com",
+                Some("Test User".to_string()),
+            )
             .unwrap();
 
         // Should be valid immediately
@@ -496,10 +524,7 @@ mod tests {
         // Note: We can't easily test actual expiration without waiting 15 minutes
         // or mocking time, but we verify the expiration is set correctly
         let now = Utc::now().timestamp();
-        assert!(
-            claims.exp > now,
-            "Expiration should be in the future"
-        );
+        assert!(claims.exp > now, "Expiration should be in the future");
         assert!(
             claims.exp <= now + 900, // 15 minutes
             "Expiration should be within 15 minutes"
@@ -507,28 +532,9 @@ mod tests {
     }
 
     #[sqlx::test(fixtures("auth_users"))]
-    #[ignore = "Known limitation: bcrypt-based JWT token storage may cause false matches between similar tokens"]
     async fn test_logout_revokes_only_specified_token(db: SqlitePool) {
-        // NOTE: This test is ignored due to a known limitation in the current implementation.
-        //
-        // The refresh token storage system uses bcrypt to hash JWT tokens before storing them.
-        // While this provides security, bcrypt is designed for password hashing and may produce
-        // false positive matches when verifying structurally similar JWT tokens (same claims,
-        // different timestamps/signatures).
-        //
-        // SECURITY IMPLICATION:
-        // In the current implementation, multiple active sessions for the same user may
-        // experience unexpected token validation behavior. This does NOT affect the
-        // security of the refresh endpoint itself, as it properly implements token rotation
-        // and revocation.
-        //
-        // RECOMMENDED FIX (for future task):
-        // Replace bcrypt hashing with SHA-256 or store tokens in plaintext with proper
-        // database encryption. JWT tokens are not passwords and don't need bcrypt's
-        // slow hashing algorithm.
-        //
-        // The test below demonstrates the expected behavior (multiple sessions with
-        // independent token revocation):
+        // This test verifies that logout revokes only the specified token while keeping
+        // other sessions active. With SHA-256 hashing, multiple sessions work reliably.
 
         let jwt_manager = create_test_jwt_manager();
 
