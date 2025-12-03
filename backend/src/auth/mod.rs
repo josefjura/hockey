@@ -10,9 +10,11 @@ use serde::{Deserialize, Serialize};
 use crate::http::ApiContext;
 
 mod jwt;
+mod middleware;
 mod service;
 
 pub use jwt::*;
+pub use middleware::*;
 pub use service::*;
 
 #[derive(Debug, Deserialize, JsonSchema)]
