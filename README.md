@@ -52,6 +52,8 @@ This is a monorepo containing:
 - **Authentication**: JWT (RS256) with [jsonwebtoken](https://github.com/Keats/jsonwebtoken), bcrypt for password hashing
 - **API Documentation**: [aide](https://github.com/tamasfe/aide) for OpenAPI
 - **Validation**: Serde for JSON serialization
+- **Architecture**: Clean three-layer architecture (Routes → Business Logic → Service)
+- **Error Handling**: Structured `AppError` enum with HTTP status mapping
 
 ## 🐳 CI/CD & Deployment
 
@@ -273,21 +275,7 @@ Language can be switched using the locale switcher in the navigation.
 
 ## 📁 Project Structure
 
-```
-src/
-├── app/                 # Next.js App Router pages
-├── components/          # React components
-│   ├── ui/             # Reusable UI components
-│   ├── layout/         # Layout components
-│   ├── shared/         # Shared app components
-│   └── features/       # Feature-specific components
-├── hooks/              # Custom React hooks
-├── queries/            # TanStack Query definitions
-├── types/              # TypeScript type definitions
-├── utils/              # Utility functions
-├── ui/pages/           # Client page components
-└── i18n/               # Internationalization setup
-```
+See `CLAUDE.md` for detailed file locations and architecture patterns.
 
 ## 🎨 Design System
 
@@ -307,110 +295,28 @@ The application uses a consistent design system with:
 
 ## 🔧 Environment Variables
 
-### Backend (.env)
+See `DEPLOYMENT.md` for complete environment variable reference and production configuration.
 
-All backend configuration can be set via environment variables or `.env` file:
+### Quick Start Environment Setup
 
+**Backend** (`.env`):
 ```bash
-# Database Configuration
 DATABASE_URL=sqlite:./data/hockey_data.db
-
-# JWT Authentication - RSA Keys
 JWT_PRIVATE_KEY_PATH=jwt_private.pem
 JWT_PUBLIC_KEY_PATH=jwt_public.pem
-
-# JWT Token Durations
-JWT_ACCESS_TOKEN_DURATION_MINUTES=15
-JWT_REFRESH_TOKEN_DURATION_DAYS=7
-
-# HMAC Key (legacy, kept for compatibility)
-HMAC_KEY=your-very-secure-hmac-key-for-jwt-signing-should-be-long-and-random
-
-# Server Configuration
-HOST=0.0.0.0
-PORT=8080
-
-# Environment Mode (development or production)
-# In production mode, wildcard CORS is rejected for security
+HMAC_KEY=your-secret-key-change-in-production
 ENVIRONMENT=development
-
-# CORS Configuration
-# Development: wildcard allowed
 CORS_ORIGINS=*
-CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
-CORS_HEADERS=*
-
-# Production: specify explicit origins
-# ENVIRONMENT=production
-# CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-# CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
-# CORS_HEADERS=content-type,authorization,x-requested-with
-
-# Logging
-RUST_LOG=info
 ```
 
-### Frontend (.env.local)
-
+**Frontend** (`.env.local`):
 ```bash
-# NextAuth Configuration
-NEXTAUTH_SECRET=your-secret-nextauth-key-change-this-in-production-min-32-chars
+NEXTAUTH_SECRET=your-secret-key-min-32-chars
 NEXTAUTH_URL=http://localhost:3000
-AUTH_TRUST_HOST=true
-
-# Backend API URL
 HOCKEY_BACKEND_URL=http://localhost:8080
-
-# Optional: Custom API endpoint
-# NEXT_PUBLIC_API_URL=http://localhost:8080
 ```
 
-### Docker Compose (.env)
-
-For Docker deployments, configure both services:
-
-```bash
-# Backend Configuration
-HOCKEY_HMAC_KEY=your-secret-hmac-key-change-this-in-production-min-32-chars
-DATABASE_URL=sqlite:///app/data/hockey.db
-CORS_ORIGINS=http://localhost:3000,http://localhost:4000
-CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
-CORS_HEADERS=*
-
-# Frontend Configuration
-NEXTAUTH_SECRET=your-secret-nextauth-key-change-this-in-production-min-32-chars
-HOCKEY_BACKEND_URL=http://hockey-backend:8080
-```
-
-### Environment Variable Reference
-
-#### Backend Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | - | SQLite database file path |
-| `JWT_PRIVATE_KEY_PATH` | Yes | `jwt_private.pem` | Path to RSA private key for JWT signing |
-| `JWT_PUBLIC_KEY_PATH` | Yes | `jwt_public.pem` | Path to RSA public key for JWT verification |
-| `JWT_ACCESS_TOKEN_DURATION_MINUTES` | No | `15` | Access token expiry in minutes |
-| `JWT_REFRESH_TOKEN_DURATION_DAYS` | No | `7` | Refresh token expiry in days |
-| `HMAC_KEY` | Yes | - | Legacy HMAC key (kept for compatibility) |
-| `HOST` | No | `0.0.0.0` | Server bind address |
-| `PORT` | No | `8080` | Server port |
-| `ENVIRONMENT` | No | `development` | Environment mode (`development` or `production`) |
-| `CORS_ORIGINS` | No | `*` | Allowed CORS origins (comma-separated or `*`) |
-| `CORS_METHODS` | No | `GET,POST,PUT,DELETE,OPTIONS` | Allowed HTTP methods |
-| `CORS_HEADERS` | No | `*` | Allowed request headers |
-| `RUST_LOG` | No | `info` | Logging level (`trace`, `debug`, `info`, `warn`, `error`) |
-
-#### Frontend Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `NEXTAUTH_SECRET` | Yes | - | Secret for NextAuth.js session encryption (min 32 chars) |
-| `NEXTAUTH_URL` | Yes | - | Full URL where the app is hosted |
-| `AUTH_TRUST_HOST` | No | `false` | Trust host header (useful for proxies) |
-| `HOCKEY_BACKEND_URL` | Yes | - | Backend API URL for server-side requests |
-| `NEXT_PUBLIC_API_URL` | No | - | Backend API URL for client-side requests (optional) |
+**Important**: Change all secrets before deploying to production. See `DEPLOYMENT.md` for security best practices.
 
 ## 🚨 Troubleshooting
 
@@ -441,13 +347,9 @@ git add backend/
 git commit -m "Fix: Convert submodule to regular directory"
 ```
 
-## 🏗️ Architecture Patterns
+## 🏗️ Development
 
-- **Server Components**: For initial data fetching and SEO
-- **Client Components**: For interactivity with proper hydration
-- **Error Boundaries**: Multi-layer error protection
-- **Suspense**: Loading states with skeleton components
-- **Form Patterns**: Consistent validation and submission flow
+For development patterns, architecture guidelines, and common patterns, see `CLAUDE.md`.
 
 ## 📱 Features Overview
 

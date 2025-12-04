@@ -10,8 +10,10 @@ WORKDIR /app
 # Copy dependency files first for better caching
 COPY Cargo.toml Cargo.lock ./
 
-# Create a dummy src/main.rs to build dependencies
-RUN mkdir src && echo "fn main() {}" > src/main.rs
+# Create dummy source files to build dependencies
+RUN mkdir -p src/bin && \
+    echo "fn main() {}" > src/main.rs && \
+    echo "fn main() {}" > src/bin/create_admin.rs
 
 # Build dependencies (this layer will be cached)
 RUN cargo build --release && rm -f target/release/deps/jura_hockey*
@@ -20,8 +22,8 @@ RUN cargo build --release && rm -f target/release/deps/jura_hockey*
 COPY src ./src
 COPY migrations ./migrations
 
-# Build the application
-RUN cargo build --release
+# Build the application (including all binaries)
+RUN cargo build --release --bins
 
 # Runtime stage
 FROM alpine:3.19
@@ -33,11 +35,12 @@ RUN apk add --no-cache ca-certificates dumb-init wget
 RUN addgroup -g 1001 -S appuser && \
 	adduser -S appuser -u 1001 -G appuser
 
-# Create data directory
-RUN mkdir -p /app/data && chown appuser:appuser /app/data
+# Create data and keys directories
+RUN mkdir -p /app/data /app/keys && chown appuser:appuser /app/data /app/keys
 
-# Copy binary and migrations from builder stage
+# Copy binaries and migrations from builder stage
 COPY --from=builder /app/target/release/jura_hockey /usr/local/bin/jura_hockey
+COPY --from=builder /app/target/release/create_admin /usr/local/bin/create_admin
 COPY --from=builder /app/migrations /app/migrations
 
 # Switch to non-root user

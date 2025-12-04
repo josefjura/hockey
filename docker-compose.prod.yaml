@@ -16,13 +16,18 @@ services:
     environment:
       - DATABASE_URL=sqlite:/app/data/hockey.db?mode=rwc
       - HMAC_KEY=${HOCKEY_HMAC_KEY}
+      - JWT_PRIVATE_KEY_PATH=/app/keys/jwt_private.pem
+      - JWT_PUBLIC_KEY_PATH=/app/keys/jwt_public.pem
+      - JWT_ACCESS_TOKEN_DURATION_MINUTES=${JWT_ACCESS_TOKEN_DURATION_MINUTES:-15}
+      - JWT_REFRESH_TOKEN_DURATION_DAYS=${JWT_REFRESH_TOKEN_DURATION_DAYS:-7}
+      - ENVIRONMENT=production
       - RUST_LOG=${RUST_LOG:-info,jura_hockey=debug}
-
       - CORS_ORIGINS=${CORS_ORIGINS}
       - CORS_METHODS=${CORS_METHODS:-GET,POST,PUT,DELETE,OPTIONS}
       - CORS_HEADERS=${CORS_HEADERS:-Content-Type,Authorization}
     volumes:
       - /home/beardo/data/hockey:/app/data
+      - /home/beardo/keys/hockey:/app/keys:ro
     restart: always
 
   hockey-frontend:

@@ -9,12 +9,19 @@ services:
     environment:
       - "DATABASE_URL=sqlite:///app/data/hockey.db"
       - HMAC_KEY=${HOCKEY_HMAC_KEY:-your-secret-hmac-key-change-this-in-production}
+      - JWT_PRIVATE_KEY_PATH=/app/keys/jwt_private.pem
+      - JWT_PUBLIC_KEY_PATH=/app/keys/jwt_public.pem
+      - JWT_ACCESS_TOKEN_DURATION_MINUTES=${JWT_ACCESS_TOKEN_DURATION_MINUTES:-15}
+      - JWT_REFRESH_TOKEN_DURATION_DAYS=${JWT_REFRESH_TOKEN_DURATION_DAYS:-7}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - RUST_LOG=info
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:4000}
       - CORS_METHODS=${CORS_METHODS:-GET,POST,PUT,DELETE,OPTIONS}
       - CORS_HEADERS=${CORS_HEADERS:-*}
     volumes:
       - ./data:/app/data
+      - ./backend/jwt_private.pem:/app/keys/jwt_private.pem:ro
+      - ./backend/jwt_public.pem:/app/keys/jwt_public.pem:ro
     ports:
       - "9080:8080"
     networks:
