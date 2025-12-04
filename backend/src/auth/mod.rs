@@ -140,8 +140,9 @@ async fn login(
                 }
             };
 
-            // Store refresh token in database (expires in 7 days)
-            let expires_at = Utc::now() + Duration::days(7);
+            // Store refresh token in database
+            let expires_at =
+                Utc::now() + Duration::days(ctx.config.jwt_refresh_token_duration_days);
             if let Err(err) =
                 store_refresh_token(&ctx.db, &refresh_token, user_id, expires_at).await
             {
@@ -154,7 +155,7 @@ async fn login(
             let response = LoginResponse {
                 access_token,
                 token_type: "Bearer".to_string(),
-                expires_in: 900, // 15 minutes in seconds
+                expires_in: ctx.config.jwt_access_token_duration_minutes * 60,
                 refresh_token,
                 user_id,
                 email: user.email,
@@ -232,7 +233,7 @@ async fn refresh(
         };
 
     // Store new refresh token in database
-    let expires_at = Utc::now() + Duration::days(7);
+    let expires_at = Utc::now() + Duration::days(ctx.config.jwt_refresh_token_duration_days);
     if let Err(err) = store_refresh_token(&ctx.db, &new_refresh_token, user_id, expires_at).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -243,7 +244,7 @@ async fn refresh(
     let response = RefreshResponse {
         access_token,
         token_type: "Bearer".to_string(),
-        expires_in: 900, // 15 minutes in seconds
+        expires_in: ctx.config.jwt_access_token_duration_minutes * 60,
         refresh_token: new_refresh_token,
     };
 
@@ -344,7 +345,8 @@ mod tests {
         let refresh_token = jwt_manager
             .generate_refresh_token(user_id, email, name.clone())
             .unwrap();
-        let expires_at = Utc::now() + Duration::days(7);
+        let expires_at =
+            Utc::now() + Duration::days(Config::test_config().jwt_refresh_token_duration_days);
         store_refresh_token(&db, &refresh_token, user_id, expires_at)
             .await
             .unwrap();
