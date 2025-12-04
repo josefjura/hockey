@@ -138,10 +138,70 @@ NEXT_PUBLIC_ENV=production
 
 ## Docker Deployment
 
-### Using Docker Compose
+### Quick Start (Development)
+
+For local development with Docker:
 
 ```bash
-# Build and start services
+# Copy environment variables
+cp .env.example .env
+
+# Edit .env and set required secrets
+# HOCKEY_HMAC_KEY and NEXTAUTH_SECRET must be changed
+
+# Start the application
+docker-compose up -d
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8080
+# API Documentation: http://localhost:8080/docs
+```
+
+### Database Setup
+
+The SQLite database is automatically:
+- Created in a Docker volume (`hockey-data`)
+- Initialized with migrations on first startup
+- Persisted between container restarts
+
+**Database Location**:
+- Inside container: `/app/data/hockey.db`
+- Docker volume: `hockey-data`
+
+**Backup Database**:
+```bash
+# Create backup
+docker-compose exec hockey-backend cp /app/data/hockey.db /app/data/hockey-backup-$(date +%Y%m%d).db
+
+# Or copy to host
+docker cp hockey-backend:/app/data/hockey.db ./hockey-backup.db
+```
+
+### Production Deployment with Docker Compose
+
+#### Prerequisites
+- Traefik reverse proxy running with external network `traefik-net` (optional)
+- DNS records pointing to your server
+
+#### Production Setup
+
+```bash
+# Generate secure secrets
+export HOCKEY_HMAC_KEY=$(openssl rand -hex 32)
+export NEXTAUTH_SECRET=$(openssl rand -base64 32)
+
+# Copy production environment template
+cp .env.prod.example .env.prod
+
+# Edit .env.prod and set all required values
+# IMPORTANT: Never commit .env.prod to version control!
+```
+
+#### Start Production Services
+
+```bash
+# Deploy with production configuration
 docker-compose -f docker-compose.prod.yaml up -d
 
 # View logs
@@ -150,6 +210,13 @@ docker-compose -f docker-compose.prod.yaml logs -f
 # Stop services
 docker-compose -f docker-compose.prod.yaml down
 ```
+
+#### Production Features
+- **Traefik Integration**: Automatic HTTPS with Let's Encrypt (if configured)
+- **Container Images**: Uses pre-built images from GitHub Container Registry
+- **Auto-updates**: Watchtower integration for automatic updates
+- **WWW Redirect**: Redirects www subdomain to apex domain
+- **Internal Networking**: Services communicate over internal Docker network
 
 ### Docker Compose Production Configuration
 
@@ -568,6 +635,46 @@ Use tools like:
 - Application logs
 
 ## Troubleshooting
+
+### Docker-Specific Issues
+
+#### Check Logs
+```bash
+# All services
+docker-compose logs
+
+# Specific service
+docker-compose logs hockey-backend
+docker-compose logs hockey-frontend
+
+# Follow logs in real-time
+docker-compose logs -f
+```
+
+#### Restart Services
+```bash
+# Restart all
+docker-compose restart
+
+# Restart specific service
+docker-compose restart hockey-backend
+```
+
+#### Reset Database
+```bash
+# Stop services
+docker-compose down
+
+# Remove database volume (WARNING: This deletes all data)
+docker volume rm hockey_hockey-data
+
+# Start services (will recreate database)
+docker-compose up -d
+```
+
+#### Development vs Production
+- **Development** (docker-compose.yaml): Uses build contexts, debug logging, exposed ports
+- **Production** (docker-compose.prod.yaml): Optimized images, production restart policies, reduced logging
 
 ### Cannot Connect to Backend
 
