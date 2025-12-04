@@ -1,6 +1,6 @@
 -- Add migration script here
-
-DROP TABLE IF EXISTS users;
+-- Note: SQLx migrations run once and track execution state.
+-- DROP TABLE statements removed to prevent accidental data loss in production.
 
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
