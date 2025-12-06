@@ -237,35 +237,35 @@ export const matchQueries = {
 		accessToken?: string
 	) =>
 		queryOptions({
-			queryKey: ['matches', filters, page, pageSize],
+			queryKey: ['matches', filters, page, pageSize, accessToken],
 			queryFn: () => fetchMatchList(page, filters, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 
 	byId: (id: string, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['match', id],
+			queryKey: ['match', id, accessToken],
 			queryFn: () => fetchMatchById(id, accessToken),
 			staleTime: 5 * 60 * 1000,
 		}),
 
 	withStats: (id: string, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['match', id, 'stats'],
+			queryKey: ['match', id, 'stats', accessToken],
 			queryFn: () => fetchMatchWithStats(id, accessToken),
 			staleTime: 1 * 60 * 1000, // 1 minute - stats change more frequently
 		}),
 
 	scoreEvents: (matchId: string, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['match', matchId, 'score-events'],
+			queryKey: ['match', matchId, 'score-events', accessToken],
 			queryFn: () => fetchScoreEventsForMatch(matchId, accessToken),
 			staleTime: 1 * 60 * 1000, // 1 minute
 		}),
 
 	rosterPlayers: (seasonId: string, teamId: string, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['season', seasonId, 'team', teamId, 'players'],
+			queryKey: ['season', seasonId, 'team', teamId, 'players', accessToken],
 			queryFn: () => fetchPlayersForTeamSeason(seasonId, teamId, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 			enabled: !!(seasonId && teamId), // Only run if both IDs are provided

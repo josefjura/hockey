@@ -128,14 +128,14 @@ export const deleteSeason = async (id: string, accessToken?: string): Promise<vo
 export const seasonQueries = {
 	list: (searchTerm: string = '', eventId: string = '', page: number = 0, pageSize: number = 20, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['seasons', searchTerm, eventId, page, pageSize],
+			queryKey: ['seasons', searchTerm, eventId, page, pageSize, accessToken],
 			queryFn: () => fetchSeasonList(page, searchTerm || undefined, eventId || undefined, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 
 	all: (accessToken?: string) =>
 		queryOptions({
-			queryKey: ['seasons', 'simple'],
+			queryKey: ['seasons', 'simple', accessToken],
 			queryFn: () => fetchSeasonListSimple(accessToken),
 			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),

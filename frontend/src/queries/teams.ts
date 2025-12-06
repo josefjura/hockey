@@ -93,14 +93,14 @@ export const deleteTeam = async (id: number, accessToken?: string): Promise<stri
 export const teamQueries = {
 	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['teams', searchTerm, page, pageSize],
+			queryKey: ['teams', searchTerm, page, pageSize, accessToken],
 			queryFn: () => fetchTeamList(page, searchTerm || undefined, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 
 	all: (accessToken?: string) =>
 		queryOptions({
-			queryKey: ['teams', 'simple'],
+			queryKey: ['teams', 'simple', accessToken],
 			queryFn: () => fetchTeamListSimple(accessToken),
 			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),
