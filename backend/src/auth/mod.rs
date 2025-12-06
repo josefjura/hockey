@@ -6,6 +6,8 @@ use axum::{extract::Extension, http::StatusCode, response::Json};
 use chrono::{Duration, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 
 use crate::http::ApiContext;
 
@@ -74,10 +76,21 @@ pub struct User {
 }
 
 pub fn auth_routes() -> ApiRouter {
+    // Configure rate limiting: 10 requests per second per IP for all auth endpoints
+    // This prevents brute force attacks on login while allowing reasonable refresh token usage
+    let governor_conf = Arc::new(
+        GovernorConfigBuilder::default()
+            .per_second(10)
+            .burst_size(10)
+            .finish()
+            .unwrap(),
+    );
+
     ApiRouter::new()
         .api_route("/login", post_with(login, login_docs))
         .api_route("/refresh", post_with(refresh, refresh_docs))
         .api_route("/logout", post_with(logout, logout_docs))
+        .layer(GovernorLayer::new(governor_conf))
 }
 
 fn login_docs(op: TransformOperation) -> TransformOperation {

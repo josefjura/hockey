@@ -7,29 +7,39 @@ use crate::errors::AppError;
 
 use super::User;
 
+#[derive(Debug, sqlx::FromRow)]
+struct UserWithPassword {
+    id: i64,
+    email: String,
+    name: Option<String>,
+    password_hash: String,
+}
+
 pub async fn authenticate_user(
     db: &SqlitePool,
     email: &str,
     password: &str,
 ) -> Result<User, AppError> {
-    let user = sqlx::query_as::<_, User>("SELECT id, email, name FROM users WHERE email = ?")
-        .bind(email)
-        .fetch_optional(db)
-        .await?;
+    // Single query fetches both user data and password hash
+    let user_data = sqlx::query_as::<_, UserWithPassword>(
+        "SELECT id, email, name, password_hash FROM users WHERE email = ?"
+    )
+    .bind(email)
+    .fetch_optional(db)
+    .await?;
 
-    let user = user.ok_or_else(|| AppError::unauthorized())?;
+    let user_data = user_data.ok_or_else(|| AppError::unauthorized())?;
 
-    let password_hash: String =
-        sqlx::query_scalar("SELECT password_hash FROM users WHERE email = ?")
-            .bind(email)
-            .fetch_one(db)
-            .await?;
-
-    if !verify(password, &password_hash)? {
+    // Verify password
+    if !verify(password, &user_data.password_hash)? {
         return Err(AppError::unauthorized());
     }
 
-    Ok(user)
+    Ok(User {
+        id: Some(user_data.id),
+        email: user_data.email,
+        name: user_data.name,
+    })
 }
 
 /// Hashes a token using SHA-256
