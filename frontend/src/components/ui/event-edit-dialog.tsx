@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,9 +28,10 @@ interface EventEditDialogProps {
 }
 
 export default function EventEditDialog({ isOpen, onClose, event }: EventEditDialogProps) {
-  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all())
+  const { data: session } = useSession()
+  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all(session?.accessToken))
   const updateEventMutation = useUpdateEvent()
-  
+
   const {
     register,
     handleSubmit,
@@ -44,7 +46,7 @@ export default function EventEditDialog({ isOpen, onClose, event }: EventEditDia
       country_id: event?.country_id?.toString() || '',
     },
   })
-  
+
   const watchedValues = watch()
 
   useEffect(() => {
@@ -70,8 +72,11 @@ export default function EventEditDialog({ isOpen, onClose, event }: EventEditDia
     try {
       await updateEventMutation.mutateAsync({
         id: parseInt(event.id),
-        name: data.name,
-        country_id: data.country_id || null,
+        eventData: {
+          name: data.name,
+          country_id: data.country_id || null,
+        },
+        accessToken: session?.accessToken
       })
       onClose()
       reset()

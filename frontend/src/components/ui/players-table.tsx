@@ -12,6 +12,7 @@ import {
   type ColumnFiltersState,
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown, Edit2, Trash2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import type { Player } from '@/types/player'
 import { getCountryFlag } from '@/utils/countryFlag'
@@ -33,9 +34,9 @@ interface PlayersTableProps {
   onEdit?: (player: Player) => void
 }
 
-export default function PlayersTable({ 
-  data, 
-  loading = false, 
+export default function PlayersTable({
+  data,
+  loading = false,
   totalItems,
   currentPage,
   pageSize,
@@ -43,16 +44,17 @@ export default function PlayersTable({
   onPageChange,
   onEdit
 }: PlayersTableProps) {
+  const { data: session } = useSession()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  
+
   const deletePlayerMutation = useDeletePlayer()
 
   const handleDeletePlayer = React.useCallback((player: Player) => {
     if (window.confirm(`Are you sure you want to delete player "${player.name}"?`)) {
-      deletePlayerMutation.mutate(player.id)
+      deletePlayerMutation.mutate({ id: player.id, accessToken: session?.accessToken })
     }
-  }, [deletePlayerMutation])
+  }, [deletePlayerMutation, session?.accessToken])
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {

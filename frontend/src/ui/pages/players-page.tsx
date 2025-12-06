@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { UserCheck, Search, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useSession } from 'next-auth/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { playerQueries } from '@/queries/players'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -13,14 +14,15 @@ import ErrorBoundary from '@/components/error-boundary'
 import QueryErrorBoundary from '@/components/query-error-boundary'
 import type { Player } from '@/types/player'
 
-function PlayersTableWrapper({ searchTerm, page, pageSize, onPageChange, onEdit }: { 
+function PlayersTableWrapper({ searchTerm, page, pageSize, onPageChange, onEdit }: {
     searchTerm: string
     page: number
     pageSize: number
     onPageChange: (page: number) => void
     onEdit: (player: Player) => void
 }) {
-    const { data } = useSuspenseQuery(playerQueries.list(searchTerm, page, pageSize))
+    const { data: session } = useSession()
+    const { data } = useSuspenseQuery(playerQueries.list(searchTerm, page, pageSize, session?.accessToken))
 
     // Additional runtime validation as failsafe
     if (!data || typeof data !== 'object') {

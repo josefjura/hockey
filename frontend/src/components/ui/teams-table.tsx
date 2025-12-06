@@ -12,6 +12,7 @@ import {
   type ColumnFiltersState,
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown, Edit2, Trash2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import type { Team } from '@/types/team'
 import { getCountryFlag } from '@/utils/countryFlag'
@@ -43,15 +44,16 @@ export default function TeamsTable({
   onPageChange,
   onEdit
 }: TeamsTableProps) {
+  const { data: session } = useSession()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const deleteTeamMutation = useDeleteTeam()
 
   const handleDelete = React.useCallback(async (team: Team) => {
     if (window.confirm(`Are you sure you want to delete team "${team.name || 'National Team'}"?`)) {
-      deleteTeamMutation.mutate(parseInt(team.id))
+      deleteTeamMutation.mutate({ id: parseInt(team.id), accessToken: session?.accessToken })
     }
-  }, [deleteTeamMutation])
+  }, [deleteTeamMutation, session?.accessToken])
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {

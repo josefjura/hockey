@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -12,7 +13,7 @@ import { countryQueries } from '@/queries/countries'
 import { useUpdatePlayer } from '@/queries/players'
 import type { Player } from '@/types/player'
 
-// Form validation schema  
+// Form validation schema
 const playerEditSchema = z.object({
   name: z.string().min(1, 'Player name is required'),
   country_id: z.string().min(1, 'Country is required'),
@@ -27,7 +28,8 @@ interface PlayerEditDialogProps {
 }
 
 export default function PlayerEditDialog({ isOpen, onClose, player }: PlayerEditDialogProps) {
-  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all())
+  const { data: session } = useSession()
+  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all(session?.accessToken))
   const updatePlayerMutation = useUpdatePlayer()
   
   const {
@@ -70,10 +72,11 @@ export default function PlayerEditDialog({ isOpen, onClose, player }: PlayerEdit
     try {
       await updatePlayerMutation.mutateAsync({
         id: player.id,
-        data: {
+        playerData: {
           name: data.name,
           country_id: data.country_id,
-        }
+        },
+        accessToken: session?.accessToken
       })
       onClose()
       reset()

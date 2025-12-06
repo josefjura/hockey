@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut, apiDelete, createClientApiClient } from "@/lib/api-client";
 import { Season } from "@/types/season";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,7 +30,7 @@ const validatePaginatedResponse = <T>(data: unknown): PaginatedResponse<T> => {
 	return data as PaginatedResponse<T>;
 };
 
-export const fetchSeasonList = async (page: number = 0, searchTerm?: string, eventId?: string, pageSize: number = 20): Promise<PaginatedResponse<Season>> => {
+export const fetchSeasonList = async (page: number = 0, searchTerm?: string, eventId?: string, pageSize: number = 20, accessToken?: string): Promise<PaginatedResponse<Season>> => {
 	const params = new URLSearchParams({
 		page: (page + 1).toString(), // Convert from 0-based to 1-based for backend
 		page_size: pageSize.toString(),
@@ -44,15 +44,44 @@ export const fetchSeasonList = async (page: number = 0, searchTerm?: string, eve
 		params.append('event_id', eventId);
 	}
 
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		const data = await client<PaginatedResponse<Season>>(`/season?${params}`);
+		return validatePaginatedResponse<Season>(data);
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	const data = await apiGet<PaginatedResponse<Season>>(`/season?${params}`);
 	return validatePaginatedResponse<Season>(data);
 };
 
-export const fetchSeasonListSimple = async (): Promise<Array<{id: number, name: string, year: number, event_name: string}>> => {
+export const fetchSeasonListSimple = async (accessToken?: string): Promise<Array<{id: number, name: string, year: number, event_name: string}>> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<Array<{id: number, name: string, year: number, event_name: string}>>('/season/list');
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	return apiGet<Array<{id: number, name: string, year: number, event_name: string}>>('/season/list');
 };
 
-export const createSeason = async (seasonData: { year: number; display_name: string | null; event_id: string }): Promise<{ id: number }> => {
+export const createSeason = async (seasonData: { year: number; display_name: string | null; event_id: string }, accessToken?: string): Promise<{ id: number }> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<{ id: number }>('/season', {
+			method: 'POST',
+			body: JSON.stringify({
+				year: seasonData.year,
+				display_name: seasonData.display_name || null,
+				event_id: parseInt(seasonData.event_id),
+			}),
+		});
+	}
+
+	// Server-side: Use apiPost (SSR/server actions)
 	return apiPost<{ id: number }>('/season', {
 		year: seasonData.year,
 		display_name: seasonData.display_name || null,
@@ -60,7 +89,21 @@ export const createSeason = async (seasonData: { year: number; display_name: str
 	});
 };
 
-export const updateSeason = async (id: string, seasonData: { year: number; display_name: string | null; event_id: string }): Promise<void> => {
+export const updateSeason = async (id: string, seasonData: { year: number; display_name: string | null; event_id: string }, accessToken?: string): Promise<void> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<void>(`/season/${id}`, {
+			method: 'PUT',
+			body: JSON.stringify({
+				year: seasonData.year,
+				display_name: seasonData.display_name || null,
+				event_id: parseInt(seasonData.event_id),
+			}),
+		});
+	}
+
+	// Server-side: Use apiPut (SSR/server actions)
 	return apiPut<void>(`/season/${id}`, {
 		year: seasonData.year,
 		display_name: seasonData.display_name || null,
@@ -68,23 +111,32 @@ export const updateSeason = async (id: string, seasonData: { year: number; displ
 	});
 };
 
-export const deleteSeason = async (id: string): Promise<void> => {
+export const deleteSeason = async (id: string, accessToken?: string): Promise<void> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<void>(`/season/${id}`, {
+			method: 'DELETE',
+		});
+	}
+
+	// Server-side: Use apiDelete (SSR/server actions)
 	return apiDelete<void>(`/season/${id}`);
 };
 
 // Query configurations
 export const seasonQueries = {
-	list: (searchTerm: string = '', eventId: string = '', page: number = 0, pageSize: number = 20) =>
+	list: (searchTerm: string = '', eventId: string = '', page: number = 0, pageSize: number = 20, accessToken?: string) =>
 		queryOptions({
 			queryKey: ['seasons', searchTerm, eventId, page, pageSize],
-			queryFn: () => fetchSeasonList(page, searchTerm || undefined, eventId || undefined, pageSize),
+			queryFn: () => fetchSeasonList(page, searchTerm || undefined, eventId || undefined, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
-	
-	all: () =>
+
+	all: (accessToken?: string) =>
 		queryOptions({
 			queryKey: ['seasons', 'simple'],
-			queryFn: () => fetchSeasonListSimple(),
+			queryFn: () => fetchSeasonListSimple(accessToken),
 			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),
 };
@@ -94,11 +146,12 @@ export const useCreateSeason = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: createSeason,
-		onSuccess: (data, variables) => {
+		mutationFn: ({ data, accessToken }: { data: { year: number; display_name: string | null; event_id: string }; accessToken?: string }) =>
+			createSeason(data, accessToken),
+		onSuccess: (_, variables) => {
 			// Invalidate seasons queries to refetch data
 			queryClient.invalidateQueries({ queryKey: ['seasons'] });
-			toast.success(`Season ${variables.year}${variables.display_name ? ` "${variables.display_name}"` : ''} created successfully`);
+			toast.success(`Season ${variables.data.year}${variables.data.display_name ? ` "${variables.data.display_name}"` : ''} created successfully`);
 		},
 		onError: (error) => {
 			toast.error('Failed to create season. Please try again.');
@@ -111,8 +164,8 @@ export const useUpdateSeason = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: { year: number; display_name: string | null; event_id: string } }) => 
-			updateSeason(id, data),
+		mutationFn: ({ id, data, accessToken }: { id: string; data: { year: number; display_name: string | null; event_id: string }; accessToken?: string }) =>
+			updateSeason(id, data, accessToken),
 		onSuccess: (_, variables) => {
 			// Invalidate seasons queries to refetch data
 			queryClient.invalidateQueries({ queryKey: ['seasons'] });
@@ -129,7 +182,8 @@ export const useDeleteSeason = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: deleteSeason,
+		mutationFn: ({ id, accessToken }: { id: string; accessToken?: string }) =>
+			deleteSeason(id, accessToken),
 		onSuccess: () => {
 			// Invalidate seasons queries to refetch data
 			queryClient.invalidateQueries({ queryKey: ['seasons'] });

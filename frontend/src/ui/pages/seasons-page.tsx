@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { Calendar, Search, Plus, Filter } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useSession } from 'next-auth/react'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import { seasonQueries } from '@/queries/seasons'
 import { eventQueries } from '@/queries/events'
@@ -12,7 +13,7 @@ import SeasonCreateDialog from '@/components/ui/season-create-dialog'
 import ErrorBoundary from '@/components/error-boundary'
 import QueryErrorBoundary from '@/components/query-error-boundary'
 
-function SeasonsTableWrapper({ searchTerm, eventId, page, pageSize, onPageChange, onEdit }: { 
+function SeasonsTableWrapper({ searchTerm, eventId, page, pageSize, onPageChange, onEdit }: {
     searchTerm: string
     eventId: string
     page: number
@@ -20,7 +21,8 @@ function SeasonsTableWrapper({ searchTerm, eventId, page, pageSize, onPageChange
     onPageChange: (page: number) => void
     onEdit?: (season: unknown) => void
 }) {
-    const { data } = useSuspenseQuery(seasonQueries.list(searchTerm, eventId, page, pageSize))
+    const { data: session } = useSession()
+    const { data } = useSuspenseQuery(seasonQueries.list(searchTerm, eventId, page, pageSize, session?.accessToken))
 
     // Runtime validation as failsafe
     if (!data || typeof data !== 'object') {
@@ -62,6 +64,7 @@ function SeasonsTableWrapper({ searchTerm, eventId, page, pageSize, onPageChange
 
 export default function SeasonsPage() {
     const t = useTranslations('Seasons')
+    const { data: session } = useSession()
     const [searchTerm, setSearchTerm] = useState('')
     const [eventFilter, setEventFilter] = useState('')
     const [page, setPage] = useState(0)
@@ -70,7 +73,7 @@ export default function SeasonsPage() {
     const pageSize = 20 // Consistent page size
 
     // Load events for filter dropdown
-    const { data: events = [] } = useQuery(eventQueries.all())
+    const { data: events = [] } = useQuery(eventQueries.all(session?.accessToken))
 
     // Reset page when search term or filter changes
     useEffect(() => {

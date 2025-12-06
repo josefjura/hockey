@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut, apiDelete, createClientApiClient } from "@/lib/api-client";
 import { Match, MatchWithStats, ScoreEvent, CreateMatchRequest, UpdateMatchRequest, CreateScoreEventRequest } from "@/types/match";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -16,7 +16,8 @@ export const fetchMatchList = async (
 		dateFrom?: string;
 		dateTo?: string;
 	} = {},
-	pageSize: number = 20
+	pageSize: number = 20,
+	accessToken?: string
 ): Promise<PaginatedResponse<Match>> => {
 	const params = new URLSearchParams({
 		page: (page + 1).toString(), // Convert from 0-based to 1-based for backend
@@ -39,19 +40,40 @@ export const fetchMatchList = async (
 		params.append('date_to', filters.dateTo);
 	}
 
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<PaginatedResponse<Match>>(`/match?${params}`);
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	return apiGet<PaginatedResponse<Match>>(`/match?${params}`);
 };
 
-export const fetchMatchById = async (id: string): Promise<Match> => {
+export const fetchMatchById = async (id: string, accessToken?: string): Promise<Match> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<Match>(`/match/${id}`);
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	return apiGet<Match>(`/match/${id}`);
 };
 
-export const fetchMatchWithStats = async (id: string): Promise<MatchWithStats> => {
+export const fetchMatchWithStats = async (id: string, accessToken?: string): Promise<MatchWithStats> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<MatchWithStats>(`/match/${id}/stats`);
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	return apiGet<MatchWithStats>(`/match/${id}/stats`);
 };
 
-export const createMatch = async (matchData: CreateMatchRequest): Promise<{ id: number }> => {
-	return apiPost<{ id: number }>('/match', {
+export const createMatch = async (matchData: CreateMatchRequest, accessToken?: string): Promise<{ id: number }> => {
+	const requestBody = {
 		season_id: parseInt(matchData.season_id),
 		home_team_id: parseInt(matchData.home_team_id),
 		away_team_id: parseInt(matchData.away_team_id),
@@ -60,10 +82,22 @@ export const createMatch = async (matchData: CreateMatchRequest): Promise<{ id: 
 		match_date: matchData.match_date || null,
 		status: matchData.status || 'scheduled',
 		venue: matchData.venue || null,
-	});
+	};
+
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<{ id: number }>('/match', {
+			method: 'POST',
+			body: JSON.stringify(requestBody),
+		});
+	}
+
+	// Server-side: Use apiPost (SSR/server actions)
+	return apiPost<{ id: number }>('/match', requestBody);
 };
 
-export const updateMatch = async (id: string, matchData: UpdateMatchRequest): Promise<string> => {
+export const updateMatch = async (id: string, matchData: UpdateMatchRequest, accessToken?: string): Promise<string> => {
 	const requestBody: Record<string, unknown> = {};
 
 	if (matchData.season_id !== undefined) requestBody.season_id = parseInt(matchData.season_id);
@@ -75,20 +109,46 @@ export const updateMatch = async (id: string, matchData: UpdateMatchRequest): Pr
 	if (matchData.status !== undefined) requestBody.status = matchData.status;
 	if (matchData.venue !== undefined) requestBody.venue = matchData.venue;
 
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<string>(`/match/${id}`, {
+			method: 'PUT',
+			body: JSON.stringify(requestBody),
+		});
+	}
+
+	// Server-side: Use apiPut (SSR/server actions)
 	return apiPut<string>(`/match/${id}`, requestBody);
 };
 
-export const deleteMatch = async (id: string): Promise<string> => {
+export const deleteMatch = async (id: string, accessToken?: string): Promise<string> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<string>(`/match/${id}`, {
+			method: 'DELETE',
+		});
+	}
+
+	// Server-side: Use apiDelete (SSR/server actions)
 	return apiDelete<string>(`/match/${id}`);
 };
 
 // Score Event API functions
-export const fetchScoreEventsForMatch = async (matchId: string): Promise<ScoreEvent[]> => {
+export const fetchScoreEventsForMatch = async (matchId: string, accessToken?: string): Promise<ScoreEvent[]> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<ScoreEvent[]>(`/match/${matchId}/score-events`);
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	return apiGet<ScoreEvent[]>(`/match/${matchId}/score-events`);
 };
 
-export const createScoreEvent = async (matchId: string, eventData: CreateScoreEventRequest): Promise<{ id: number }> => {
-	return apiPost<{ id: number }>(`/match/${matchId}/score-events`, {
+export const createScoreEvent = async (matchId: string, eventData: CreateScoreEventRequest, accessToken?: string): Promise<{ id: number }> => {
+	const requestBody = {
 		team_id: parseInt(eventData.team_id),
 		scorer_id: eventData.scorer_id ? parseInt(eventData.scorer_id) : null,
 		assist1_id: eventData.assist1_id ? parseInt(eventData.assist1_id) : null,
@@ -97,11 +157,23 @@ export const createScoreEvent = async (matchId: string, eventData: CreateScoreEv
 		time_minutes: eventData.time_minutes || null,
 		time_seconds: eventData.time_seconds || null,
 		goal_type: eventData.goal_type || null,
-	});
+	};
+
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<{ id: number }>(`/match/${matchId}/score-events`, {
+			method: 'POST',
+			body: JSON.stringify(requestBody),
+		});
+	}
+
+	// Server-side: Use apiPost (SSR/server actions)
+	return apiPost<{ id: number }>(`/match/${matchId}/score-events`, requestBody);
 };
 
-export const identifyGoal = async (matchId: string, eventData: CreateScoreEventRequest): Promise<{ id: number }> => {
-	return apiPost<{ id: number }>(`/match/${matchId}/identify-goal`, {
+export const identifyGoal = async (matchId: string, eventData: CreateScoreEventRequest, accessToken?: string): Promise<{ id: number }> => {
+	const requestBody = {
 		team_id: parseInt(eventData.team_id),
 		scorer_id: eventData.scorer_id ? parseInt(eventData.scorer_id) : null,
 		assist1_id: eventData.assist1_id ? parseInt(eventData.assist1_id) : null,
@@ -110,14 +182,42 @@ export const identifyGoal = async (matchId: string, eventData: CreateScoreEventR
 		time_minutes: eventData.time_minutes || null,
 		time_seconds: eventData.time_seconds || null,
 		goal_type: eventData.goal_type || null,
-	});
+	};
+
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<{ id: number }>(`/match/${matchId}/identify-goal`, {
+			method: 'POST',
+			body: JSON.stringify(requestBody),
+		});
+	}
+
+	// Server-side: Use apiPost (SSR/server actions)
+	return apiPost<{ id: number }>(`/match/${matchId}/identify-goal`, requestBody);
 };
 
-export const deleteScoreEvent = async (matchId: string, eventId: string): Promise<string> => {
+export const deleteScoreEvent = async (matchId: string, eventId: string, accessToken?: string): Promise<string> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<string>(`/match/${matchId}/score-events/${eventId}`, {
+			method: 'DELETE',
+		});
+	}
+
+	// Server-side: Use apiDelete (SSR/server actions)
 	return apiDelete<string>(`/match/${matchId}/score-events/${eventId}`);
 };
 
-export const fetchPlayersForTeamSeason = async (seasonId: string, teamId: string): Promise<Array<{ id: number, name: string, nationality: string }>> => {
+export const fetchPlayersForTeamSeason = async (seasonId: string, teamId: string, accessToken?: string): Promise<Array<{ id: number, name: string, nationality: string }>> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<Array<{ id: number, name: string, nationality: string }>>(`/season/${seasonId}/team/${teamId}/players`);
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	return apiGet<Array<{ id: number, name: string, nationality: string }>>(`/season/${seasonId}/team/${teamId}/players`);
 };
 
@@ -133,39 +233,40 @@ export const matchQueries = {
 			dateTo?: string;
 		} = {},
 		page: number = 0,
-		pageSize: number = 20
+		pageSize: number = 20,
+		accessToken?: string
 	) =>
 		queryOptions({
 			queryKey: ['matches', filters, page, pageSize],
-			queryFn: () => fetchMatchList(page, filters, pageSize),
+			queryFn: () => fetchMatchList(page, filters, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 
-	byId: (id: string) =>
+	byId: (id: string, accessToken?: string) =>
 		queryOptions({
 			queryKey: ['match', id],
-			queryFn: () => fetchMatchById(id),
+			queryFn: () => fetchMatchById(id, accessToken),
 			staleTime: 5 * 60 * 1000,
 		}),
 
-	withStats: (id: string) =>
+	withStats: (id: string, accessToken?: string) =>
 		queryOptions({
 			queryKey: ['match', id, 'stats'],
-			queryFn: () => fetchMatchWithStats(id),
+			queryFn: () => fetchMatchWithStats(id, accessToken),
 			staleTime: 1 * 60 * 1000, // 1 minute - stats change more frequently
 		}),
 
-	scoreEvents: (matchId: string) =>
+	scoreEvents: (matchId: string, accessToken?: string) =>
 		queryOptions({
 			queryKey: ['match', matchId, 'score-events'],
-			queryFn: () => fetchScoreEventsForMatch(matchId),
+			queryFn: () => fetchScoreEventsForMatch(matchId, accessToken),
 			staleTime: 1 * 60 * 1000, // 1 minute
 		}),
 
-	rosterPlayers: (seasonId: string, teamId: string) =>
+	rosterPlayers: (seasonId: string, teamId: string, accessToken?: string) =>
 		queryOptions({
 			queryKey: ['season', seasonId, 'team', teamId, 'players'],
-			queryFn: () => fetchPlayersForTeamSeason(seasonId, teamId),
+			queryFn: () => fetchPlayersForTeamSeason(seasonId, teamId, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 			enabled: !!(seasonId && teamId), // Only run if both IDs are provided
 		}),
@@ -176,7 +277,8 @@ export const useCreateMatch = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: createMatch,
+		mutationFn: ({ data, accessToken }: { data: CreateMatchRequest; accessToken?: string }) =>
+			createMatch(data, accessToken),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['matches'] });
 			toast.success(`Match created successfully`);
@@ -192,9 +294,9 @@ export const useUpdateMatch = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ id, ...matchData }: { id: string } & UpdateMatchRequest) =>
-			updateMatch(id, matchData),
-		onSuccess: (data, variables) => {
+		mutationFn: ({ id, data, accessToken }: { id: string; data: UpdateMatchRequest; accessToken?: string }) =>
+			updateMatch(id, data, accessToken),
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['matches'] });
 			queryClient.invalidateQueries({ queryKey: ['match', variables.id] });
 			toast.success(`Match updated successfully`);
@@ -210,10 +312,11 @@ export const useDeleteMatch = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: deleteMatch,
-		onSuccess: (_data, variables) => {
+		mutationFn: ({ id, accessToken }: { id: string; accessToken?: string }) =>
+			deleteMatch(id, accessToken),
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['matches'] });
-			queryClient.removeQueries({ queryKey: ['match', variables] });
+			queryClient.removeQueries({ queryKey: ['match', variables.id] });
 			toast.success('Match deleted successfully');
 		},
 		onError: (error) => {
@@ -228,9 +331,9 @@ export const useCreateScoreEvent = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ matchId, ...eventData }: { matchId: string } & CreateScoreEventRequest) =>
-			createScoreEvent(matchId, eventData),
-		onSuccess: (data, variables) => {
+		mutationFn: ({ matchId, data, accessToken }: { matchId: string; data: CreateScoreEventRequest; accessToken?: string }) =>
+			createScoreEvent(matchId, data, accessToken),
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'score-events'] });
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'stats'] });
 			toast.success('Score event created successfully');
@@ -246,8 +349,8 @@ export const useIdentifyGoal = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ matchId, ...eventData }: { matchId: string } & CreateScoreEventRequest) =>
-			identifyGoal(matchId, eventData),
+		mutationFn: ({ matchId, data, accessToken }: { matchId: string; data: CreateScoreEventRequest; accessToken?: string }) =>
+			identifyGoal(matchId, data, accessToken),
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'score-events'] });
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'stats'] });
@@ -265,9 +368,9 @@ export const useDeleteScoreEvent = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ matchId, eventId }: { matchId: string; eventId: string }) =>
-			deleteScoreEvent(matchId, eventId),
-		onSuccess: (data, variables) => {
+		mutationFn: ({ matchId, eventId, accessToken }: { matchId: string; eventId: string; accessToken?: string }) =>
+			deleteScoreEvent(matchId, eventId, accessToken),
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'score-events'] });
 			queryClient.invalidateQueries({ queryKey: ['match', variables.matchId, 'stats'] });
 			toast.success('Score event deleted successfully');

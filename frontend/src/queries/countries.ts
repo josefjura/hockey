@@ -1,11 +1,11 @@
-import { apiGet, apiClient } from "@/lib/api-client";
+import { apiGet, apiClient, createClientApiClient } from "@/lib/api-client";
 import { Country } from "@/types/country";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 
-export const fetchCountryList = async (page: number = 0, searchTerm?: string): Promise<PaginatedResponse<Country>> => {
+export const fetchCountryList = async (page: number = 0, searchTerm?: string, accessToken?: string): Promise<PaginatedResponse<Country>> => {
 	const params = new URLSearchParams({
 		page: (page + 1).toString(), // Convert from 0-based to 1-based for backend
 	});
@@ -14,15 +14,40 @@ export const fetchCountryList = async (page: number = 0, searchTerm?: string): P
 		params.append('name', searchTerm);
 	}
 
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<PaginatedResponse<Country>>(`/country?${params}`);
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	return apiGet<PaginatedResponse<Country>>(`/country?${params}`);
 };
 
-export const fetchCountryListAll = async (): Promise<Country[]> => {
+export const fetchCountryListAll = async (accessToken?: string): Promise<Country[]> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		const data = await client<PaginatedResponse<Country>>('/country?page_size=200&enabled=true');
+		return data.items;
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	const data = await apiGet<PaginatedResponse<Country>>('/country?page_size=200&enabled=true');
 	return data.items;
 };
 
-export const updateCountryStatus = async (countryId: string, status: boolean) => {
+export const updateCountryStatus = async (countryId: string, status: boolean, accessToken?: string) => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client(`/country/${countryId}`, {
+			method: 'PATCH',
+			body: JSON.stringify(status),
+		});
+	}
+
+	// Server-side: Use apiClient (SSR/server actions)
 	return apiClient(`/country/${countryId}`, {
 		method: 'PATCH',
 		body: JSON.stringify(status),
@@ -31,16 +56,16 @@ export const updateCountryStatus = async (countryId: string, status: boolean) =>
 
 // Simple query configuration for country list (no details needed)
 export const countryQueries = {
-	list: (searchTerm: string = '', page: number = 0) =>
+	list: (searchTerm: string = '', page: number = 0, accessToken?: string) =>
 		queryOptions({
 			queryKey: ['countries', searchTerm, page],
-			queryFn: () => fetchCountryList(page, searchTerm || undefined),
+			queryFn: () => fetchCountryList(page, searchTerm || undefined, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
-	all: () =>
+	all: (accessToken?: string) =>
 		queryOptions({
 			queryKey: ['countries-all'],
-			queryFn: () => fetchCountryListAll(),
+			queryFn: () => fetchCountryListAll(accessToken),
 			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),
 };
@@ -50,8 +75,8 @@ export const useUpdateCountryStatus = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ countryId, enabled }: { countryId: string; enabled: boolean }) =>
-			updateCountryStatus(countryId, enabled),
+		mutationFn: ({ countryId, enabled, accessToken }: { countryId: string; enabled: boolean; accessToken?: string }) =>
+			updateCountryStatus(countryId, enabled, accessToken),
 		onMutate: async ({ countryId, enabled }) => {
 			// Cancel outgoing refetches so they don't overwrite our optimistic update
 			await queryClient.cancelQueries({ queryKey: ['countries'] });

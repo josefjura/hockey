@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Users, Activity, Trophy } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { countryQueries } from '@/queries/countries'
@@ -39,7 +40,8 @@ interface QuickCreateTeamProps {
 
 export function QuickCreateTeam({ onSuccess }: QuickCreateTeamProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const { data: countries = [] } = useQuery(countryQueries.all())
+  const { data: session } = useSession()
+  const { data: countries = [] } = useQuery(countryQueries.all(session?.accessToken))
   const createTeamMutation = useCreateTeam()
   const t = useTranslations()
 
@@ -51,8 +53,11 @@ export function QuickCreateTeam({ onSuccess }: QuickCreateTeamProps) {
   const onSubmit = async (data: QuickTeamData) => {
     try {
       await createTeamMutation.mutateAsync({
-        name: data.name.trim(),
-        country_id: data.country_id,
+        teamData: {
+          name: data.name.trim(),
+          country_id: data.country_id,
+        },
+        accessToken: session?.accessToken
       })
       reset()
       setIsExpanded(false)
@@ -142,7 +147,8 @@ export function QuickCreateTeam({ onSuccess }: QuickCreateTeamProps) {
 
 export function QuickCreatePlayer({ onSuccess }: QuickCreateTeamProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const { data: countries = [] } = useQuery(countryQueries.all())
+  const { data: session } = useSession()
+  const { data: countries = [] } = useQuery(countryQueries.all(session?.accessToken))
   const createPlayerMutation = useCreatePlayer()
   const t = useTranslations()
 
@@ -154,8 +160,11 @@ export function QuickCreatePlayer({ onSuccess }: QuickCreateTeamProps) {
   const onSubmit = async (data: QuickPlayerData) => {
     try {
       await createPlayerMutation.mutateAsync({
-        name: data.name.trim(),
-        country_id: data.country_id,
+        playerData: {
+          name: data.name.trim(),
+          country_id: data.country_id,
+        },
+        accessToken: session?.accessToken
       })
       reset()
       setIsExpanded(false)
@@ -245,7 +254,8 @@ export function QuickCreatePlayer({ onSuccess }: QuickCreateTeamProps) {
 
 export function QuickCreateEvent({ onSuccess }: QuickCreateTeamProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const { data: countries = [] } = useQuery(countryQueries.all())
+  const { data: session } = useSession()
+  const { data: countries = [] } = useQuery(countryQueries.all(session?.accessToken))
   const createEventMutation = useCreateEvent()
   const t = useTranslations()
 
@@ -257,8 +267,11 @@ export function QuickCreateEvent({ onSuccess }: QuickCreateTeamProps) {
   const onSubmit = async (data: QuickEventData) => {
     try {
       await createEventMutation.mutateAsync({
-        name: data.name.trim(),
-        country_id: data.country_id,
+        eventData: {
+          name: data.name.trim(),
+          country_id: data.country_id,
+        },
+        accessToken: session?.accessToken
       })
       reset()
       setIsExpanded(false)

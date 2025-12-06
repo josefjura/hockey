@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,7 +14,7 @@ import { useCreateTeam } from '@/queries/teams'
 import { getCountryFlag } from '@/utils/countryFlag'
 import Image from 'next/image'
 
-// Form validation schema  
+// Form validation schema
 const teamCreateSchema = z.object({
   name: z.string().optional(),
   country_id: z.string().min(1, 'Country is required'),
@@ -27,7 +28,8 @@ interface TeamCreateDialogProps {
 }
 
 export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogProps) {
-  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all())
+  const { data: session } = useSession()
+  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all(session?.accessToken))
   const createTeamMutation = useCreateTeam()
   
   const {
@@ -59,10 +61,13 @@ export default function TeamCreateDialog({ isOpen, onClose }: TeamCreateDialogPr
   const onSubmit = async (data: TeamCreateFormData) => {
     try {
       await createTeamMutation.mutateAsync({
-        name: data.name?.trim() || null,
-        country_id: data.country_id,
+        teamData: {
+          name: data.name?.trim() || null,
+          country_id: data.country_id,
+        },
+        accessToken: session?.accessToken
       })
-      
+
       // Reset form and close dialog
       reset()
       onClose()

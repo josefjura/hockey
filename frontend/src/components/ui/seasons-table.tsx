@@ -12,6 +12,7 @@ import {
   type ColumnFiltersState,
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown, Edit2, Trash2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import type { Season } from '@/types/season'
 import { useDeleteSeason } from '@/queries/seasons'
 import Pager from '@/components/ui/pager'
@@ -41,15 +42,16 @@ export default function SeasonsTable({
   onPageChange,
   onEdit
 }: SeasonsTableProps) {
+  const { data: session } = useSession()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const deleteSeasonMutation = useDeleteSeason()
 
   const handleDelete = React.useCallback(async (season: Season) => {
     if (window.confirm(`Are you sure you want to delete season ${season.year}${season.display_name ? ` "${season.display_name}"` : ''}?`)) {
-      deleteSeasonMutation.mutate(season.id)
+      deleteSeasonMutation.mutate({ id: season.id, accessToken: session?.accessToken })
     }
-  }, [deleteSeasonMutation])
+  }, [deleteSeasonMutation, session?.accessToken])
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {

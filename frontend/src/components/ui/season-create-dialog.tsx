@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,7 +12,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import { eventQueries } from '@/queries/events'
 import { useCreateSeason } from '@/queries/seasons'
 
-// Form validation schema  
+// Form validation schema
 const seasonCreateSchema = z.object({
   year: z.number().min(1900, 'Year must be at least 1900').max(2100, 'Year must be at most 2100'),
   display_name: z.string().optional(),
@@ -26,7 +27,8 @@ interface SeasonCreateDialogProps {
 }
 
 export default function SeasonCreateDialog({ isOpen, onClose }: SeasonCreateDialogProps) {
-  const { data: events = [], isLoading: eventsLoading } = useQuery(eventQueries.all())
+  const { data: session } = useSession()
+  const { data: events = [], isLoading: eventsLoading } = useQuery(eventQueries.all(session?.accessToken))
   const createSeasonMutation = useCreateSeason()
   
   const {
@@ -58,11 +60,14 @@ export default function SeasonCreateDialog({ isOpen, onClose }: SeasonCreateDial
   const onSubmit = async (data: SeasonCreateFormData) => {
     try {
       await createSeasonMutation.mutateAsync({
-        year: data.year,
-        display_name: data.display_name || null,
-        event_id: data.event_id,
+        seasonData: {
+          year: data.year,
+          display_name: data.display_name || null,
+          event_id: data.event_id,
+        },
+        accessToken: session?.accessToken
       })
-      
+
       reset()
       onClose()
     } catch (error) {
