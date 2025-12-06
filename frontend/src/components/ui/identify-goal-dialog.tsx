@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { API_URL } from "@/lib/config"
 import { X, Target, Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
 import { useIdentifyGoal } from '@/queries/matches'
 import QuickAddPlayerDialog from './quick-add-player-dialog'
 import type { CreateScoreEventRequest } from '@/types/match'
@@ -48,6 +49,7 @@ function IdentifyGoalForm({
     homeUnidentified: number
     awayUnidentified: number
 }) {
+    const { data: session } = useSession()
     const [formData, setFormData] = useState<CreateScoreEventRequest>({
         team_id: '',
         scorer_id: '',
@@ -144,14 +146,17 @@ function IdentifyGoalForm({
         try {
             await identifyGoalMutation.mutateAsync({
                 matchId,
-                ...formData,
-                scorer_id: formData.scorer_id || undefined,
-                assist1_id: formData.assist1_id || undefined,
-                assist2_id: formData.assist2_id || undefined,
-                period: formData.period || undefined,
-                time_minutes: formData.time_minutes || undefined,
-                time_seconds: formData.time_seconds || undefined,
-                goal_type: formData.goal_type || undefined,
+                data: {
+                    ...formData,
+                    scorer_id: formData.scorer_id || undefined,
+                    assist1_id: formData.assist1_id || undefined,
+                    assist2_id: formData.assist2_id || undefined,
+                    period: formData.period || undefined,
+                    time_minutes: formData.time_minutes || undefined,
+                    time_seconds: formData.time_seconds || undefined,
+                    goal_type: formData.goal_type || undefined,
+                },
+                accessToken: session?.accessToken,
             })
             onClose()
         } catch (error) {

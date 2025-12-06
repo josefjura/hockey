@@ -160,7 +160,7 @@ export function QuickCreatePlayer({ onSuccess }: QuickCreateTeamProps) {
   const onSubmit = async (data: QuickPlayerData) => {
     try {
       await createPlayerMutation.mutateAsync({
-        playerData: {
+        data: {
           name: data.name.trim(),
           country_id: data.country_id,
         },
@@ -267,7 +267,7 @@ export function QuickCreateEvent({ onSuccess }: QuickCreateTeamProps) {
   const onSubmit = async (data: QuickEventData) => {
     try {
       await createEventMutation.mutateAsync({
-        eventData: {
+        data: {
           name: data.name.trim(),
           country_id: data.country_id,
         },

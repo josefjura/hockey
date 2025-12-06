@@ -60,7 +60,7 @@ export default function SeasonCreateDialog({ isOpen, onClose }: SeasonCreateDial
   const onSubmit = async (data: SeasonCreateFormData) => {
     try {
       await createSeasonMutation.mutateAsync({
-        seasonData: {
+        data: {
           year: data.year,
           display_name: data.display_name || null,
           event_id: data.event_id,

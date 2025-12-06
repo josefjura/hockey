@@ -96,7 +96,7 @@ export default function MatchEditDialog({ isOpen, onClose, match }: MatchEditDia
 
             await updateMatchMutation.mutateAsync({
                 id: match.id,
-                matchData: updateData,
+                data: updateData,
                 accessToken: session?.accessToken
             })
             onClose()

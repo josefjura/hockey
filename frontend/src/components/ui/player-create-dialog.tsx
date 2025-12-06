@@ -67,7 +67,7 @@ export default function PlayerCreateDialog({ isOpen, onClose }: PlayerCreateDial
     console.log('[PlayerCreateDialog] onSubmit called with data:', data)
     try {
       await createPlayerMutation.mutateAsync({
-        playerData: {
+        data: {
           name: data.name.trim(),
           country_id: data.country_id,
         },

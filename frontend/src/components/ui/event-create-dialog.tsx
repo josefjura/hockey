@@ -61,7 +61,7 @@ export default function EventCreateDialog({ isOpen, onClose }: EventCreateDialog
   const onSubmit = async (data: EventCreateFormData) => {
     try {
       await createEventMutation.mutateAsync({
-        eventData: {
+        data: {
           name: data.name.trim(),
           country_id: data.country_id || null,
         },

@@ -72,7 +72,7 @@ export default function EventEditDialog({ isOpen, onClose, event }: EventEditDia
     try {
       await updateEventMutation.mutateAsync({
         id: parseInt(event.id),
-        eventData: {
+        data: {
           name: data.name,
           country_id: data.country_id || null,
         },

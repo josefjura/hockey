@@ -109,7 +109,7 @@ export const deletePlayer = async (id: string, accessToken?: string): Promise<vo
 export const playerQueries = {
 	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['players', searchTerm, page, pageSize],
+			queryKey: ['players', searchTerm, page, pageSize, accessToken],
 			queryFn: () => fetchPlayerList(page, searchTerm || undefined, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),

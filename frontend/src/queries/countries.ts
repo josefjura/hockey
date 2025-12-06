@@ -58,13 +58,13 @@ export const updateCountryStatus = async (countryId: string, status: boolean, ac
 export const countryQueries = {
 	list: (searchTerm: string = '', page: number = 0, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['countries', searchTerm, page],
+			queryKey: ['countries', searchTerm, page, accessToken],
 			queryFn: () => fetchCountryList(page, searchTerm || undefined, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 	all: (accessToken?: string) =>
 		queryOptions({
-			queryKey: ['countries-all'],
+			queryKey: ['countries-all', accessToken],
 			queryFn: () => fetchCountryListAll(accessToken),
 			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),

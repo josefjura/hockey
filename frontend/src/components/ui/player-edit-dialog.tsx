@@ -72,7 +72,7 @@ export default function PlayerEditDialog({ isOpen, onClose, player }: PlayerEdit
     try {
       await updatePlayerMutation.mutateAsync({
         id: player.id,
-        playerData: {
+        data: {
           name: data.name,
           country_id: data.country_id,
         },

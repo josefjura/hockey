@@ -71,8 +71,10 @@ export default function PlayerCreateDialog({ isOpen, onClose }: PlayerCreateDial
     console.log('[MINIMAL PlayerCreateDialog] onSubmit called with data:', data)
     try {
       await createPlayerMutation.mutateAsync({
-        name: data.name.trim(),
-        country_id: data.country_id,
+        data: {
+          name: data.name.trim(),
+          country_id: data.country_id,
+        }
       })
       
       console.log('[MINIMAL PlayerCreateDialog] Success - resetting and closing')
