@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { X, Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useCreateMatch } from '@/queries/matches'
 import { teamQueries } from '@/queries/teams'
@@ -14,8 +15,9 @@ interface MatchCreateDialogProps {
 }
 
 function MatchCreateForm({ onClose }: { onClose: () => void }) {
-    const { data: teamsData } = useSuspenseQuery(teamQueries.all())
-    const { data: seasonsData } = useSuspenseQuery(seasonQueries.all())
+    const { data: session } = useSession()
+    const { data: teamsData } = useSuspenseQuery(teamQueries.all(session?.accessToken))
+    const { data: seasonsData } = useSuspenseQuery(seasonQueries.all(session?.accessToken))
     
     const [formData, setFormData] = useState<CreateMatchRequest>({
         season_id: '',
@@ -81,9 +83,12 @@ function MatchCreateForm({ onClose }: { onClose: () => void }) {
 
         try {
             await createMatchMutation.mutateAsync({
-                ...formData,
-                match_date: formData.match_date || undefined,
-                venue: formData.venue || undefined,
+                matchData: {
+                    ...formData,
+                    match_date: formData.match_date || undefined,
+                    venue: formData.venue || undefined,
+                },
+                accessToken: session?.accessToken
             })
             onClose()
         } catch (error) {

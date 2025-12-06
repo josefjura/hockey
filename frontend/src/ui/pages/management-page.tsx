@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { Globe, Search, Settings } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useSession } from 'next-auth/react'
 import type { Country } from '@/types/country'
 import { getCountryFlag } from '@/utils/countryFlag'
 import Image from 'next/image'
@@ -15,14 +16,15 @@ import { useDebounce } from '@/hooks/useDebounce'
 import ErrorBoundary from '@/components/error-boundary'
 import QueryErrorBoundary from '@/components/query-error-boundary'
 
-function CountriesTable({ searchTerm, page, onPageChange }: { 
+function CountriesTable({ searchTerm, page, onPageChange }: {
     searchTerm: string
-    page: number 
-    onPageChange: (page: number) => void 
+    page: number
+    onPageChange: (page: number) => void
 }) {
     const t = useTranslations('Management')
-    
-    const { data } = useSuspenseQuery(countryQueries.list(searchTerm, page))
+    const { data: session } = useSession()
+
+    const { data } = useSuspenseQuery(countryQueries.list(searchTerm, page, session?.accessToken))
     const updateCountryStatus = useUpdateCountryStatus()
 
     // Runtime validation as failsafe
@@ -105,7 +107,8 @@ function CountriesTable({ searchTerm, page, onPageChange }: {
                                     <button
                                         onClick={() => updateCountryStatus.mutate({
                                             countryId: country.id.toString(),
-                                            enabled: !country.enabled
+                                            enabled: !country.enabled,
+                                            accessToken: session?.accessToken
                                         })}
                                         disabled={updateCountryStatus.isPending}
                                         className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${

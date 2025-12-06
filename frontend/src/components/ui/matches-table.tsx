@@ -1,6 +1,7 @@
 "use client"
 
 import { Edit, Trash2, Trophy, Calendar, MapPin, Users, Gamepad2, Eye } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useDeleteMatch } from '@/queries/matches'
 import TableSkeleton from './table-skeleton'
 import Badge from './badge'
@@ -30,11 +31,12 @@ export default function MatchesTable({
     onEdit,
     onViewDetails,
 }: MatchesTableProps) {
+    const { data: session } = useSession()
     const deleteMatchMutation = useDeleteMatch()
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this match?')) {
-            deleteMatchMutation.mutate(id)
+            deleteMatchMutation.mutate({ id, accessToken: session?.accessToken })
         }
     }
 

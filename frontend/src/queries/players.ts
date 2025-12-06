@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut, apiDelete, createClientApiClient } from "@/lib/api-client";
 import { Player } from "@/types/player";
 import { PaginatedResponse } from "@/types/paging";
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,7 +30,7 @@ const validatePaginatedResponse = <T>(data: unknown): PaginatedResponse<T> => {
 	return data as PaginatedResponse<T>;
 };
 
-export const fetchPlayerList = async (page: number = 0, searchTerm?: string, pageSize: number = 20): Promise<PaginatedResponse<Player>> => {
+export const fetchPlayerList = async (page: number = 0, searchTerm?: string, pageSize: number = 20, accessToken?: string): Promise<PaginatedResponse<Player>> => {
 	const params = new URLSearchParams({
 		page: (page + 1).toString(), // Convert from 0-based to 1-based for backend
 		page_size: pageSize.toString(),
@@ -40,34 +40,77 @@ export const fetchPlayerList = async (page: number = 0, searchTerm?: string, pag
 		params.append('name', searchTerm);
 	}
 
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		const data = await client<PaginatedResponse<Player>>(`/player?${params}`);
+		return validatePaginatedResponse<Player>(data);
+	}
+
+	// Server-side: Use apiGet (SSR/prefetch)
 	const data = await apiGet<PaginatedResponse<Player>>(`/player?${params}`);
 	return validatePaginatedResponse<Player>(data);
 };
 
-export const createPlayer = async (playerData: { name: string; country_id: string }): Promise<{ id: number }> => {
+export const createPlayer = async (playerData: { name: string; country_id: string }, accessToken?: string): Promise<{ id: number }> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<{ id: number }>('/player', {
+			method: 'POST',
+			body: JSON.stringify({
+				name: playerData.name,
+				country_id: parseInt(playerData.country_id),
+			}),
+		});
+	}
+
+	// Server-side: Use apiPost (SSR/server actions)
 	return apiPost<{ id: number }>('/player', {
 		name: playerData.name,
 		country_id: parseInt(playerData.country_id),
 	});
 };
 
-export const updatePlayer = async (id: string, playerData: { name: string; country_id: string }): Promise<void> => {
+export const updatePlayer = async (id: string, playerData: { name: string; country_id: string }, accessToken?: string): Promise<void> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<void>(`/player/${id}`, {
+			method: 'PUT',
+			body: JSON.stringify({
+				name: playerData.name,
+				country_id: parseInt(playerData.country_id),
+			}),
+		});
+	}
+
+	// Server-side: Use apiPut (SSR/server actions)
 	return apiPut<void>(`/player/${id}`, {
 		name: playerData.name,
 		country_id: parseInt(playerData.country_id),
 	});
 };
 
-export const deletePlayer = async (id: string): Promise<void> => {
+export const deletePlayer = async (id: string, accessToken?: string): Promise<void> => {
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<void>(`/player/${id}`, {
+			method: 'DELETE',
+		});
+	}
+
+	// Server-side: Use apiDelete (SSR/server actions)
 	return apiDelete<void>(`/player/${id}`);
 };
 
 // Query configurations
 export const playerQueries = {
-	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20) =>
+	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20, accessToken?: string) =>
 		queryOptions({
 			queryKey: ['players', searchTerm, page, pageSize],
-			queryFn: () => fetchPlayerList(page, searchTerm || undefined, pageSize),
+			queryFn: () => fetchPlayerList(page, searchTerm || undefined, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 };
@@ -77,11 +120,12 @@ export const useCreatePlayer = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: createPlayer,
-		onSuccess: (data, variables) => {
+		mutationFn: ({ data, accessToken }: { data: { name: string; country_id: string }; accessToken?: string }) =>
+			createPlayer(data, accessToken),
+		onSuccess: (_, variables) => {
 			// Invalidate players queries to refetch data
 			queryClient.invalidateQueries({ queryKey: ['players'] });
-			toast.success(`Player "${variables.name}" created successfully`);
+			toast.success(`Player "${variables.data.name}" created successfully`);
 		},
 		onError: (error) => {
 			toast.error('Failed to create player. Please try again.');
@@ -94,8 +138,8 @@ export const useUpdatePlayer = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: { name: string; country_id: string } }) => 
-			updatePlayer(id, data),
+		mutationFn: ({ id, data, accessToken }: { id: string; data: { name: string; country_id: string }; accessToken?: string }) =>
+			updatePlayer(id, data, accessToken),
 		onSuccess: (_, variables) => {
 			// Invalidate players queries to refetch data
 			queryClient.invalidateQueries({ queryKey: ['players'] });
@@ -112,7 +156,8 @@ export const useDeletePlayer = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: deletePlayer,
+		mutationFn: ({ id, accessToken }: { id: string; accessToken?: string }) =>
+			deletePlayer(id, accessToken),
 		onSuccess: () => {
 			// Invalidate players queries to refetch data
 			queryClient.invalidateQueries({ queryKey: ['players'] });

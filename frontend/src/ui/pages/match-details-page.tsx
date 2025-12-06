@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react'
 import { ArrowLeft, Plus, Target, Edit, Trash2, Clock, MapPin, Trophy } from 'lucide-react'
 import { useRouter } from '@/i18n/navigation'
+import { useSession } from 'next-auth/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { matchQueries } from '@/queries/matches'
 import { useDeleteScoreEvent } from '@/queries/matches'
@@ -121,17 +122,18 @@ function MatchScoreboard({ match, stats }: { match: Match; stats: MatchWithStats
     )
 }
 
-function ScoreEventsTimeline({ matchId, homeTeamId }: { 
-    matchId: string; 
-    homeTeamId: string; 
-    awayTeamId: string; 
+function ScoreEventsTimeline({ matchId, homeTeamId }: {
+    matchId: string;
+    homeTeamId: string;
+    awayTeamId: string;
 }) {
-    const { data: events } = useSuspenseQuery(matchQueries.scoreEvents(matchId))
+    const { data: session } = useSession()
+    const { data: events } = useSuspenseQuery(matchQueries.scoreEvents(matchId, session?.accessToken))
     const deleteEventMutation = useDeleteScoreEvent()
 
     const handleDeleteEvent = async (eventId: string) => {
         if (confirm('Are you sure you want to delete this goal?')) {
-            deleteEventMutation.mutate({ matchId, eventId })
+            deleteEventMutation.mutate({ matchId, eventId, accessToken: session?.accessToken })
         }
     }
 
@@ -225,9 +227,10 @@ function ScoreEventsTimeline({ matchId, homeTeamId }: {
 
 function MatchDetailsContent({ matchId }: { matchId: string }) {
     const router = useRouter()
-    const { data: match } = useSuspenseQuery(matchQueries.byId(matchId))
-    const { data: stats } = useSuspenseQuery(matchQueries.withStats(matchId))
-    
+    const { data: session } = useSession()
+    const { data: match } = useSuspenseQuery(matchQueries.byId(matchId, session?.accessToken))
+    const { data: stats } = useSuspenseQuery(matchQueries.withStats(matchId, session?.accessToken))
+
     const [isAddGoalDialogOpen, setIsAddGoalDialogOpen] = useState(false)
     const [isIdentifyGoalDialogOpen, setIsIdentifyGoalDialogOpen] = useState(false)
     const [isEditMatchDialogOpen, setIsEditMatchDialogOpen] = useState(false)

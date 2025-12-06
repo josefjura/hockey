@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,7 +14,7 @@ import { useCreatePlayer } from '@/queries/players'
 import { getCountryFlag } from '@/utils/countryFlag'
 import Image from 'next/image'
 
-// Form validation schema  
+// Form validation schema
 const playerCreateSchema = z.object({
   name: z.string().min(1, 'Player name is required'),
   country_id: z.string().min(1, 'Country is required'),
@@ -28,8 +29,9 @@ interface PlayerCreateDialogProps {
 
 export default function PlayerCreateDialog({ isOpen, onClose }: PlayerCreateDialogProps) {
   console.log('[PlayerCreateDialog] Render - isOpen:', isOpen)
-  
-  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all())
+
+  const { data: session } = useSession()
+  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all(session?.accessToken))
   const createPlayerMutation = useCreatePlayer()
   
   const {
@@ -65,10 +67,13 @@ export default function PlayerCreateDialog({ isOpen, onClose }: PlayerCreateDial
     console.log('[PlayerCreateDialog] onSubmit called with data:', data)
     try {
       await createPlayerMutation.mutateAsync({
-        name: data.name.trim(),
-        country_id: data.country_id,
+        playerData: {
+          name: data.name.trim(),
+          country_id: data.country_id,
+        },
+        accessToken: session?.accessToken
       })
-      
+
       // Reset form and close dialog
       console.log('[PlayerCreateDialog] Success - resetting and closing')
       reset()

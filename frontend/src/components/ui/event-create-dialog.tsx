@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,9 +28,10 @@ interface EventCreateDialogProps {
 }
 
 export default function EventCreateDialog({ isOpen, onClose }: EventCreateDialogProps) {
-  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all())
+  const { data: session } = useSession()
+  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all(session?.accessToken))
   const createEventMutation = useCreateEvent()
-  
+
   const {
     register,
     handleSubmit,
@@ -44,7 +46,7 @@ export default function EventCreateDialog({ isOpen, onClose }: EventCreateDialog
       country_id: '',
     },
   })
-  
+
   const watchedValues = watch()
 
 	useEffect(() => {
@@ -59,10 +61,13 @@ export default function EventCreateDialog({ isOpen, onClose }: EventCreateDialog
   const onSubmit = async (data: EventCreateFormData) => {
     try {
       await createEventMutation.mutateAsync({
-        name: data.name.trim(),
-        country_id: data.country_id || null,
+        eventData: {
+          name: data.name.trim(),
+          country_id: data.country_id || null,
+        },
+        accessToken: session?.accessToken
       })
-      
+
       // Reset form and close dialog
       reset()
       onClose()

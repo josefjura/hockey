@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Plus, Search, User } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useAddPlayerToRoster, searchPlayers } from '@/queries/roster'
 
 interface QuickAddPlayerDialogProps {
@@ -12,17 +13,18 @@ interface QuickAddPlayerDialogProps {
     teamName: string
 }
 
-function QuickAddPlayerForm({ 
-    onClose, 
-    seasonId, 
-    teamId, 
-    teamName 
-}: { 
+function QuickAddPlayerForm({
+    onClose,
+    seasonId,
+    teamId,
+    teamName
+}: {
     onClose: () => void
     seasonId: string
     teamId: string
     teamName: string
 }) {
+    const { data: session } = useSession()
     const [searchTerm, setSearchTerm] = useState('')
     const [isCreatingNew, setIsCreatingNew] = useState(false)
     const [searchResults, setSearchResults] = useState<Array<{id: number, name: string, nationality: string}>>([])
@@ -63,19 +65,19 @@ function QuickAddPlayerForm({
             if (selectedPlayer) {
                 // Add existing player
                 await addPlayerMutation.mutateAsync({
-                    seasonId,
-                    teamId,
-                    playerData: { id: selectedPlayer.id }
+                    teamSeasonId: teamId,
+                    playerData: { id: selectedPlayer.id },
+                    accessToken: session?.accessToken
                 })
             } else if (isCreatingNew && newPlayerData.name.trim()) {
                 // Create new player and add to roster
                 await addPlayerMutation.mutateAsync({
-                    seasonId,
-                    teamId,
+                    teamSeasonId: teamId,
                     playerData: {
                         name: newPlayerData.name,
                         nationality: newPlayerData.nationality
-                    }
+                    },
+                    accessToken: session?.accessToken
                 })
             } else {
                 return // Invalid state

@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,7 +28,8 @@ interface TeamEditDialogProps {
 }
 
 export default function TeamEditDialog({ isOpen, onClose, team }: TeamEditDialogProps) {
-  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all())
+  const { data: session } = useSession()
+  const { data: countries = [], isLoading: countriesLoading } = useQuery(countryQueries.all(session?.accessToken))
   const updateTeamMutation = useUpdateTeam()
   
   const {
@@ -70,8 +72,11 @@ export default function TeamEditDialog({ isOpen, onClose, team }: TeamEditDialog
     try {
       await updateTeamMutation.mutateAsync({
         id: parseInt(team.id),
-        name: data.name || null,
-        country_id: data.country_id,
+        teamData: {
+          name: data.name || null,
+          country_id: data.country_id,
+        },
+        accessToken: session?.accessToken
       })
       onClose()
       reset()

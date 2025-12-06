@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "@/lib/api-client";
+import { apiGet, apiPost, createClientApiClient } from "@/lib/api-client";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Player } from '@/types/player';
@@ -12,23 +12,47 @@ interface Country {
 }
 
 // Team Participation API functions
-export const findOrCreateTeamParticipation = async (seasonId: string, teamId: string): Promise<{ id: number }> => {
-	return apiPost<{ id: number }>('/team-participation/find-or-create', {
+export const findOrCreateTeamParticipation = async (seasonId: string, teamId: string, accessToken?: string): Promise<{ id: number }> => {
+	const requestBody = {
 		season_id: parseInt(seasonId),
 		team_id: parseInt(teamId),
-	});
+	};
+
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<{ id: number }>('/team-participation/find-or-create', {
+			method: 'POST',
+			body: JSON.stringify(requestBody),
+		});
+	}
+
+	// Server-side: Use apiPost (SSR/server actions)
+	return apiPost<{ id: number }>('/team-participation/find-or-create', requestBody);
 };
 
 // Player Contract API functions
-export const createPlayerContract = async (teamParticipationId: number, playerId: number): Promise<{ id: number }> => {
-	return apiPost<{ id: number }>('/player-contract', {
+export const createPlayerContract = async (teamParticipationId: number, playerId: number, accessToken?: string): Promise<{ id: number }> => {
+	const requestBody = {
 		team_participation_id: teamParticipationId,
 		player_id: playerId,
-	});
+	};
+
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		return client<{ id: number }>('/player-contract', {
+			method: 'POST',
+			body: JSON.stringify(requestBody),
+		});
+	}
+
+	// Server-side: Use apiPost (SSR/server actions)
+	return apiPost<{ id: number }>('/player-contract', requestBody);
 };
 
 // Search existing players
-export const searchPlayers = async (searchTerm: string): Promise<Array<{ id: number, name: string, nationality: string }>> => {
+export const searchPlayers = async (searchTerm: string, accessToken?: string): Promise<Array<{ id: number, name: string, nationality: string }>> => {
 	const params = new URLSearchParams({
 		page: '1',
 		page_size: '10',
@@ -38,7 +62,16 @@ export const searchPlayers = async (searchTerm: string): Promise<Array<{ id: num
 		params.append('name', searchTerm);
 	}
 
-	const data = await apiGet<PaginatedResponse<Player>>(`/player?${params}`);
+	let data: PaginatedResponse<Player>;
+
+	// Client-side: Use createClientApiClient with token
+	if (accessToken) {
+		const client = createClientApiClient(accessToken);
+		data = await client<PaginatedResponse<Player>>(`/player?${params}`);
+	} else {
+		// Server-side: Use apiGet (SSR/prefetch)
+		data = await apiGet<PaginatedResponse<Player>>(`/player?${params}`);
+	}
 
 	// Convert from paginated response to simple array for search results
 	return data.items?.map((player: Player) => ({
@@ -52,7 +85,8 @@ export const searchPlayers = async (searchTerm: string): Promise<Array<{ id: num
 export const addPlayerToRoster = async (
 	seasonId: string,
 	teamId: string,
-	playerData: { name: string; nationality: string } | { id: number }
+	playerData: { name: string; nationality: string } | { id: number },
+	accessToken?: string
 ): Promise<{ playerId: number; contractId: number }> => {
 	let playerId: number;
 
@@ -61,7 +95,15 @@ export const addPlayerToRoster = async (
 		playerId = playerData.id;
 	} else {
 		// First, find the country by name
-		const countriesData = await apiGet<PaginatedResponse<Country>>('/country?page_size=250');
+		let countriesData: PaginatedResponse<Country>;
+
+		if (accessToken) {
+			const client = createClientApiClient(accessToken);
+			countriesData = await client<PaginatedResponse<Country>>('/country?page_size=250');
+		} else {
+			countriesData = await apiGet<PaginatedResponse<Country>>('/country?page_size=250');
+		}
+
 		const country = countriesData.items?.find((c: Country) =>
 			c.name.toLowerCase() === playerData.nationality.toLowerCase()
 		);
@@ -71,18 +113,31 @@ export const addPlayerToRoster = async (
 		}
 
 		// Create the player
-		const newPlayer = await apiPost<{ id: number }>('/player', {
+		const newPlayerBody = {
 			name: playerData.name,
 			country_id: parseInt(country.id),
-		});
+		};
+
+		let newPlayer: { id: number };
+
+		if (accessToken) {
+			const client = createClientApiClient(accessToken);
+			newPlayer = await client<{ id: number }>('/player', {
+				method: 'POST',
+				body: JSON.stringify(newPlayerBody),
+			});
+		} else {
+			newPlayer = await apiPost<{ id: number }>('/player', newPlayerBody);
+		}
+
 		playerId = newPlayer.id;
 	}
 
 	// Step 2: Find or create team participation
-	const teamParticipation = await findOrCreateTeamParticipation(seasonId, teamId);
+	const teamParticipation = await findOrCreateTeamParticipation(seasonId, teamId, accessToken);
 
 	// Step 3: Create player contract
-	const contract = await createPlayerContract(teamParticipation.id, playerId);
+	const contract = await createPlayerContract(teamParticipation.id, playerId, accessToken);
 
 	return {
 		playerId,
@@ -98,12 +153,14 @@ export const useAddPlayerToRoster = () => {
 		mutationFn: ({
 			seasonId,
 			teamId,
-			playerData
+			playerData,
+			accessToken
 		}: {
 			seasonId: string;
 			teamId: string;
 			playerData: { name: string; nationality: string } | { id: number };
-		}) => addPlayerToRoster(seasonId, teamId, playerData),
+			accessToken?: string;
+		}) => addPlayerToRoster(seasonId, teamId, playerData, accessToken),
 		onSuccess: (data, variables) => {
 			// Invalidate roster queries to refetch data
 			queryClient.invalidateQueries({
@@ -120,7 +177,8 @@ export const useAddPlayerToRoster = () => {
 
 export const useSearchPlayers = () => {
 	return useMutation({
-		mutationFn: searchPlayers,
+		mutationFn: ({ searchTerm, accessToken }: { searchTerm: string; accessToken?: string }) =>
+			searchPlayers(searchTerm, accessToken),
 		onError: (error) => {
 			toast.error('Failed to search players. Please try again.');
 			console.error('Failed to search players:', error);

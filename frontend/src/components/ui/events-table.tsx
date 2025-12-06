@@ -12,6 +12,7 @@ import {
   type ColumnFiltersState,
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown, Edit2, Trash2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import type { Event } from '@/types/event'
 import { getCountryFlag } from '@/utils/countryFlag'
@@ -33,9 +34,9 @@ interface EventsTableProps {
   onEdit?: (event: Event) => void
 }
 
-export default function EventsTable({ 
-  data, 
-  loading = false, 
+export default function EventsTable({
+  data,
+  loading = false,
   totalItems,
   currentPage,
   pageSize,
@@ -43,15 +44,16 @@ export default function EventsTable({
   onPageChange,
   onEdit
 }: EventsTableProps) {
+  const { data: session } = useSession()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const deleteEventMutation = useDeleteEvent()
 
   const handleDelete = React.useCallback(async (event: Event) => {
     if (window.confirm(`Are you sure you want to delete event "${event.name}"?`)) {
-      deleteEventMutation.mutate(parseInt(event.id))
+      deleteEventMutation.mutate({ id: parseInt(event.id), accessToken: session?.accessToken })
     }
-  }, [deleteEventMutation])
+  }, [deleteEventMutation, session?.accessToken])
 
   const columns = React.useMemo(() => [
     columnHelper.accessor('id', {

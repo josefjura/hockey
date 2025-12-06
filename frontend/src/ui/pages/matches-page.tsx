@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { Gamepad2, Search, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useSession } from 'next-auth/react'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import { useRouter } from '@/i18n/navigation'
 import { matchQueries } from '@/queries/matches'
@@ -16,14 +17,14 @@ import ErrorBoundary from '@/components/error-boundary'
 import QueryErrorBoundary from '@/components/query-error-boundary'
 import type { Match } from '@/types/match'
 
-function MatchesTableWrapper({ 
-    filters, 
-    page, 
-    pageSize, 
-    onPageChange, 
+function MatchesTableWrapper({
+    filters,
+    page,
+    pageSize,
+    onPageChange,
     onEdit,
     onViewDetails
-}: { 
+}: {
     filters: {
         searchTerm?: string;
         seasonId?: string;
@@ -38,7 +39,8 @@ function MatchesTableWrapper({
     onEdit: (match: Match) => void
     onViewDetails: (match: Match) => void
 }) {
-    const { data } = useSuspenseQuery(matchQueries.list(filters, page, pageSize))
+    const { data: session } = useSession()
+    const { data } = useSuspenseQuery(matchQueries.list(filters, page, pageSize, session?.accessToken))
 
     // Runtime validation as failsafe
     if (!data || typeof data !== 'object') {
@@ -81,6 +83,7 @@ function MatchesTableWrapper({
 
 export default function MatchesPage() {
     const t = useTranslations('Matches')
+    const { data: session } = useSession()
     const router = useRouter()
     const [searchTerm, setSearchTerm] = useState('')
     const [seasonFilter, setSeasonFilter] = useState('')
@@ -94,8 +97,8 @@ export default function MatchesPage() {
     const pageSize = 20 // Consistent page size
 
     // Load filter data
-    const { data: teamsData } = useQuery(teamQueries.all())
-    const { data: seasonsData } = useQuery(seasonQueries.all())
+    const { data: teamsData } = useQuery(teamQueries.all(session?.accessToken))
+    const { data: seasonsData } = useQuery(seasonQueries.all(session?.accessToken))
 
     // Build filters object
     const filters = {

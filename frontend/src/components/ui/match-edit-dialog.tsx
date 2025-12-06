@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useUpdateMatch } from '@/queries/matches'
 import type { Match, UpdateMatchRequest } from '@/types/match'
 
@@ -12,6 +13,7 @@ interface MatchEditDialogProps {
 }
 
 export default function MatchEditDialog({ isOpen, onClose, match }: MatchEditDialogProps) {
+    const { data: session } = useSession()
     const [formData, setFormData] = useState<UpdateMatchRequest>({})
     const [errors, setErrors] = useState<Record<string, string>>({})
     const updateMatchMutation = useUpdateMatch()
@@ -94,7 +96,8 @@ export default function MatchEditDialog({ isOpen, onClose, match }: MatchEditDia
 
             await updateMatchMutation.mutateAsync({
                 id: match.id,
-                ...updateData,
+                matchData: updateData,
+                accessToken: session?.accessToken
             })
             onClose()
         } catch (error) {
