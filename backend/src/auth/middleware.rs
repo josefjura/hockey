@@ -192,7 +192,8 @@ mod tests {
     use crate::auth::jwt::JwtManager;
 
     fn create_test_jwt_manager() -> JwtManager {
-        JwtManager::new("jwt_private.pem", "jwt_public.pem").expect("Failed to create JwtManager")
+        JwtManager::new("jwt_private.pem", "jwt_public.pem", 15, 7)
+            .expect("Failed to create JwtManager")
     }
 
     async fn protected_handler(user: AuthUser) -> String {

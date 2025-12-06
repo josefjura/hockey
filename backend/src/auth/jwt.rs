@@ -55,12 +55,16 @@ impl JwtManager {
     /// # Arguments
     /// * `private_key_path` - Path to the RSA private key (PEM format)
     /// * `public_key_path` - Path to the RSA public key (PEM format)
+    /// * `access_token_duration_minutes` - Duration in minutes for access tokens
+    /// * `refresh_token_duration_days` - Duration in days for refresh tokens
     ///
     /// # Returns
     /// A Result containing the JwtManager or an error
     pub fn new<P: AsRef<Path>>(
         private_key_path: P,
         public_key_path: P,
+        access_token_duration_minutes: i64,
+        refresh_token_duration_days: i64,
     ) -> Result<Self, JwtManagerError> {
         // Read private key for signing
         let private_key_pem = fs::read(private_key_path)?;
@@ -73,8 +77,8 @@ impl JwtManager {
         Ok(Self {
             encoding_key,
             decoding_key,
-            access_token_duration: Duration::minutes(15),
-            refresh_token_duration: Duration::days(7),
+            access_token_duration: Duration::minutes(access_token_duration_minutes),
+            refresh_token_duration: Duration::days(refresh_token_duration_days),
         })
     }
 
@@ -213,8 +217,9 @@ mod tests {
     use std::time::Duration as StdDuration;
 
     fn create_test_jwt_manager() -> JwtManager {
-        // Use the actual RSA keys from the project
-        JwtManager::new("jwt_private.pem", "jwt_public.pem").expect("Failed to create JwtManager")
+        // Use the actual RSA keys from the project with default durations
+        JwtManager::new("jwt_private.pem", "jwt_public.pem", 15, 7)
+            .expect("Failed to create JwtManager")
     }
 
     #[test]
@@ -373,5 +378,68 @@ mod tests {
 
         assert_eq!(claims1.sub, "1");
         assert_eq!(claims2.sub, "2");
+    }
+
+    #[test]
+    fn test_custom_token_durations() {
+        // Create a manager with custom durations
+        let custom_access_minutes = 30_i64; // 30 minutes instead of default 15
+        let custom_refresh_days = 14_i64; // 14 days instead of default 7
+
+        let manager = JwtManager::new(
+            "jwt_private.pem",
+            "jwt_public.pem",
+            custom_access_minutes,
+            custom_refresh_days,
+        )
+        .expect("Failed to create JwtManager");
+
+        // Generate access token
+        let access_token = manager
+            .generate_access_token(1, "test@example.com", None)
+            .expect("Failed to generate access token");
+
+        let access_claims = manager
+            .validate_access_token(&access_token)
+            .expect("Failed to validate access token");
+
+        // Generate refresh token
+        let refresh_token = manager
+            .generate_refresh_token(1, "test@example.com", None)
+            .expect("Failed to generate refresh token");
+
+        let refresh_claims = manager
+            .validate_refresh_token(&refresh_token)
+            .expect("Failed to validate refresh token");
+
+        let now = Utc::now().timestamp();
+
+        // Verify access token expiration is approximately 30 minutes from now
+        let access_duration = access_claims.exp - access_claims.iat;
+        assert!(
+            access_duration >= custom_access_minutes * 60 - 5
+                && access_duration <= custom_access_minutes * 60 + 5,
+            "Access token duration should be approximately {} seconds (30 minutes), got {}",
+            custom_access_minutes * 60,
+            access_duration
+        );
+
+        // Verify refresh token expiration is approximately 14 days from now
+        let refresh_duration = refresh_claims.exp - refresh_claims.iat;
+        let expected_refresh_seconds = custom_refresh_days * 24 * 60 * 60;
+        assert!(
+            refresh_duration >= expected_refresh_seconds - 5
+                && refresh_duration <= expected_refresh_seconds + 5,
+            "Refresh token duration should be approximately {} seconds (14 days), got {}",
+            expected_refresh_seconds,
+            refresh_duration
+        );
+
+        // Verify tokens are valid now but will expire in the future
+        assert!(access_claims.exp > now);
+        assert!(refresh_claims.exp > now);
+
+        // Verify access token expires before refresh token
+        assert!(access_claims.exp < refresh_claims.exp);
     }
 }
