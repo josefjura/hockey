@@ -3,6 +3,7 @@ use dotenvy::dotenv;
 use jura_hockey::{auth::hash_password, config::Config, errors::AppError};
 use sqlx::SqlitePool;
 use std::io::{self, Write};
+use validator::ValidateEmail;
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
@@ -26,9 +27,9 @@ async fn main() -> Result<(), AppError> {
         .expect("Failed to read email");
     let email = email.trim().to_string();
 
-    // Validate email format (basic check)
-    if !email.contains('@') || !email.contains('.') {
-        eprintln!("Error: Invalid email format");
+    // Validate email format using validator crate
+    if !email.validate_email() {
+        eprintln!("Error: Invalid email format. Please provide a valid email address (e.g., user@example.com)");
         std::process::exit(1);
     }
 
