@@ -37,7 +37,8 @@ mod tests {
 
     /// Create a test JWT manager
     fn create_test_jwt_manager() -> JwtManager {
-        JwtManager::new("jwt_private.pem", "jwt_public.pem").expect("Failed to create JwtManager")
+        JwtManager::new("jwt_private.pem", "jwt_public.pem", 15, 7)
+            .expect("Failed to create JwtManager")
     }
 
     /// Create a test API context

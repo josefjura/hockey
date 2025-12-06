@@ -35,8 +35,12 @@ pub struct ApiContext {
 
 impl ApiContext {
     pub fn new(db: SqlitePool, config: Config) -> Result<Self, Box<dyn std::error::Error>> {
-        let jwt_manager =
-            JwtManager::new(&config.jwt_private_key_path, &config.jwt_public_key_path)?;
+        let jwt_manager = JwtManager::new(
+            &config.jwt_private_key_path,
+            &config.jwt_public_key_path,
+            config.jwt_access_token_duration_minutes,
+            config.jwt_refresh_token_duration_days,
+        )?;
 
         Ok(Self {
             config: Arc::new(config),
@@ -180,8 +184,13 @@ pub async fn serve(config: Config, db: SqlitePool) {
     // It does look nicer than the mess of `move || {}` closures you have to do with Actix-web,
     // which, I suspect, largely has to do with how it manages its own worker threads instead of
     // letting Tokio do it.
-    let jwt_manager = JwtManager::new(&config.jwt_private_key_path, &config.jwt_public_key_path)
-        .expect("Failed to initialize JWT manager");
+    let jwt_manager = JwtManager::new(
+        &config.jwt_private_key_path,
+        &config.jwt_public_key_path,
+        config.jwt_access_token_duration_minutes,
+        config.jwt_refresh_token_duration_days,
+    )
+    .expect("Failed to initialize JWT manager");
 
     let api_context = ApiContext {
         config: Arc::new(config.clone()),
