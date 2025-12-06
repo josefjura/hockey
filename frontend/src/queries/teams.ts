@@ -25,15 +25,15 @@ export const fetchTeamList = async (page: number = 0, searchTerm?: string, pageS
 	return apiGet<PaginatedResponse<Team>>(`/team?${params}`);
 };
 
-export const fetchTeamListSimple = async (accessToken?: string): Promise<Array<{id: number, name: string}>> => {
+export const fetchTeamListSimple = async (accessToken?: string): Promise<Array<{ id: number, name: string }>> => {
 	// Client-side: Use createClientApiClient with token
 	if (accessToken) {
 		const client = createClientApiClient(accessToken);
-		return client<Array<{id: number, name: string}>>('/team/list');
+		return client<Array<{ id: number, name: string }>>('/team/list');
 	}
 
 	// Server-side: Use apiGet (SSR/prefetch)
-	return apiGet<Array<{id: number, name: string}>>('/team/list');
+	return apiGet<Array<{ id: number, name: string }>>('/team/list');
 };
 
 export const createTeam = async (teamData: { name: string | null; country_id: string }, accessToken?: string): Promise<{ id: number }> => {
@@ -93,14 +93,14 @@ export const deleteTeam = async (id: number, accessToken?: string): Promise<stri
 export const teamQueries = {
 	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['teams', searchTerm, page, pageSize],
+			queryKey: ['teams', searchTerm, page, pageSize, accessToken],
 			queryFn: () => fetchTeamList(page, searchTerm || undefined, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 
 	all: (accessToken?: string) =>
 		queryOptions({
-			queryKey: ['teams', 'simple'],
+			queryKey: ['teams', 'simple', accessToken],
 			queryFn: () => fetchTeamListSimple(accessToken),
 			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),

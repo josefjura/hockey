@@ -95,13 +95,13 @@ export const deleteEvent = async (id: number, accessToken?: string): Promise<str
 export const eventQueries = {
 	list: (searchTerm: string = '', page: number = 0, pageSize: number = 20, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['events', searchTerm, page, pageSize],
+			queryKey: ['events', searchTerm, page, pageSize, accessToken],
 			queryFn: () => fetchEventList(page, searchTerm || undefined, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 	all: (accessToken?: string) =>
 		queryOptions({
-			queryKey: ['events-all'],
+			queryKey: ['events-all', accessToken],
 			queryFn: () => fetchEventListAll(accessToken),
 			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),

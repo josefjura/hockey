@@ -89,8 +89,10 @@ export default function PlayerCreateDialog({ isOpen, onClose, editingPlayer }: P
         })
       } else {
         await createPlayerMutation.mutateAsync({
-          name: data.name.trim(),
-          country_id: data.country_id,
+          data: {
+            name: data.name.trim(),
+            country_id: data.country_id,
+          }
         })
       }
       

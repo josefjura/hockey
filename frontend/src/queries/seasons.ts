@@ -56,15 +56,15 @@ export const fetchSeasonList = async (page: number = 0, searchTerm?: string, eve
 	return validatePaginatedResponse<Season>(data);
 };
 
-export const fetchSeasonListSimple = async (accessToken?: string): Promise<Array<{id: number, name: string, year: number, event_name: string}>> => {
+export const fetchSeasonListSimple = async (accessToken?: string): Promise<Array<{ id: number, name: string, year: number, event_name: string }>> => {
 	// Client-side: Use createClientApiClient with token
 	if (accessToken) {
 		const client = createClientApiClient(accessToken);
-		return client<Array<{id: number, name: string, year: number, event_name: string}>>('/season/list');
+		return client<Array<{ id: number, name: string, year: number, event_name: string }>>('/season/list');
 	}
 
 	// Server-side: Use apiGet (SSR/prefetch)
-	return apiGet<Array<{id: number, name: string, year: number, event_name: string}>>('/season/list');
+	return apiGet<Array<{ id: number, name: string, year: number, event_name: string }>>('/season/list');
 };
 
 export const createSeason = async (seasonData: { year: number; display_name: string | null; event_id: string }, accessToken?: string): Promise<{ id: number }> => {
@@ -128,14 +128,14 @@ export const deleteSeason = async (id: string, accessToken?: string): Promise<vo
 export const seasonQueries = {
 	list: (searchTerm: string = '', eventId: string = '', page: number = 0, pageSize: number = 20, accessToken?: string) =>
 		queryOptions({
-			queryKey: ['seasons', searchTerm, eventId, page, pageSize],
+			queryKey: ['seasons', searchTerm, eventId, page, pageSize, accessToken],
 			queryFn: () => fetchSeasonList(page, searchTerm || undefined, eventId || undefined, pageSize, accessToken),
 			staleTime: 5 * 60 * 1000, // 5 minutes
 		}),
 
 	all: (accessToken?: string) =>
 		queryOptions({
-			queryKey: ['seasons', 'simple'],
+			queryKey: ['seasons', 'simple', accessToken],
 			queryFn: () => fetchSeasonListSimple(accessToken),
 			staleTime: 10 * 60 * 1000, // 10 minutes
 		}),

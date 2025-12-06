@@ -83,7 +83,7 @@ function MatchCreateForm({ onClose }: { onClose: () => void }) {
 
         try {
             await createMatchMutation.mutateAsync({
-                matchData: {
+                data: {
                     ...formData,
                     match_date: formData.match_date || undefined,
                     venue: formData.venue || undefined,

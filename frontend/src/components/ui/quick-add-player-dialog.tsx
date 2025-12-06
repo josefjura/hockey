@@ -65,14 +65,16 @@ function QuickAddPlayerForm({
             if (selectedPlayer) {
                 // Add existing player
                 await addPlayerMutation.mutateAsync({
-                    teamSeasonId: teamId,
+                    seasonId,
+                    teamId,
                     playerData: { id: selectedPlayer.id },
                     accessToken: session?.accessToken
                 })
             } else if (isCreatingNew && newPlayerData.name.trim()) {
                 // Create new player and add to roster
                 await addPlayerMutation.mutateAsync({
-                    teamSeasonId: teamId,
+                    seasonId,
+                    teamId,
                     playerData: {
                         name: newPlayerData.name,
                         nationality: newPlayerData.nationality
