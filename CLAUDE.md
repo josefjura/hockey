@@ -4,37 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a hockey management application with a Rust backend (Axum + SQLx) and Next.js frontend. The system manages hockey tournaments, teams, players, and their relationships across seasons and events.
+This is a hockey management application being rewritten as a single Rust binary using Axum, Maud, and HTMX. The system manages hockey tournaments, teams, players, and their relationships across seasons and events.
 
-### Authentication System
+**Status**: Active rewrite from Next.js/React to HTMX/Maud architecture (see REWRITE_ANALYSIS.md)
 
-The project uses a secure OAuth2-inspired JWT authentication system that was completed as part of the "OAuth2 Authentication Migration" milestone.
+### Authentication System (New Architecture)
+
+The rewrite uses simplified session-based authentication instead of JWT:
 
 **Key Features**:
-- RSA-256 JWT tokens (4096-bit keys)
-- Access tokens (15 min) and refresh tokens (7 days)
-- Bcrypt password hashing
-- Token revocation support
-- Production-ready CORS configuration
+- Session cookies (HttpOnly, Secure, SameSite)
+- Bcrypt password hashing (preserved from old system)
+- CSRF protection
+- Session expiration
 
-**Documentation**: See `DEPLOYMENT.md` for production setup and `README.md` for authentication flow details.
+**Why the change**: Simpler for server-rendered HTMX architecture, no client-side token management needed.
 
 ## Architecture
 
-### Backend (Rust)
-- **Framework**: Axum web framework with aide for OpenAPI documentation
+### New Frontend (Rust - Active Development in `frontend/`)
+- **Framework**: Axum web framework
+- **Templating**: Maud for type-safe HTML generation
+- **Interactivity**: HTMX for dynamic updates
+- **Components**: Lit Web Components for rich client-side features
 - **Database**: SQLite with SQLx for type-safe queries
-- **Authentication**: OAuth2-inspired JWT (RS256) with refresh tokens and bcrypt password hashing
-- **API Documentation**: Auto-generated OpenAPI specs accessible at `/docs`
-- **Port**: Runs on port 8080 (configurable)
+- **Authentication**: Session-based with cookies
+- **Internationalization**: fluent-rs for Czech/English support
+- **Styling**: Tailwind CSS
+- **Deployment**: Single binary with embedded assets
+- **Port**: Runs on port 8080
 
-### Frontend (Next.js)
-- **Framework**: Next.js 15 with App Router
-- **Authentication**: NextAuth.js with credentials provider
-- **Internationalization**: next-intl for multi-language support
-- **Styling**: Tailwind CSS v4
-- **State Management**: TanStack Query for server state
-- **Port**: Runs on port 3000 (default)
+### Old Backend (Rust - Reference in `backend/`)
+- Preserved for SQL query reference
+- Business logic patterns can be ported
+- Service layer patterns reusable
+
+### Old Frontend (Next.js - Archived in `backup/`)
+- Gitignored, kept as reference only
+- UI patterns and workflows documented in REWRITE_ANALYSIS.md
 
 ### Database Schema
 The database follows a hierarchical structure:
@@ -44,99 +51,107 @@ The database follows a hierarchical structure:
 
 ## Development Commands
 
-### Backend
+### New Frontend (Active Development)
 ```bash
-cd backend
-./scripts/generate_keys.sh   # Generate JWT RSA keys (first time only)
-cargo run                    # Start development server
+cd frontend
+cargo run                    # Start development server (creates DB from migrations)
 cargo build                  # Build the project
 cargo test                   # Run tests
 cargo check                  # Check code without building
+cargo fmt                    # Format code
+cargo clippy                 # Lint code
 cargo run --bin create_admin # Create an admin user
-```
-
-### Frontend
-```bash
-cd frontend
-npm run dev                  # Start development server with Turbopack
-npm run build                # Build for production
-npm start                    # Start production server
-npm run lint                 # Run ESLint
+cargo watch -x run           # Hot reload (requires cargo-watch)
 ```
 
 ### Database
 ```bash
-cd backend
-# Database is automatically created on first run
+cd frontend
+# Database is automatically created on first run from migrations/
 # Migrations are applied automatically at startup
+```
+
+### Reference Old Code
+```bash
+# SQL queries
+cat backend/src/*/service/fixtures/*.sql
+
+# Business logic patterns
+cat backend/src/*/business.rs
+
+# Service patterns
+cat backend/src/*/service/mod.rs
 ```
 
 ## Environment Configuration
 
-### Backend Environment Variables
-- `DATABASE_URL`: SQLite database file path
-- `HMAC_KEY`: Legacy HMAC key (kept for compatibility)
-- `JWT_PRIVATE_KEY_PATH`: Path to RSA private key for JWT signing (default: `jwt_private.pem`)
-- `JWT_PUBLIC_KEY_PATH`: Path to RSA public key for JWT verification (default: `jwt_public.pem`)
-- `JWT_ACCESS_TOKEN_DURATION_MINUTES`: Access token expiry in minutes (default: 15)
-- `JWT_REFRESH_TOKEN_DURATION_DAYS`: Refresh token expiry in days (default: 7)
-- `ENVIRONMENT`: Environment mode - `development` or `production` (affects CORS validation)
-- `CORS_ORIGINS`: Allowed CORS origins (comma-separated or `*` for development)
-- `CORS_METHODS`: Allowed HTTP methods (default: `GET,POST,PUT,DELETE,OPTIONS`)
-- `CORS_HEADERS`: Allowed request headers (comma-separated or `*` for development)
+### New Frontend Environment Variables
+- `DATABASE_URL`: SQLite database file path (default: `sqlite:./hockey.db`)
+- `SESSION_SECRET`: Secret key for session encryption (generate with `openssl rand -hex 32`)
+- `ENVIRONMENT`: Environment mode - `development` or `production`
+- `PORT`: Server port (default: 8080)
 
-### Frontend Environment Variables
-- `NEXTAUTH_SECRET`: NextAuth.js secret key (min 32 characters)
-- `NEXTAUTH_URL`: Application URL for NextAuth.js
-- `HOCKEY_BACKEND_URL`: Backend API URL for server-side requests
+### Generate Secrets
+```bash
+# Generate session secret
+openssl rand -hex 32
+```
 
-See `DEPLOYMENT.md` for complete environment variable reference and production configuration.
+See README.md for complete setup instructions.
 
 ## Key File Locations
 
-### Backend Structure
-- `src/main.rs`: Application entry point and OpenAPI configuration
-- `src/http.rs`: HTTP server setup and route configuration
-- `src/config.rs`: Configuration management
-- `src/auth/`: Authentication module with JWT, middleware, and refresh tokens
-  - `jwt.rs`: JWT manager for token creation and validation
-  - `middleware.rs`: JWT validation middleware for protected routes
-  - `service.rs`: Authentication service (login, token management)
-  - `routes.rs`: Auth endpoints (login, refresh, logout)
-- `src/*/routes.rs`: API route definitions for each domain
-- `src/*/service/mod.rs`: Business logic and database operations
-- `src/*/service/fixtures/*.sql`: SQL queries for each service
-- `src/bin/create_admin.rs`: CLI tool for creating admin users
-- `migrations/`: Database migration files (chronological order)
-- `scripts/generate_keys.sh`: Script to generate RSA key pairs for JWT
+### New Frontend Structure (Active Development)
+```
+frontend/
+├── src/
+│   ├── main.rs                    # Entry point, server setup
+│   ├── config.rs                  # Configuration management
+│   ├── routes/                    # Route handlers (return HTML)
+│   │   ├── auth.rs               # Login, logout
+│   │   ├── dashboard.rs
+│   │   ├── teams.rs
+│   │   └── ...
+│   ├── views/                     # Maud templates
+│   │   ├── layout.rs             # Base layout with sidebar
+│   │   ├── components/           # Reusable template components
+│   │   │   ├── table.rs
+│   │   │   ├── form.rs
+│   │   │   └── pagination.rs
+│   │   └── pages/                # Page templates
+│   ├── business/                  # Business logic
+│   ├── service/                   # Data access
+│   ├── auth/                      # Session management
+│   │   ├── session.rs
+│   │   ├── middleware.rs
+│   │   └── password.rs
+│   └── i18n/                      # Internationalization
+│       ├── mod.rs
+│       └── messages/
+│           ├── en.ftl
+│           └── cs.ftl
+├── web_components/                # Lit components (compiled separately)
+│   └── small-table.ts
+├── static/                        # Static assets (embedded)
+│   ├── css/
+│   ├── js/
+│   └── flags/
+├── migrations/                    # SQLx migrations
+└── Cargo.toml
+```
 
-### Frontend Structure
-- `src/app/`: Next.js App Router pages and API routes
-- `src/components/`: Organized React components by purpose:
-  - `ui/`: Reusable UI components (Badge, Pager, TableSkeleton, etc.)
-  - `layout/`: Layout-specific components (AdminLayoutClient, AdminSidebar)
-  - `shared/`: App-specific shared components (LocaleSwitcher, AuthProvider)
-  - `features/`: Feature-specific components organized by domain
-- `src/ui/pages/`: Client page components that pair with server pages
-- `src/hooks/`: Custom React hooks (useDebounce, etc.)
-- `src/queries/`: TanStack Query definitions organized by domain
-- `src/auth.ts`: NextAuth.js configuration
-- `src/middleware.ts`: Next.js middleware for auth and i18n
-- `src/i18n/`: Internationalization configuration
-- `src/types/`: TypeScript type definitions
-- `src/utils/`: Utility functions and helpers
-- `messages/`: Translation files (cs.json, en.json)
+### Reference Directories
+- `backend/`: Old Rust API (for SQL queries and business logic patterns)
+- `backup/`: Old Next.js frontend (gitignored, UI patterns reference)
 
 ## Testing
 
-### Backend Tests
-- Unit tests are located in `src/*/service/test.rs`
-- Tests use fixture data from `src/*/service/fixtures/`
+### Tests
+- Unit tests will be in `src/*/tests.rs`
+- Integration tests in `tests/`
 - Run with `cargo test`
-
-### Frontend Tests
-- ESLint configuration in `eslint.config.mjs`
-- Run linting with `npm run lint`
+- Linting with `cargo clippy`
+- Formatting with `cargo fmt --check`
 
 ## Domain Model
 
@@ -155,112 +170,106 @@ See `DEPLOYMENT.md` for complete environment variable reference and production c
 - Season-specific team and player relationships
 - Authentication required for most operations
 
-## API Structure
+## API Structure (New HTMX Architecture)
 
-All API endpoints follow RESTful conventions:
-- `/auth/*`: Authentication endpoints
-  - `POST /auth/login`: Login with email/password, returns access + refresh tokens
-  - `POST /auth/refresh`: Refresh access token using refresh token
-  - `POST /auth/logout`: Revoke refresh token
-- `/event/*`: Event management (protected)
-- `/country/*`: Country management (protected)
-- `/team/*`: Team management (protected)
-- `/player/*`: Player management (protected)
-- `/season/*`: Season management (protected)
-- `/team-participation/*`: Team participation management (protected)
-- `/player-contract/*`: Player contract management (protected)
-- `/docs`: OpenAPI documentation
-- `/health`: Health check endpoint (public)
+Routes return HTML (full pages or fragments):
+- `/`: Dashboard (protected)
+- `/auth/login`: Login page (GET) and form submission (POST)
+- `/auth/logout`: Logout (POST)
+- `/teams`: Teams management page (protected)
+- `/teams/list`: HTMX endpoint for table updates
+- `/teams/{id}/edit`: Edit form modal
+- `/players`: Players management (protected)
+- `/events`: Events management (protected)
+- `/seasons`: Seasons management (protected)
+- `/matches`: Matches list (protected)
+- `/matches/{id}`: Match detail with scoring (protected)
+- `/management`: Countries and settings (protected)
 
-Protected endpoints require `Authorization: Bearer <access_token>` header.
+Protected routes check session cookie. HTMX endpoints return HTML fragments.
 
 ## Development Workflow
 
-1. **Backend Changes**: Modify Rust code, restart with `cargo run`
-2. **Frontend Changes**: Hot reload enabled with `npm run dev`
-3. **Database Changes**: Create new migration files in `migrations/`
-4. **API Changes**: Update OpenAPI documentation is auto-generated
-5. **Authentication**: All protected routes require JWT authentication
+1. **Code Changes**: Modify Rust code, use `cargo watch -x run` for hot reload
+2. **Database Changes**: Create new migration files in `frontend/migrations/`
+3. **Templates**: Edit Maud templates in `src/views/`
+4. **HTMX**: Add HTMX attributes to templates for dynamic behavior
+5. **Web Components**: Edit Lit components in `web_components/`, compile with npm
+6. **Authentication**: All protected routes check session cookie
 
-## Common Patterns
+## Common Patterns (New Architecture)
 
-### Backend Service Pattern
+### Backend Service Pattern (Preserved)
 Each domain follows this structure:
 ```rust
-// routes.rs - API endpoint definitions
-// service/mod.rs - Business logic
-// service/fixtures/*.sql - SQL queries
-// service/test.rs - Unit tests
+// routes/{domain}.rs - Route handlers returning HTML
+// business/{domain}.rs - Business logic and validation
+// service/{domain}.rs - Data access with SQLx
+// views/pages/{domain}.rs - Maud templates
 ```
 
-### Frontend Component Pattern
-- **Server Components**: Data fetching with `ensureQueryData` for initial state
-- **Client Components**: Interactivity with `useSuspenseQuery` for seamless loading
-- **Page Structure**: Server page components import client page components from `ui/pages/`
-- **Component Organization**:
-  - `ui/`: Generic, reusable components (Button, Badge, Table, etc.)
-  - `layout/`: Layout-specific components for app structure
-  - `shared/`: App-specific shared components across features
-  - `features/[domain]/`: Domain-specific components (countries, teams, players)
-- **Data Fetching**: TanStack Query with proper hydration and Suspense boundaries
-- **State Management**: Minimal local state, server state via TanStack Query
-- **Loading States**: Suspense with skeleton components, no manual loading flags
-- **Internationalization**: next-intl with translation keys
+### HTMX Patterns
+- **Full page loads**: Return complete HTML with layout
+- **Partial updates**: HTMX requests return fragments
+- **Forms**: Submit with `hx-post`, return updated HTML
+- **Pagination**: `hx-get` with page parameter, target table body
+- **Search**: Debounced with `hx-trigger="keyup changed delay:300ms"`
+- **Modals**: Load form via `hx-get`, submit via `hx-post`
 
-### Error Handling and Resilience
-**CRITICAL**: Always implement proper error boundaries to prevent infinite loops and crashes from malformed API responses.
+### Component Patterns
+- **Maud templates**: Type-safe HTML in Rust
+- **Reusable components**: Functions returning `Markup`
+- **Lit components**: For rich client-side (small tables, selectors)
+- **Progressive enhancement**: Works without JS, enhanced with HTMX/Lit
 
-#### Multi-Layer Error Protection:
-1. **API Response Validation**: Validate expected data structure in query functions
-   ```typescript
-   const validatePaginatedResponse = <T>(data: any): PaginatedResponse<T> => {
-     if (!data || typeof data !== 'object') {
-       throw new Error('API response is not an object');
-     }
-     if (Array.isArray(data)) {
-       throw new Error('API returned array instead of paginated response - backend may be outdated');
-     }
-     // Validate required fields...
+### Error Handling (New Architecture)
+**CRITICAL**: Proper error handling in Axum routes and templates.
+
+#### Error Patterns:
+1. **Typed Errors**: Use `AppError` enum with `IntoResponse`
+   ```rust
+   pub enum AppError {
+       NotFound { entity: String, id: i64 },
+       InvalidInput { message: String },
+       Database(sqlx::Error),
+       Unauthorized,
+   }
+
+   impl IntoResponse for AppError {
+       fn into_response(self) -> Response {
+           match self {
+               AppError::NotFound { entity, id } => {
+                   (StatusCode::NOT_FOUND, html! { /* error page */ }).into_response()
+               }
+               // ... other cases
+           }
+       }
    }
    ```
 
-2. **React Error Boundaries**: Use `ErrorBoundary` component to catch rendering errors
-   ```typescript
-   <ErrorBoundary fallback={<ErrorMessage />}>
-     <TableComponent data={data.items || []} />
-   </ErrorBoundary>
-   ```
-
-3. **Query Error Boundaries**: Use `QueryErrorBoundary` for TanStack Query errors
-   ```typescript
-   <QueryErrorBoundary fallback={<APIErrorMessage />}>
-     <Suspense fallback={<Loading />}>
-       <DataComponent />
-     </Suspense>
-   </QueryErrorBoundary>
-   ```
-
-4. **Runtime Data Validation**: Additional checks in components as failsafe
-   ```typescript
-   if (!data || typeof data !== 'object') {
-     throw new Error('Invalid data received from API')
-   }
-   if (!Array.isArray(data.items)) {
-     throw new Error('API data.items is not an array')
+2. **Validation**: Server-side validation in business layer
+   ```rust
+   if name.trim().is_empty() {
+       return Err(AppError::InvalidInput {
+           message: "Name cannot be empty".to_string()
+       });
    }
    ```
 
-5. **Graceful Fallbacks**: Default values prevent crashes
-   ```typescript
-   data={data.items || []}
-   totalItems={data.total || 0}
+3. **Graceful Fallbacks**: Empty states in templates
+   ```rust
+   @if teams.is_empty() {
+       p { "No teams found." }
+   } @else {
+       // ... render table
+   }
    ```
 
-#### Error Boundary Components:
-- `ErrorBoundary`: General error boundary for component-level errors
-- `QueryErrorBoundary`: Specialized for TanStack Query with reset functionality
-
-**Required for all pages with data tables**: Teams, Events, Players, Countries (Management)
+4. **HTMX Error Responses**: Return error HTML fragments
+   ```rust
+   // On error, return error message fragment
+   html! { div.error { (error_message) } }
+   ```
 
 ### Database Query Pattern
 - Use SQLx QueryBuilder for dynamic queries

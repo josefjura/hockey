@@ -1,5 +1,8 @@
 # Monorepo .gitignore for hockey management system
 
+# Backup directory (old Next.js frontend)
+backup/
+
 # Dependencies (frontend and backend)
 **/node_modules/
 **/.pnp
@@ -70,6 +73,8 @@ next-env.d.ts
 **/data/*.db
 **/data/*.sqlite
 **/data/*.sqlite3
+frontend/hockey.db
+frontend/*.db
 
 # Temporary files
 **/tmp/
