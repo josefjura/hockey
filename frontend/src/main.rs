@@ -82,7 +82,15 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/events", post(routes::events::event_create_post))
         .route("/events/:id/edit", get(routes::events::event_edit_get))
         .route("/events/:id", post(routes::events::event_update_post))
-        .route("/events/:id/delete", post(routes::events::event_delete_post))
+        .route(
+            "/events/:id/delete",
+            post(routes::events::event_delete_post),
+        )
+        .route("/matches/:id", get(routes::matches::match_detail_get))
+        .route(
+            "/matches/:id/delete",
+            post(routes::matches::match_delete_post),
+        )
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));
 
     // Health check (no auth)

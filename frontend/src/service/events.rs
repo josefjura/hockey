@@ -40,7 +40,7 @@ pub struct PagedResult<T> {
 
 impl<T> PagedResult<T> {
     pub fn new(items: Vec<T>, total: usize, page: usize, page_size: usize) -> Self {
-        let total_pages = (total + page_size - 1) / page_size;
+        let total_pages = total.div_ceil(page_size);
         let has_next = page < total_pages;
         let has_previous = page > 1;
 
@@ -57,17 +57,12 @@ impl<T> PagedResult<T> {
 }
 
 /// Create a new event
-pub async fn create_event(
-    db: &SqlitePool,
-    event: CreateEventEntity,
-) -> Result<i64, sqlx::Error> {
-    let result = sqlx::query(
-        "INSERT INTO event (name, country_id) VALUES (?, ?)",
-    )
-    .bind(event.name)
-    .bind(event.country_id)
-    .execute(db)
-    .await?;
+pub async fn create_event(db: &SqlitePool, event: CreateEventEntity) -> Result<i64, sqlx::Error> {
+    let result = sqlx::query("INSERT INTO event (name, country_id) VALUES (?, ?)")
+        .bind(event.name)
+        .bind(event.country_id)
+        .execute(db)
+        .await?;
 
     Ok(result.last_insert_rowid())
 }
@@ -92,7 +87,7 @@ pub async fn get_events(
         "SELECT e.id, e.name, e.country_id, c.name as country_name, c.iso2Code as country_iso2_code
          FROM event e
          LEFT JOIN country c ON e.country_id = c.id
-         WHERE 1=1"
+         WHERE 1=1",
     );
     apply_filters(&mut data_query, filters);
     data_query.push(" ORDER BY e.id");
@@ -119,15 +114,12 @@ pub async fn get_events(
 }
 
 /// Get a single event by ID
-pub async fn get_event_by_id(
-    db: &SqlitePool,
-    id: i64,
-) -> Result<Option<EventEntity>, sqlx::Error> {
+pub async fn get_event_by_id(db: &SqlitePool, id: i64) -> Result<Option<EventEntity>, sqlx::Error> {
     let row = sqlx::query(
         "SELECT e.id, e.name, e.country_id, c.name as country_name, c.iso2Code as country_iso2_code
          FROM event e
          LEFT JOIN country c ON e.country_id = c.id
-         WHERE e.id = ?"
+         WHERE e.id = ?",
     )
     .bind(id)
     .fetch_optional(db)
@@ -148,14 +140,12 @@ pub async fn update_event(
     id: i64,
     event: UpdateEventEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
-        "UPDATE event SET name = ?, country_id = ? WHERE id = ?",
-    )
-    .bind(event.name)
-    .bind(event.country_id)
-    .bind(id)
-    .execute(db)
-    .await?;
+    let result = sqlx::query("UPDATE event SET name = ?, country_id = ? WHERE id = ?")
+        .bind(event.name)
+        .bind(event.country_id)
+        .bind(id)
+        .execute(db)
+        .await?;
 
     Ok(result.rows_affected() > 0)
 }

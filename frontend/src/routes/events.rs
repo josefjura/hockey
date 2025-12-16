@@ -8,14 +8,10 @@ use serde::Deserialize;
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::Locale;
-use crate::service::events::{
-    self, CreateEventEntity, EventFilters, UpdateEventEntity,
-};
+use crate::service::events::{self, CreateEventEntity, EventFilters, UpdateEventEntity};
 use crate::views::{
     layout::admin_layout,
-    pages::events::{
-        event_create_modal, event_edit_modal, event_list_content, events_page,
-    },
+    pages::events::{event_create_modal, event_edit_modal, event_list_content, events_page},
 };
 
 #[derive(Debug, Deserialize)]
@@ -101,7 +97,10 @@ pub async fn events_list_htmx(
         Ok(result) => result,
         Err(e) => {
             tracing::error!("Failed to fetch events: {}", e);
-            return Html(crate::views::components::error::error_message("Failed to load events").into_string());
+            return Html(
+                crate::views::components::error::error_message("Failed to load events")
+                    .into_string(),
+            );
         }
     };
 
@@ -131,11 +130,8 @@ pub async fn event_create_post(
     if name.len() > 255 {
         let countries = events::get_countries(&state.db).await.unwrap_or_default();
         return Html(
-            event_create_modal(
-                &countries,
-                Some("Event name cannot exceed 255 characters"),
-            )
-            .into_string(),
+            event_create_modal(&countries, Some("Event name cannot exceed 255 characters"))
+                .into_string(),
         );
     }
 
@@ -176,7 +172,8 @@ pub async fn event_edit_get(
         Err(e) => {
             tracing::error!("Failed to fetch event: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load event").into_string(),
+                crate::views::components::error::error_message("Failed to load event")
+                    .into_string(),
             );
         }
     };
@@ -264,9 +261,9 @@ pub async fn event_delete_post(
             // Return HTMX response to reload table
             Html("<div hx-get=\"/events/list\" hx-target=\"#events-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
         }
-        Ok(false) => Html(
-            crate::views::components::error::error_message("Event not found").into_string(),
-        ),
+        Ok(false) => {
+            Html(crate::views::components::error::error_message("Event not found").into_string())
+        }
         Err(e) => {
             tracing::error!("Failed to delete event: {}", e);
             Html(
