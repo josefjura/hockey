@@ -44,6 +44,7 @@ pub async fn require_auth(
 
 /// Middleware that optionally extracts session if present
 /// Does not redirect - just adds session to extensions if available
+#[allow(dead_code)]
 pub async fn optional_auth(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -66,6 +67,7 @@ pub async fn optional_auth(
 
 /// Extract session from request extensions
 /// Returns 401 if no session found (for use in handlers)
+#[allow(dead_code)]
 pub fn get_session(request: &Request) -> Result<Session, StatusCode> {
     request
         .extensions()

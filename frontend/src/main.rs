@@ -1,12 +1,15 @@
 mod app_state;
 mod auth;
 mod config;
+mod i18n;
 mod routes;
 mod views;
 
 use app_state::AppState;
 use axum::{
+    extract::Request,
     middleware,
+    response::Html,
     routing::{get, post},
     Router,
 };
@@ -16,6 +19,8 @@ use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use auth::{require_auth, SessionStore};
+use i18n::Locale;
+use views::{layout::admin_layout, pages::dashboard::dashboard_page};
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -42,9 +47,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // Run migrations
     tracing::info!("Running database migrations...");
-    sqlx::migrate!("./migrations")
-        .run(&db_pool)
-        .await?;
+    sqlx::migrate!("./migrations").run(&db_pool).await?;
     tracing::info!("Migrations completed successfully");
 
     // Create session store
@@ -72,14 +75,10 @@ async fn main() -> Result<(), anyhow::Error> {
     // Protected routes (authentication required)
     let protected_routes = Router::new()
         .route("/", get(root_handler))
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            require_auth,
-        ));
+        .layer(middleware::from_fn_with_state(state.clone(), require_auth));
 
     // Health check (no auth)
-    let health_routes = Router::new()
-        .route("/health", get(health_handler));
+    let health_routes = Router::new().route("/health", get(health_handler));
 
     // Build the complete application
     let app = Router::new()
@@ -95,14 +94,27 @@ async fn main() -> Result<(), anyhow::Error> {
     tracing::info!("Login at http://{}:{}/auth/login", addr.ip(), config.port);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app)
-        .await?;
+    axum::serve(listener, app).await?;
 
     Ok(())
 }
 
-async fn root_handler() -> &'static str {
-    "Hockey Management Application - Dashboard (Protected)"
+async fn root_handler(request: Request) -> Html<String> {
+    // Extract session from request extensions (added by require_auth middleware)
+    let session = request
+        .extensions()
+        .get::<auth::Session>()
+        .expect("Session should be available in protected route")
+        .clone();
+
+    // For now, default to English locale
+    // TODO: Get locale from user preferences or cookie
+    let locale = Locale::English;
+
+    let content = dashboard_page();
+    let html = admin_layout("Dashboard", &session, "/", locale, content);
+
+    Html(html.into_string())
 }
 
 async fn health_handler() -> &'static str {

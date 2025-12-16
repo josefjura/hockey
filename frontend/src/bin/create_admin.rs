@@ -11,8 +11,8 @@ async fn main() -> Result<()> {
     let _ = dotenvy::dotenv();
 
     // Get database URL
-    let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite:./hockey.db".to_string());
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:./hockey.db".to_string());
 
     println!("Connecting to database: {}", database_url);
 

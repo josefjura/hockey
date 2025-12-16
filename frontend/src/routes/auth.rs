@@ -3,7 +3,10 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
     Form,
 };
-use axum_extra::extract::{cookie::{Cookie, SameSite}, CookieJar};
+use axum_extra::extract::{
+    cookie::{Cookie, SameSite},
+    CookieJar,
+};
 use serde::Deserialize;
 use sqlx::Row;
 
@@ -34,19 +37,23 @@ pub async fn login_post(
     Form(form): Form<LoginForm>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
     // Verify user credentials using raw query
-    let user_row = sqlx::query(
-        "SELECT id, email, password_hash, name FROM users WHERE email = ?"
-    )
-    .bind(&form.email)
-    .fetch_optional(&state.db)
-    .await
-    .map_err(|e| {
-        tracing::error!("Database error during login: {}", e);
-        (
-            jar.clone(),
-            Html(login_page(Some("An error occurred. Please try again.".to_string()), &form.csrf_token).into_string())
-        )
-    })?;
+    let user_row = sqlx::query("SELECT id, email, password_hash, name FROM users WHERE email = ?")
+        .bind(&form.email)
+        .fetch_optional(&state.db)
+        .await
+        .map_err(|e| {
+            tracing::error!("Database error during login: {}", e);
+            (
+                jar.clone(),
+                Html(
+                    login_page(
+                        Some("An error occurred. Please try again.".to_string()),
+                        &form.csrf_token,
+                    )
+                    .into_string(),
+                ),
+            )
+        })?;
 
     // Check if user exists
     let user_row = match user_row {
@@ -54,7 +61,13 @@ pub async fn login_post(
         None => {
             return Err((
                 jar,
-                Html(login_page(Some("Invalid email or password".to_string()), &form.csrf_token).into_string())
+                Html(
+                    login_page(
+                        Some("Invalid email or password".to_string()),
+                        &form.csrf_token,
+                    )
+                    .into_string(),
+                ),
             ));
         }
     };
@@ -66,24 +79,36 @@ pub async fn login_post(
     let password_hash: String = user_row.get("password_hash");
 
     // Verify password
-    let password_valid = verify_password(&form.password, &password_hash)
-        .map_err(|e| {
-            tracing::error!("Password verification error: {}", e);
-            (
-                jar.clone(),
-                Html(login_page(Some("An error occurred. Please try again.".to_string()), &form.csrf_token).into_string())
-            )
-        })?;
+    let password_valid = verify_password(&form.password, &password_hash).map_err(|e| {
+        tracing::error!("Password verification error: {}", e);
+        (
+            jar.clone(),
+            Html(
+                login_page(
+                    Some("An error occurred. Please try again.".to_string()),
+                    &form.csrf_token,
+                )
+                .into_string(),
+            ),
+        )
+    })?;
 
     if !password_valid {
         return Err((
             jar,
-            Html(login_page(Some("Invalid email or password".to_string()), &form.csrf_token).into_string())
+            Html(
+                login_page(
+                    Some("Invalid email or password".to_string()),
+                    &form.csrf_token,
+                )
+                .into_string(),
+            ),
         ));
     }
 
     // Create session
-    let session = state.sessions
+    let session = state
+        .sessions
         .create_session(user_id, user_email.clone(), user_name)
         .await;
 
@@ -104,10 +129,7 @@ pub async fn login_post(
 }
 
 /// POST /auth/logout - Handle logout
-pub async fn logout_post(
-    State(state): State<AppState>,
-    jar: CookieJar,
-) -> impl IntoResponse {
+pub async fn logout_post(State(state): State<AppState>, jar: CookieJar) -> impl IntoResponse {
     // Get session cookie
     if let Some(session_cookie) = jar.get(SESSION_COOKIE_NAME) {
         // Delete session from store
@@ -116,11 +138,7 @@ pub async fn logout_post(
     }
 
     // Remove session cookie
-    let jar = jar.remove(
-        Cookie::build(SESSION_COOKIE_NAME)
-            .path("/")
-            .build()
-    );
+    let jar = jar.remove(Cookie::build(SESSION_COOKIE_NAME).path("/").build());
 
     // Redirect to login
     (jar, Redirect::to("/auth/login"))
