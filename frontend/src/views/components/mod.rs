@@ -1,1 +1,3 @@
-// Component templates will go here
+pub mod sidebar;
+
+pub use sidebar::sidebar;

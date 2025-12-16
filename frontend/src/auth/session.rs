@@ -7,11 +7,14 @@ use uuid::Uuid;
 #[derive(Debug, Clone)]
 pub struct Session {
     pub id: String,
+    #[allow(dead_code)]
     pub user_id: i64,
     pub user_email: String,
     pub user_name: String,
+    #[allow(dead_code)]
     pub created_at: DateTime<Utc>,
     pub expires_at: DateTime<Utc>,
+    #[allow(dead_code)]
     pub csrf_token: String,
 }
 
@@ -108,6 +111,7 @@ impl SessionStore {
     }
 
     /// Get number of active sessions
+    #[allow(dead_code)]
     pub async fn session_count(&self) -> usize {
         let sessions = self.sessions.read().await;
         sessions.len()
@@ -128,7 +132,9 @@ mod tests {
     #[tokio::test]
     async fn test_session_creation() {
         let store = SessionStore::new();
-        let session = store.create_session(1, "test@example.com".to_string(), "Test User".to_string()).await;
+        let session = store
+            .create_session(1, "test@example.com".to_string(), "Test User".to_string())
+            .await;
 
         assert_eq!(session.user_id, 1);
         assert_eq!(session.user_email, "test@example.com");
@@ -138,7 +144,9 @@ mod tests {
     #[tokio::test]
     async fn test_session_retrieval() {
         let store = SessionStore::new();
-        let session = store.create_session(1, "test@example.com".to_string(), "Test User".to_string()).await;
+        let session = store
+            .create_session(1, "test@example.com".to_string(), "Test User".to_string())
+            .await;
 
         let retrieved = store.get_session(&session.id).await;
         assert!(retrieved.is_some());
@@ -148,7 +156,9 @@ mod tests {
     #[tokio::test]
     async fn test_session_deletion() {
         let store = SessionStore::new();
-        let session = store.create_session(1, "test@example.com".to_string(), "Test User".to_string()).await;
+        let session = store
+            .create_session(1, "test@example.com".to_string(), "Test User".to_string())
+            .await;
 
         assert_eq!(store.session_count().await, 1);
         store.delete_session(&session.id).await;
@@ -158,7 +168,9 @@ mod tests {
     #[tokio::test]
     async fn test_session_validation() {
         let store = SessionStore::new();
-        let session = store.create_session(1, "test@example.com".to_string(), "Test User".to_string()).await;
+        let session = store
+            .create_session(1, "test@example.com".to_string(), "Test User".to_string())
+            .await;
 
         // Valid session
         let validated = store.validate_session(&session.id).await;

@@ -1,6 +1,7 @@
 use bcrypt::{hash, verify, DEFAULT_COST};
 
 /// Hash a password using bcrypt
+#[allow(dead_code)]
 pub fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
     hash(password, DEFAULT_COST)
 }

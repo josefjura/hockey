@@ -3,6 +3,7 @@ use std::env;
 #[derive(Debug, Clone)]
 pub struct Config {
     pub database_url: String,
+    #[allow(dead_code)]
     pub session_secret: String,
     pub environment: Environment,
     pub port: u16,
@@ -19,14 +20,13 @@ impl Config {
         // Load .env file if it exists
         let _ = dotenvy::dotenv();
 
-        let database_url = env::var("DATABASE_URL")
-            .unwrap_or_else(|_| "sqlite:./hockey.db".to_string());
+        let database_url =
+            env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:./hockey.db".to_string());
 
-        let session_secret = env::var("SESSION_SECRET")
-            .unwrap_or_else(|_| {
-                tracing::warn!("SESSION_SECRET not set, using default (not secure for production)");
-                "development-secret-key-change-in-production".to_string()
-            });
+        let session_secret = env::var("SESSION_SECRET").unwrap_or_else(|_| {
+            tracing::warn!("SESSION_SECRET not set, using default (not secure for production)");
+            "development-secret-key-change-in-production".to_string()
+        });
 
         let environment = match env::var("ENVIRONMENT")
             .unwrap_or_else(|_| "development".to_string())
@@ -49,10 +49,12 @@ impl Config {
         })
     }
 
+    #[allow(dead_code)]
     pub fn is_production(&self) -> bool {
         self.environment == Environment::Production
     }
 
+    #[allow(dead_code)]
     pub fn is_development(&self) -> bool {
         self.environment == Environment::Development
     }
