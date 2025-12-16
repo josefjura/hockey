@@ -2,17 +2,17 @@
 
 ## Reporting Security Vulnerabilities
 
-If you discover a security vulnerability, please email the maintainers directly. Do not open a public issue.
+If you discover a security vulnerability, please email the maintainers directly. **Do not open a public issue.**
 
 ## Secure Production Deployment
 
 ### Critical Security Requirements
 
 1. **Rotate All Secrets**: Never use example/default secrets in production
-2. **Environment Variables**: Use `.env.prod` file, never commit it to version control
-3. **CORS Configuration**: Restrict to specific domains, never use wildcards in production
-4. **HTTPS Only**: Always use HTTPS in production (handled by Traefik)
-5. **Database Backups**: Regular automated backups of production database
+2. **Environment Variables**: Use `.env` file with secure values, never commit it
+3. **HTTPS Only**: Always use HTTPS in production (via reverse proxy)
+4. **Database Backups**: Regular automated backups of production database
+5. **Session Security**: HttpOnly, Secure, SameSite cookies
 
 ### Secret Management
 
@@ -21,11 +21,8 @@ If you discover a security vulnerability, please email the maintainers directly.
 All secrets must be strong, randomly generated, and unique:
 
 ```bash
-# Generate HMAC key (64 characters recommended)
+# Generate session secret (recommended 32 bytes)
 openssl rand -hex 32
-
-# Generate NextAuth secret (44 characters recommended)
-openssl rand -base64 32
 ```
 
 #### Secret Rotation Schedule
@@ -37,160 +34,220 @@ openssl rand -base64 32
 
 #### Secret Rotation Process
 
-1. **Generate new secrets** using commands above
-2. **Update `.env.prod`** with new values
-3. **Deploy changes**: `docker-compose -f docker-compose.prod.yaml up -d`
-4. **Verify services restart successfully**
-5. **Monitor logs** for any authentication issues
-6. **Store new secrets securely** in password manager/vault
-
-### Exposed Secrets in Git History
-
-This repository previously contained exposed secrets in:
-- `docker-compose.prod.yaml` (lines 18, 46 in commit history)
-
-**Actions taken**:
-- Secrets removed from current version (Task #16)
-- `.env.prod` added to `.gitignore`
-- `.env.prod.example` created as template
-- Documentation updated with security best practices
-
-**Required actions if deployed**:
-1. Rotate all production secrets immediately
-2. Review access logs for unauthorized access
-3. Monitor for suspicious activity
-4. Consider additional security audit
-
-### Docker Compose Security
-
-#### Production Configuration
-
-The production docker-compose file (`docker-compose.prod.yaml`) now:
-- Uses environment variables for ALL secrets
-- Requires `.env.prod` file (not committed to git)
-- Includes secure defaults for optional settings
-- Enforces CORS restrictions
-
-#### Development Configuration
-
-The development docker-compose file (`docker-compose.yaml`):
-- Uses example secrets with clear warnings
-- NOT suitable for production use
-- Includes additional debugging features
-
-### CORS Configuration
-
-Proper CORS configuration is critical for security. The backend now automatically enforces CORS restrictions in production mode.
-
-#### Production Mode Enforcement
-
-When `ENVIRONMENT=production`, the server will refuse to start if:
-- CORS origins contain wildcards (`*`)
-- CORS headers contain wildcards (`*`)
-- CORS methods contain wildcards (`*`)
-- Origins are not properly formatted URLs (must start with `http://` or `https://`)
-
-This prevents accidental deployment with insecure CORS settings.
-
-#### Configuration Examples
-
-```bash
-# Development mode - wildcards allowed
-ENVIRONMENT=development
-CORS_ORIGINS=*
-CORS_HEADERS=*
-CORS_METHODS=*
-
-# Production mode - explicit values required
-ENVIRONMENT=production
-CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-CORS_HEADERS=content-type,authorization,x-requested-with
-CORS_METHODS=GET,POST,PUT,DELETE,OPTIONS
-```
-
-#### Testing CORS Configuration
-
-```bash
-# Test that server fails with invalid production config
-ENVIRONMENT=production CORS_ORIGINS=* cargo run
-# Should fail with: "CORS configuration error: Wildcard CORS origins (*) are not allowed in production mode"
-```
-
-### Database Security
-
-- SQLite database stored in persistent volume
-- Regular backups recommended
-- No direct external access
-- Access only through authenticated API
+1. **Generate new secret** using command above
+2. **Update `.env`** with new SESSION_SECRET value
+3. **Restart service**: `systemctl restart hockey` or rebuild/redeploy
+4. **Existing sessions invalidated**: Users must re-login
+5. **Store new secret securely** in password manager/vault
 
 ### Authentication Security
 
-- JWT tokens with RSA signing
-- Refresh tokens stored securely
-- Access tokens with short expiration (15 minutes)
-- Refresh tokens with longer expiration (7 days)
-- Automatic token refresh on frontend
+The application uses session-based authentication with these security features:
 
-## Security Checklist for Production Deployment
+#### Session Security
+- **HttpOnly cookies**: Prevents JavaScript access
+- **Secure flag**: HTTPS-only transmission (production)
+- **SameSite**: CSRF protection
+- **Expiration**: Automatic session timeout
 
-Before deploying to production, verify:
+#### Password Security
+- **Bcrypt hashing**: Strong password hashing (cost factor 12)
+- **Minimum length**: 8 characters enforced
+- **No plaintext storage**: Passwords never stored in plaintext
 
-- [ ] All secrets rotated and randomly generated
-- [ ] `.env.prod` file created with production values
-- [ ] `.env.prod` NOT committed to version control
-- [ ] CORS_ORIGINS set to specific domain(s)
-- [ ] HTTPS enabled (via Traefik or other reverse proxy)
-- [ ] Database backup strategy implemented
-- [ ] Monitoring and logging configured
-- [ ] Security headers configured in reverse proxy
-- [ ] Rate limiting configured (if needed)
-- [ ] Firewall rules configured
-- [ ] SSH access secured with keys only
-- [ ] System updates automated
-- [ ] Secrets stored in secure vault/password manager
+### Database Security
 
-## Dependency Security
+#### SQLite Security
+- **File permissions**: `chmod 600 hockey.db` (owner read/write only)
+- **Backup encryption**: Encrypt database backups at rest
+- **Connection limits**: Single process access (SQLite default)
 
-Keep dependencies up to date:
+#### Migration Security
+- **Review migrations**: Inspect all migration files before running
+- **Backup before migrate**: Always backup before applying new migrations
+- **One-way operations**: Migrations are not automatically reversible
 
-```bash
-# Backend (Rust)
-cd backend
-cargo update
-cargo audit
+### Network Security
 
-# Frontend (Node.js)
-cd frontend
-yarn upgrade-interactive
-yarn audit
+#### Reverse Proxy Requirements
+Always use a reverse proxy (Nginx, Caddy) for:
+- **SSL/TLS termination**: HTTPS with valid certificates
+- **Rate limiting**: Prevent brute force attacks
+- **Request filtering**: Block malicious requests
+- **Header security**: Add security headers (HSTS, CSP, etc.)
+
+#### Example Nginx Configuration
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name hockey.example.com;
+
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/hockey.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/hockey.example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Security Headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" always;
+
+    # Rate Limiting
+    limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /auth/login {
+        limit_req zone=login burst=10 nodelay;
+        proxy_pass http://localhost:8080;
+    }
+}
 ```
 
-## Monitoring and Incident Response
+### Application Security
 
-### Monitoring
+#### Input Validation
+- **Server-side validation**: All user input validated on server
+- **Type safety**: Rust's type system prevents many vulnerabilities
+- **SQL injection prevention**: SQLx parameterized queries
+- **XSS prevention**: Maud escapes HTML by default
 
-Monitor for:
-- Failed authentication attempts
-- Unusual API access patterns
-- High error rates
-- Unauthorized access attempts
+#### CSRF Protection
+- **Token validation**: CSRF tokens in forms
+- **SameSite cookies**: Additional CSRF protection
+- **State-changing operations**: POST/PUT/DELETE only
+
+#### File Upload Security
+(If/when file uploads are implemented)
+- **File type validation**: Whitelist allowed types
+- **Size limits**: Enforce maximum file size
+- **Virus scanning**: Scan uploaded files
+- **Separate storage**: Store outside web root
+
+### Monitoring and Logging
+
+#### Security Logging
+Log these security events:
+- Failed login attempts
+- Session creation/destruction
+- Access to sensitive operations
+- Database errors
+- Configuration changes
+
+#### Log Management
+- **Secure storage**: Restrict access to log files
+- **No sensitive data**: Don't log passwords, tokens, or PII
+- **Retention policy**: Rotate and archive logs regularly
+- **Monitoring**: Alert on suspicious patterns
+
+### Deployment Checklist
+
+Before deploying to production:
+
+- [ ] All secrets generated and securely stored
+- [ ] `.env` file created with production secrets
+- [ ] Database file permissions set to 600
+- [ ] HTTPS configured with valid certificate
+- [ ] Reverse proxy configured with security headers
+- [ ] Rate limiting enabled for login endpoints
+- [ ] Database backups configured
+- [ ] Monitoring and alerting set up
+- [ ] Firewall rules configured (only HTTPS port open)
+- [ ] Service user created (don't run as root)
+- [ ] Systemd service configured with security options
+
+### Security Headers
+
+Recommended security headers (configured in reverse proxy):
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+```
 
 ### Incident Response
 
-If security incident detected:
-1. Rotate all secrets immediately
-2. Review access logs
-3. Identify scope of compromise
-4. Update affected systems
-5. Document incident and response
-6. Update security procedures if needed
+If a security incident occurs:
 
-## Security Updates
+1. **Isolate**: Take affected systems offline if necessary
+2. **Assess**: Determine scope and severity
+3. **Contain**: Stop ongoing attack/breach
+4. **Rotate**: Change all secrets immediately
+5. **Notify**: Inform affected users if data compromised
+6. **Investigate**: Review logs and determine root cause
+7. **Remediate**: Fix vulnerability
+8. **Document**: Record incident and response
+9. **Improve**: Update security measures
 
-This document is maintained as part of the repository and should be updated when:
-- New security features are added
-- Security procedures change
-- Vulnerabilities are discovered and fixed
-- Deployment configuration changes
+### Regular Security Maintenance
 
-Last updated: 2025-12-03
+#### Weekly
+- Review access logs for anomalies
+- Check for failed login attempts
+- Verify backup completion
+
+#### Monthly
+- Update dependencies (`cargo update`)
+- Review security advisories
+- Test backup restoration
+
+#### Quarterly
+- Rotate secrets
+- Security audit
+- Penetration testing (if resources available)
+
+### Security Best Practices
+
+1. **Principle of Least Privilege**: Grant minimum necessary access
+2. **Defense in Depth**: Multiple layers of security
+3. **Fail Securely**: Errors should not expose sensitive information
+4. **Keep Updated**: Regularly update dependencies
+5. **Security by Design**: Consider security from the start
+6. **Secure Defaults**: Default configuration should be secure
+7. **Audit Trail**: Log security-relevant events
+
+### Dependency Security
+
+#### Rust Dependencies
+```bash
+# Check for known vulnerabilities
+cargo audit
+
+# Update dependencies
+cargo update
+
+# Review dependency tree
+cargo tree
+```
+
+#### Security Advisories
+Monitor:
+- [RustSec Advisory Database](https://rustsec.org/)
+- [GitHub Security Advisories](https://github.com/advisories)
+- Dependency GitHub repositories
+
+### Contact
+
+For security concerns, contact the maintainers at:
+- **Email**: [Your security contact email]
+- **Response Time**: Within 48 hours for critical issues
+
+---
+
+**Last Updated**: 2025-12-16
+**Version**: 2.0 (HTMX rewrite)
