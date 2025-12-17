@@ -4,6 +4,7 @@ mod config;
 mod i18n;
 mod routes;
 mod service;
+mod utils;
 mod views;
 
 use app_state::AppState;
@@ -16,7 +17,7 @@ use axum::{
 };
 use sqlx::sqlite::SqlitePoolOptions;
 use std::net::SocketAddr;
-use tower_http::trace::TraceLayer;
+use tower_http::{services::ServeDir, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use auth::{require_auth, SessionStore};
@@ -99,6 +100,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .merge(public_routes)
         .merge(protected_routes)
         .merge(health_routes)
+        .nest_service("/static", ServeDir::new("static"))
         .with_state(state)
         .layer(TraceLayer::new_for_http());
 
