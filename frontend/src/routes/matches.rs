@@ -11,7 +11,7 @@ use crate::service::matches;
 use crate::views::{layout::admin_layout, pages::matches::match_detail_page};
 
 /// GET /matches/{id} - Match detail page
-pub async fn match_detail_get(
+pub async fn match_detail(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -65,7 +65,7 @@ pub async fn match_detail_get(
 }
 
 /// POST /matches/{id}/delete - Delete match
-pub async fn match_delete_post(
+pub async fn match_delete(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {

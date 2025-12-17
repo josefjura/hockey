@@ -1,4 +1,4 @@
-use maud::{html, Markup};
+use maud::{html, Markup, PreEscaped};
 
 use crate::service::teams::{TeamEntity, TeamFilters, PagedResult};
 
@@ -10,7 +10,7 @@ pub fn teams_page(
 ) -> Markup {
     html! {
         div class="card" {
-            // Header with title
+            // Header with title and create button
             div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
                 div {
                     h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;" {
@@ -19,6 +19,14 @@ pub fn teams_page(
                     p style="color: var(--gray-600);" {
                         "Manage and view all teams in the system."
                     }
+                }
+                button
+                    class="btn btn-primary"
+                    hx-get="/teams/new"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                {
+                    "+ New Team"
                 }
             }
 
@@ -79,6 +87,9 @@ pub fn teams_page(
 
             // Table
             (team_list_content(result, filters))
+
+            // Modal container
+            div id="modal-container" {}
         }
     }
 }
@@ -297,4 +308,84 @@ fn pagination_pages(current_page: usize, total_pages: usize) -> Vec<usize> {
     }
 
     pages
+}
+
+/// Create team modal
+pub fn team_create_modal(countries: &[(i64, String)], error: Option<&str>) -> Markup {
+    html! {
+        div
+            class="modal-backdrop"
+            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;"
+            id="team-modal"
+        {
+            div
+                class="modal"
+                style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
+                onclick="event.stopPropagation()"
+            {
+                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
+                    "Create Team"
+                }
+
+                @if let Some(error_msg) = error {
+                    div class="error" style="margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;" {
+                        (error_msg)
+                    }
+                }
+
+                form hx-post="/teams" hx-target="#team-modal" hx-swap="outerHTML" {
+                    div style="margin-bottom: 1rem;" {
+                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                            "Team Name"
+                            span style="color: red;" { "*" }
+                        }
+                        input
+                            type="text"
+                            name="name"
+                            required
+                            autofocus
+                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    }
+
+                    div style="margin-bottom: 1.5rem;" {
+                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                            "Country"
+                        }
+                        select
+                            name="country_id"
+                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                        {
+                            option value="" { "No country" }
+                            @for (id, name) in countries {
+                                option value=(id) { (name) }
+                            }
+                        }
+                    }
+
+                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
+                        button
+                            type="button"
+                            class="btn"
+                            style="background: white; border: 1px solid var(--gray-300);"
+                            onclick="document.getElementById('team-modal').remove()"
+                        {
+                            "Cancel"
+                        }
+                        button type="submit" class="btn btn-primary" {
+                            "Create Team"
+                        }
+                    }
+                }
+            }
+        }
+        (PreEscaped(r#"
+        <script>
+            document.getElementById('team-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.remove();
+                }
+            });
+        </script>
+        "#))
+    }
 }
