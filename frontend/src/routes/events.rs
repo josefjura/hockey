@@ -255,10 +255,7 @@ pub async fn event_update(
 }
 
 /// POST /events/{id}/delete - Delete event
-pub async fn event_delete(
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> impl IntoResponse {
+pub async fn event_delete(State(state): State<AppState>, Path(id): Path<i64>) -> impl IntoResponse {
     match events::delete_event(&state.db, id).await {
         Ok(true) => {
             // Return HTMX response to reload table

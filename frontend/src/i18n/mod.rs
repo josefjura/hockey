@@ -50,7 +50,6 @@ impl Locale {
     }
 }
 
-
 // FluentBundle with IntlLangMemoizer is not Send because it uses RefCell internally
 // We create bundles on-demand per translation instead of caching them
 pub struct I18n;
@@ -84,20 +83,12 @@ impl I18n {
     ) -> String {
         let bundle = Self::create_bundle(locale);
 
-        let message = bundle.get_message(key).unwrap_or_else(|| {
-            panic!(
-                "Message '{}' not found in {} locale",
-                key,
-                locale.code()
-            )
-        });
+        let message = bundle
+            .get_message(key)
+            .unwrap_or_else(|| panic!("Message '{}' not found in {} locale", key, locale.code()));
 
         let pattern = message.value().unwrap_or_else(|| {
-            panic!(
-                "Message '{}' has no value in {} locale",
-                key,
-                locale.code()
-            )
+            panic!("Message '{}' has no value in {} locale", key, locale.code())
         });
 
         let mut errors = vec![];

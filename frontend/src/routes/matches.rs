@@ -65,10 +65,7 @@ pub async fn match_detail(
 }
 
 /// POST /matches/{id}/delete - Delete match
-pub async fn match_delete(
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> impl IntoResponse {
+pub async fn match_delete(State(state): State<AppState>, Path(id): Path<i64>) -> impl IntoResponse {
     match matches::delete_match(&state.db, id).await {
         Ok(true) => {
             // Redirect to matches list using HTMX redirect header
