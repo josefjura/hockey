@@ -15,6 +15,8 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 (base_styles())
                 // HTMX library for dynamic HTML updates
                 script src="https://unpkg.com/htmx.org@2.0.4" {}
+                // Web Components
+                script type="module" src="/static/js/components/country-selector.js" {}
             }
             body {
                 (content)
