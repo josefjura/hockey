@@ -13,6 +13,8 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
                 title { (title) " - Hockey Management" }
                 (base_styles())
+                // HTMX library for dynamic HTML updates
+                script src="https://unpkg.com/htmx.org@2.0.4" {}
             }
             body {
                 (content)

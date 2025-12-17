@@ -20,7 +20,9 @@ pub struct TeamsQuery {
     page: usize,
     #[serde(default = "default_page_size")]
     page_size: usize,
+    #[serde(default, deserialize_with = "crate::utils::empty_string_as_none")]
     name: Option<String>,
+    #[serde(default, deserialize_with = "crate::utils::empty_string_as_none_i64")]
     country_id: Option<i64>,
     #[serde(default)]
     sort: String,
