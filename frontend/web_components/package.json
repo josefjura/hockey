@@ -1,0 +1,17 @@
+{
+  "name": "hockey-web-components",
+  "version": "1.0.0",
+  "description": "Web Components for Hockey Management App",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf ../static/js/components/*.js"
+  },
+  "dependencies": {
+    "lit": "^3.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

@@ -332,7 +332,7 @@ fn pagination_pages(current_page: usize, total_pages: usize) -> Vec<usize> {
 }
 
 /// Create team modal
-pub fn team_create_modal(countries: &[(i64, String)], error: Option<&str>) -> Markup {
+pub fn team_create_modal(error: Option<&str>) -> Markup {
     html! {
         div
             class="modal-backdrop"
@@ -372,15 +372,9 @@ pub fn team_create_modal(countries: &[(i64, String)], error: Option<&str>) -> Ma
                         label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                             "Country"
                         }
-                        select
+                        country-selector
                             name="country_id"
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-                        {
-                            option value="" { "No country" }
-                            @for (id, name) in countries {
-                                option value=(id) { (name) }
-                            }
-                        }
+                            placeholder="Select a country" {}
                     }
 
                     div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
@@ -414,7 +408,6 @@ pub fn team_create_modal(countries: &[(i64, String)], error: Option<&str>) -> Ma
 /// Edit team modal
 pub fn team_edit_modal(
     team: &TeamEntity,
-    countries: &[(i64, String)],
     error: Option<&str>,
 ) -> Markup {
     html! {
@@ -457,19 +450,15 @@ pub fn team_edit_modal(
                         label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                             "Country"
                         }
-                        select
-                            name="country_id"
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-                        {
-                            option value="" selected[team.country_id.is_none()] { "No country" }
-                            @for (id, name) in countries {
-                                option
-                                    value=(id)
-                                    selected[team.country_id == Some(*id)]
-                                {
-                                    (name)
-                                }
-                            }
+                        @if let Some(country_id) = team.country_id {
+                            country-selector
+                                name="country_id"
+                                placeholder="Select a country"
+                                value=(country_id) {}
+                        } @else {
+                            country-selector
+                                name="country_id"
+                                placeholder="Select a country" {}
                         }
                     }
 
