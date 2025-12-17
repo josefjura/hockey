@@ -68,6 +68,7 @@ pub async fn events_list_get(
                     "Events",
                     &session,
                     "/events",
+                    &state.i18n,
                     locale,
                     crate::views::components::error::error_message("Failed to load events"),
                 )
@@ -80,7 +81,7 @@ pub async fn events_list_get(
     let countries = events::get_countries(&state.db).await.unwrap_or_default();
 
     let content = events_page(&result, &filters, &countries);
-    Html(admin_layout("Events", &session, "/events", locale, content).into_string())
+    Html(admin_layout("Events", &session, "/events", &state.i18n, locale, content).into_string())
 }
 
 /// GET /events/list - HTMX endpoint for table updates

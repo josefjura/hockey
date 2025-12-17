@@ -8,7 +8,7 @@ mod views;
 
 use app_state::AppState;
 use axum::{
-    extract::Request,
+    extract::{Request, State},
     middleware,
     response::Html,
     routing::{get, post},
@@ -115,7 +115,7 @@ async fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-async fn root_handler(request: Request) -> Html<String> {
+async fn root_handler(State(state): State<AppState>, request: Request) -> Html<String> {
     // Extract session from request extensions (added by require_auth middleware)
     let session = request
         .extensions()
@@ -128,7 +128,7 @@ async fn root_handler(request: Request) -> Html<String> {
     let locale = Locale::English;
 
     let content = dashboard_page();
-    let html = admin_layout("Dashboard", &session, "/", locale, content);
+    let html = admin_layout("Dashboard", &session, "/", &state.i18n, locale, content);
 
     Html(html.into_string())
 }
