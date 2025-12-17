@@ -41,7 +41,7 @@ fn default_sort_order() -> String {
 }
 
 /// GET /teams - Teams list page
-pub async fn teams_list_get(
+pub async fn teams_get(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
     Query(query): Query<TeamsQuery>,
@@ -81,7 +81,7 @@ pub async fn teams_list_get(
 }
 
 /// GET /teams/list - HTMX endpoint for table updates
-pub async fn teams_list_htmx(
+pub async fn teams_list_partial(
     State(state): State<AppState>,
     Query(query): Query<TeamsQuery>,
 ) -> impl IntoResponse {

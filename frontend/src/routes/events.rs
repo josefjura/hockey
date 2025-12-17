@@ -45,7 +45,7 @@ pub struct UpdateEventForm {
 }
 
 /// GET /events - Events list page
-pub async fn events_list_get(
+pub async fn events_get(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
     Query(query): Query<EventsQuery>,
@@ -85,7 +85,7 @@ pub async fn events_list_get(
 }
 
 /// GET /events/list - HTMX endpoint for table updates
-pub async fn events_list_htmx(
+pub async fn events_list_partial(
     State(state): State<AppState>,
     Query(query): Query<EventsQuery>,
 ) -> impl IntoResponse {
@@ -109,13 +109,13 @@ pub async fn events_list_htmx(
 }
 
 /// GET /events/new - Show create modal
-pub async fn event_create_get(State(state): State<AppState>) -> impl IntoResponse {
+pub async fn event_create_form(State(state): State<AppState>) -> impl IntoResponse {
     let countries = events::get_countries(&state.db).await.unwrap_or_default();
     Html(event_create_modal(&countries, None).into_string())
 }
 
 /// POST /events - Create new event
-pub async fn event_create_post(
+pub async fn event_create(
     State(state): State<AppState>,
     Form(form): Form<CreateEventForm>,
 ) -> impl IntoResponse {
@@ -159,7 +159,7 @@ pub async fn event_create_post(
 }
 
 /// GET /events/{id}/edit - Show edit modal
-pub async fn event_edit_get(
+pub async fn event_edit_form(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
@@ -184,7 +184,7 @@ pub async fn event_edit_get(
 }
 
 /// POST /events/{id} - Update event
-pub async fn event_update_post(
+pub async fn event_update(
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Form(form): Form<UpdateEventForm>,
@@ -253,7 +253,7 @@ pub async fn event_update_post(
 }
 
 /// POST /events/{id}/delete - Delete event
-pub async fn event_delete_post(
+pub async fn event_delete(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {

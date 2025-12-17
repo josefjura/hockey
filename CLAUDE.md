@@ -208,6 +208,49 @@ Each domain follows this structure:
 // views/pages/{domain}.rs - Maud templates
 ```
 
+### Route Handler Naming Conventions
+**IMPORTANT**: Follow these naming conventions for all route handlers to maintain consistency:
+
+#### Function Names:
+- `{resource}_get` - Full page GET endpoints (e.g., `teams_get`, `events_get`)
+- `{resource}_list_partial` - HTMX HTML fragments for list updates (e.g., `teams_list_partial`)
+- `{resource}_create_form` - GET endpoints returning create form/modal HTML (e.g., `team_create_form`)
+- `{resource}_edit_form` - GET endpoints returning edit form/modal HTML (e.g., `team_edit_form`)
+- `{resource}_create` - POST endpoints for creation (e.g., `team_create`)
+- `{resource}_update` - POST endpoints for updates (e.g., `team_update`)
+- `{resource}_delete` - POST endpoints for deletion (e.g., `team_delete`)
+- `{resource}_detail` - GET endpoints for detail views (e.g., `match_detail`)
+- `{resource}_{action}_api` - Future JSON API endpoints (e.g., `teams_list_api`)
+
+#### URL Patterns:
+- `GET /{resources}` - Full page (calls `{resource}_get`)
+- `GET /{resources}/list` - Partial update (calls `{resource}_list_partial`)
+- `GET /{resources}/new` - Create form (calls `{resource}_create_form`)
+- `POST /{resources}` - Create action (calls `{resource}_create`)
+- `GET /{resources}/:id/edit` - Edit form (calls `{resource}_edit_form`)
+- `POST /{resources}/:id` - Update action (calls `{resource}_update`)
+- `POST /{resources}/:id/delete` - Delete action (calls `{resource}_delete`)
+- `GET /{resources}/:id` - Detail view (calls `{resource}_detail`)
+
+#### Examples:
+```rust
+// Good (route handlers in routes/*.rs)
+pub async fn teams_get(...) -> impl IntoResponse { }
+pub async fn teams_list_partial(...) -> impl IntoResponse { }
+pub async fn team_create_form(...) -> impl IntoResponse { }
+pub async fn team_create(...) -> impl IntoResponse { }
+
+// Good (view templates in views/pages/*.rs)
+pub fn teams_page(...) -> Markup { }  // Called by teams_get
+pub fn team_list_content(...) -> Markup { }  // Called by teams_list_partial
+
+// Bad (inconsistent naming)
+pub async fn teams_list_get(...) -> impl IntoResponse { }
+pub async fn teams_list_htmx(...) -> impl IntoResponse { }
+pub async fn event_create_get(...) -> impl IntoResponse { }
+pub async fn event_create_post(...) -> impl IntoResponse { }
+```
+
 ### HTMX Patterns
 - **Full page loads**: Return complete HTML with layout
 - **Partial updates**: HTMX requests return fragments

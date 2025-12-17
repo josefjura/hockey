@@ -76,23 +76,17 @@ async fn main() -> Result<(), anyhow::Error> {
     // Protected routes (authentication required)
     let protected_routes = Router::new()
         .route("/", get(root_handler))
-        .route("/events", get(routes::events::events_list_get))
-        .route("/events/list", get(routes::events::events_list_htmx))
-        .route("/events/new", get(routes::events::event_create_get))
-        .route("/events", post(routes::events::event_create_post))
-        .route("/events/:id/edit", get(routes::events::event_edit_get))
-        .route("/events/:id", post(routes::events::event_update_post))
-        .route(
-            "/events/:id/delete",
-            post(routes::events::event_delete_post),
-        )
-        .route("/teams", get(routes::teams::teams_list_get))
-        .route("/teams/list", get(routes::teams::teams_list_htmx))
-        .route("/matches/:id", get(routes::matches::match_detail_get))
-        .route(
-            "/matches/:id/delete",
-            post(routes::matches::match_delete_post),
-        )
+        .route("/events", get(routes::events::events_get))
+        .route("/events/list", get(routes::events::events_list_partial))
+        .route("/events/new", get(routes::events::event_create_form))
+        .route("/events", post(routes::events::event_create))
+        .route("/events/:id/edit", get(routes::events::event_edit_form))
+        .route("/events/:id", post(routes::events::event_update))
+        .route("/events/:id/delete", post(routes::events::event_delete))
+        .route("/teams", get(routes::teams::teams_get))
+        .route("/teams/list", get(routes::teams::teams_list_partial))
+        .route("/matches/:id", get(routes::matches::match_detail))
+        .route("/matches/:id/delete", post(routes::matches::match_delete))
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));
 
     // Health check (no auth)
