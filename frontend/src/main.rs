@@ -85,6 +85,8 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/events/:id/delete", post(routes::events::event_delete))
         .route("/teams", get(routes::teams::teams_get))
         .route("/teams/list", get(routes::teams::teams_list_partial))
+        .route("/teams/new", get(routes::teams::team_create_form))
+        .route("/teams", post(routes::teams::team_create))
         .route("/matches/:id", get(routes::matches::match_detail))
         .route("/matches/:id/delete", post(routes::matches::match_delete))
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));

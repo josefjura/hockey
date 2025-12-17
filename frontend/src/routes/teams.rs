@@ -1,17 +1,17 @@
 use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse},
-    Extension,
+    Extension, Form,
 };
 use serde::Deserialize;
 
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::Locale;
-use crate::service::teams::{self, TeamFilters};
+use crate::service::teams::{self, CreateTeamEntity, TeamFilters};
 use crate::views::{
     layout::admin_layout,
-    pages::teams::{team_list_content, teams_page},
+    pages::teams::{team_create_modal, team_list_content, teams_page},
 };
 
 #[derive(Debug, Deserialize)]
@@ -38,6 +38,12 @@ fn default_page_size() -> usize {
 
 fn default_sort_order() -> String {
     "asc".to_string()
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateTeamForm {
+    name: String,
+    country_id: Option<i64>,
 }
 
 /// GET /teams - Teams list page
@@ -102,4 +108,54 @@ pub async fn teams_list_partial(
     };
 
     Html(team_list_content(&result, &filters).into_string())
+}
+
+/// GET /teams/new - Show create modal
+pub async fn team_create_form(State(state): State<AppState>) -> impl IntoResponse {
+    let countries = teams::get_countries(&state.db).await.unwrap_or_default();
+    Html(team_create_modal(&countries, None).into_string())
+}
+
+/// POST /teams - Create new team
+pub async fn team_create(
+    State(state): State<AppState>,
+    Form(form): Form<CreateTeamForm>,
+) -> impl IntoResponse {
+    // Validation
+    let name = form.name.trim();
+    if name.is_empty() {
+        let countries = teams::get_countries(&state.db).await.unwrap_or_default();
+        return Html(
+            team_create_modal(&countries, Some("Team name cannot be empty")).into_string(),
+        );
+    }
+
+    if name.len() > 255 {
+        let countries = teams::get_countries(&state.db).await.unwrap_or_default();
+        return Html(
+            team_create_modal(&countries, Some("Team name cannot exceed 255 characters"))
+                .into_string(),
+        );
+    }
+
+    // Create team
+    match teams::create_team(
+        &state.db,
+        CreateTeamEntity {
+            name: name.to_string(),
+            country_id: form.country_id,
+        },
+    )
+    .await
+    {
+        Ok(_) => {
+            // Return HTMX response to close modal and reload table
+            Html("<div hx-get=\"/teams/list\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+        }
+        Err(e) => {
+            tracing::error!("Failed to create team: {}", e);
+            let countries = teams::get_countries(&state.db).await.unwrap_or_default();
+            Html(team_create_modal(&countries, Some("Failed to create team")).into_string())
+        }
+    }
 }
