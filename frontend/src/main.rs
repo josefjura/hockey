@@ -88,6 +88,8 @@ async fn main() -> Result<(), anyhow::Error> {
         )
         .route("/teams", get(routes::teams::teams_list_get))
         .route("/teams/list", get(routes::teams::teams_list_htmx))
+        .route("/teams/new", get(routes::teams::team_create_get))
+        .route("/teams", post(routes::teams::team_create_post))
         .route("/matches/:id", get(routes::matches::match_detail_get))
         .route(
             "/matches/:id/delete",
