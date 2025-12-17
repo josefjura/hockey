@@ -1,6 +1,6 @@
 use maud::{html, Markup, PreEscaped};
 
-use crate::service::teams::{TeamEntity, TeamFilters, PagedResult};
+use crate::service::teams::{PagedResult, TeamEntity, TeamFilters};
 
 /// Main teams page with table and filters
 pub fn teams_page(
@@ -151,6 +151,7 @@ pub fn team_list_content(result: &PagedResult<TeamEntity>, filters: &TeamFilters
                                     span style="font-size: 0.75rem;" { "↕" }
                                 }
                             }
+                            th style="text-align: right;" { "Actions" }
                         }
                     }
                     tbody {
@@ -174,6 +175,26 @@ pub fn team_list_content(result: &PagedResult<TeamEntity>, filters: &TeamFilters
                                         }
                                     } @else {
                                         span style="color: var(--gray-400); font-style: italic;" { "No country" }
+                                    }
+                                }
+                                td style="text-align: right;" {
+                                    button
+                                        class="btn btn-sm"
+                                        hx-get=(format!("/teams/{}/edit", team.id))
+                                        hx-target="#modal-container"
+                                        hx-swap="innerHTML"
+                                        style="margin-right: 0.5rem;"
+                                    {
+                                        "Edit"
+                                    }
+                                    button
+                                        class="btn btn-sm btn-danger"
+                                        hx-post=(format!("/teams/{}/delete", team.id))
+                                        hx-target="#teams-table"
+                                        hx-swap="outerHTML"
+                                        hx-confirm="Are you sure you want to delete this team?"
+                                    {
+                                        "Delete"
                                     }
                                 }
                             }
@@ -373,6 +394,96 @@ pub fn team_create_modal(countries: &[(i64, String)], error: Option<&str>) -> Ma
                         }
                         button type="submit" class="btn btn-primary" {
                             "Create Team"
+                        }
+                    }
+                }
+            }
+        }
+        (PreEscaped(r#"
+        <script>
+            document.getElementById('team-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.remove();
+                }
+            });
+        </script>
+        "#))
+    }
+}
+
+/// Edit team modal
+pub fn team_edit_modal(
+    team: &TeamEntity,
+    countries: &[(i64, String)],
+    error: Option<&str>,
+) -> Markup {
+    html! {
+        div
+            class="modal-backdrop"
+            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;"
+            id="team-modal"
+        {
+            div
+                class="modal"
+                style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
+                onclick="event.stopPropagation()"
+            {
+                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
+                    "Edit Team"
+                }
+
+                @if let Some(error_msg) = error {
+                    div class="error" style="margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;" {
+                        (error_msg)
+                    }
+                }
+
+                form hx-post=(format!("/teams/{}", team.id)) hx-target="#team-modal" hx-swap="outerHTML" {
+                    div style="margin-bottom: 1rem;" {
+                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                            "Team Name"
+                            span style="color: red;" { "*" }
+                        }
+                        input
+                            type="text"
+                            name="name"
+                            value=(team.name)
+                            required
+                            autofocus
+                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    }
+
+                    div style="margin-bottom: 1.5rem;" {
+                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                            "Country"
+                        }
+                        select
+                            name="country_id"
+                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                        {
+                            option value="" selected[team.country_id.is_none()] { "No country" }
+                            @for (id, name) in countries {
+                                option
+                                    value=(id)
+                                    selected[team.country_id == Some(*id)]
+                                {
+                                    (name)
+                                }
+                            }
+                        }
+                    }
+
+                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
+                        button
+                            type="button"
+                            class="btn"
+                            style="background: white; border: 1px solid var(--gray-300);"
+                            onclick="document.getElementById('team-modal').remove()"
+                        {
+                            "Cancel"
+                        }
+                        button type="submit" class="btn btn-primary" {
+                            "Save Changes"
                         }
                     }
                 }
