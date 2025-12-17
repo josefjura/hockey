@@ -47,7 +47,7 @@ pub struct CreateTeamForm {
 }
 
 /// GET /teams - Teams list page
-pub async fn teams_list_get(
+pub async fn teams_get(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
     Query(query): Query<TeamsQuery>,
@@ -87,7 +87,7 @@ pub async fn teams_list_get(
 }
 
 /// GET /teams/list - HTMX endpoint for table updates
-pub async fn teams_list_htmx(
+pub async fn teams_list_partial(
     State(state): State<AppState>,
     Query(query): Query<TeamsQuery>,
 ) -> impl IntoResponse {
@@ -111,13 +111,13 @@ pub async fn teams_list_htmx(
 }
 
 /// GET /teams/new - Show create modal
-pub async fn team_create_get(State(state): State<AppState>) -> impl IntoResponse {
+pub async fn team_create_form(State(state): State<AppState>) -> impl IntoResponse {
     let countries = teams::get_countries(&state.db).await.unwrap_or_default();
     Html(team_create_modal(&countries, None).into_string())
 }
 
 /// POST /teams - Create new team
-pub async fn team_create_post(
+pub async fn team_create(
     State(state): State<AppState>,
     Form(form): Form<CreateTeamForm>,
 ) -> impl IntoResponse {
