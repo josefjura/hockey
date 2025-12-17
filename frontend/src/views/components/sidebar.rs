@@ -1,7 +1,7 @@
 use maud::{html, Markup};
 
 use crate::auth::Session;
-use crate::i18n::Translations;
+use crate::i18n::{I18n, Locale};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NavItem {
@@ -28,15 +28,19 @@ impl NavItem {
     }
 }
 
-pub fn sidebar(session: &Session, current_path: &str, t: &Translations) -> Markup {
+pub fn sidebar(session: &Session, current_path: &str, i18n: &I18n, locale: Locale) -> Markup {
     let nav_items = vec![
-        NavItem::new("/", t.nav_dashboard(), "📊"),
-        NavItem::new("/teams", t.nav_teams(), "🏒"),
-        NavItem::new("/players", t.nav_players(), "👤"),
-        NavItem::new("/events", t.nav_events(), "🏆"),
-        NavItem::new("/seasons", t.nav_seasons(), "📅"),
-        NavItem::new("/matches", t.nav_matches(), "🎯"),
-        NavItem::new("/management", t.nav_management(), "⚙️"),
+        NavItem::new("/", i18n.translate(locale, "nav-dashboard"), "📊"),
+        NavItem::new("/teams", i18n.translate(locale, "nav-teams"), "🏒"),
+        NavItem::new("/players", i18n.translate(locale, "nav-players"), "👤"),
+        NavItem::new("/events", i18n.translate(locale, "nav-events"), "🏆"),
+        NavItem::new("/seasons", i18n.translate(locale, "nav-seasons"), "📅"),
+        NavItem::new("/matches", i18n.translate(locale, "nav-matches"), "🎯"),
+        NavItem::new(
+            "/management",
+            i18n.translate(locale, "nav-management"),
+            "⚙️",
+        ),
     ];
 
     html! {
@@ -56,8 +60,8 @@ pub fn sidebar(session: &Session, current_path: &str, t: &Translations) -> Marku
             // User info and controls at bottom
             div class="sidebar-footer" {
                 (user_info(session))
-                (locale_switcher(t))
-                (logout_button(t))
+                (locale_switcher(i18n, locale))
+                (logout_button(i18n, locale))
             }
         }
     }
@@ -92,24 +96,24 @@ fn user_info(session: &Session) -> Markup {
     }
 }
 
-fn locale_switcher(t: &Translations) -> Markup {
+fn locale_switcher(i18n: &I18n, locale: Locale) -> Markup {
     html! {
         div class="locale-switcher" {
-            label for="locale-select" class="locale-label" { (t.language()) }
+            label for="locale-select" class="locale-label" { (i18n.translate(locale, "user-language")) }
             select id="locale-select" class="locale-select" {
-                option value="en" selected[t.locale == crate::i18n::Locale::English] { "English" }
-                option value="cs" selected[t.locale == crate::i18n::Locale::Czech] { "Čeština" }
+                option value="en" selected[locale == Locale::English] { "English" }
+                option value="cs" selected[locale == Locale::Czech] { "Čeština" }
             }
         }
     }
 }
 
-fn logout_button(t: &Translations) -> Markup {
+fn logout_button(i18n: &I18n, locale: Locale) -> Markup {
     html! {
         form method="POST" action="/auth/logout" class="logout-form" {
             button type="submit" class="logout-button" {
                 span class="nav-icon" { "🚪" }
-                span { (t.logout()) }
+                span { (i18n.translate(locale, "user-logout")) }
             }
         }
     }

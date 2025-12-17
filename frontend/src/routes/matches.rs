@@ -27,6 +27,7 @@ pub async fn match_detail_get(
                     "Match Not Found",
                     &session,
                     "/matches",
+                    &state.i18n,
                     locale,
                     crate::views::components::error::error_message("Match not found"),
                 )
@@ -40,6 +41,7 @@ pub async fn match_detail_get(
                     "Error",
                     &session,
                     "/matches",
+                    &state.i18n,
                     locale,
                     crate::views::components::error::error_message("Failed to load match detail"),
                 )
@@ -49,7 +51,17 @@ pub async fn match_detail_get(
     };
 
     let content = match_detail_page(&match_detail);
-    Html(admin_layout("Match Detail", &session, "/matches", locale, content).into_string())
+    Html(
+        admin_layout(
+            "Match Detail",
+            &session,
+            "/matches",
+            &state.i18n,
+            locale,
+            content,
+        )
+        .into_string(),
+    )
 }
 
 /// POST /matches/{id}/delete - Delete match

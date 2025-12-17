@@ -2,7 +2,7 @@ use maud::{html, Markup, DOCTYPE};
 
 use super::components::sidebar;
 use crate::auth::Session;
-use crate::i18n::{Locale, Translations};
+use crate::i18n::{I18n, Locale};
 
 pub fn base_layout(title: &str, content: Markup) -> Markup {
     html! {
@@ -26,16 +26,15 @@ pub fn admin_layout(
     title: &str,
     session: &Session,
     current_path: &str,
+    i18n: &I18n,
     locale: Locale,
     content: Markup,
 ) -> Markup {
-    let t = Translations::new(locale);
-
     base_layout(
         title,
         html! {
             div class="app-layout" {
-                (sidebar(session, current_path, &t))
+                (sidebar(session, current_path, i18n, locale))
                 main class="main-content" {
                     div class="content-wrapper" {
                         (content)
