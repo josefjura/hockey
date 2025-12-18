@@ -1,7 +1,7 @@
 use maud::{html, Markup, PreEscaped};
 
 // Re-export table components for convenience
-pub use crate::views::components::table::{pagination, pagination_pages, sortable_header};
+pub use crate::views::components::table::pagination;
 
 /// Page header with title, description, and create button
 pub fn page_header(

@@ -1,34 +1,26 @@
-use maud::{html, Markup, PreEscaped};
+use maud::{html, Markup};
 
-use crate::service::teams::{PagedResult, TeamEntity, TeamFilters};
+use crate::common::pagination::PagedResult;
+use crate::service::teams::{SortField, SortOrder, TeamEntity, TeamFilters};
+use crate::views::components::crud::{empty_state, modal_form, page_header, pagination, table_actions};
 
 /// Main teams page with table and filters
 pub fn teams_page(
     result: &PagedResult<TeamEntity>,
     filters: &TeamFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
     countries: &[(i64, String)],
 ) -> Markup {
     html! {
         div class="card" {
             // Header with title and create button
-            div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
-                div {
-                    h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;" {
-                        "Teams"
-                    }
-                    p style="color: var(--gray-600);" {
-                        "Manage and view all teams in the system."
-                    }
-                }
-                button
-                    class="btn btn-primary"
-                    hx-get="/teams/new"
-                    hx-target="#modal-container"
-                    hx-swap="innerHTML"
-                {
-                    "+ New Team"
-                }
-            }
+            (page_header(
+                "Teams",
+                "Manage and view all teams in the system.",
+                "/teams/new",
+                "+ New Team"
+            ))
 
             // Filters
             div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--gray-50); border-radius: 8px;" {
@@ -86,7 +78,7 @@ pub fn teams_page(
             }
 
             // Table
-            (team_list_content(result, filters))
+            (team_list_content(result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -95,61 +87,49 @@ pub fn teams_page(
 }
 
 /// Teams table content (for HTMX updates)
-pub fn team_list_content(result: &PagedResult<TeamEntity>, filters: &TeamFilters) -> Markup {
+pub fn team_list_content(
+    result: &PagedResult<TeamEntity>,
+    filters: &TeamFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+) -> Markup {
     html! {
         div id="teams-table" {
             @if result.items.is_empty() {
-                div style="padding: 3rem; text-align: center; color: var(--gray-500);" {
-                    h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;" {
-                        "No teams found"
-                    }
-                    p {
-                        @if filters.name.is_some() || filters.country_id.is_some() {
-                            "No teams match your search criteria. Try adjusting your filters."
-                        } @else {
-                            "No teams have been added yet."
-                        }
-                    }
-                }
+                (empty_state(
+                    "teams",
+                    filters.name.is_some() || filters.country_id.is_some()
+                ))
             } @else {
                 table class="table" {
                     thead {
                         tr {
                             th {
-                                button
-                                    class="sort-button"
-                                    hx-get="/teams/list?sort=id"
-                                    hx-target="#teams-table"
-                                    hx-swap="outerHTML"
-                                    style="background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;"
-                                {
-                                    "ID"
-                                    span style="font-size: 0.75rem;" { "↕" }
-                                }
+                                (sortable_header(
+                                    "ID",
+                                    &SortField::Id,
+                                    sort_field,
+                                    sort_order,
+                                    filters,
+                                ))
                             }
                             th {
-                                button
-                                    class="sort-button"
-                                    hx-get="/teams/list?sort=name"
-                                    hx-target="#teams-table"
-                                    hx-swap="outerHTML"
-                                    style="background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;"
-                                {
-                                    "Name"
-                                    span style="font-size: 0.75rem;" { "↕" }
-                                }
+                                (sortable_header(
+                                    "Name",
+                                    &SortField::Name,
+                                    sort_field,
+                                    sort_order,
+                                    filters,
+                                ))
                             }
                             th {
-                                button
-                                    class="sort-button"
-                                    hx-get="/teams/list?sort=country"
-                                    hx-target="#teams-table"
-                                    hx-swap="outerHTML"
-                                    style="background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;"
-                                {
-                                    "Country"
-                                    span style="font-size: 0.75rem;" { "↕" }
-                                }
+                                (sortable_header(
+                                    "Country",
+                                    &SortField::Country,
+                                    sort_field,
+                                    sort_order,
+                                    filters,
+                                ))
                             }
                             th style="text-align: right;" { "Actions" }
                         }
@@ -177,112 +157,84 @@ pub fn team_list_content(result: &PagedResult<TeamEntity>, filters: &TeamFilters
                                         span style="color: var(--gray-400); font-style: italic;" { "No country" }
                                     }
                                 }
-                                td style="text-align: right;" {
-                                    button
-                                        class="btn btn-sm"
-                                        hx-get=(format!("/teams/{}/edit", team.id))
-                                        hx-target="#modal-container"
-                                        hx-swap="innerHTML"
-                                        style="margin-right: 0.5rem;"
-                                    {
-                                        "Edit"
-                                    }
-                                    button
-                                        class="btn btn-sm btn-danger"
-                                        hx-post=(format!("/teams/{}/delete", team.id))
-                                        hx-target="#teams-table"
-                                        hx-swap="outerHTML"
-                                        hx-confirm="Are you sure you want to delete this team?"
-                                    {
-                                        "Delete"
-                                    }
-                                }
+                                (table_actions(
+                                    &format!("/teams/{}/edit", team.id),
+                                    &build_delete_url(team.id, filters, sort_field, sort_order),
+                                    "teams-table",
+                                    "team"
+                                ))
                             }
                         }
                     }
                 }
 
                 // Pagination
-                (pagination(result, filters))
+                (pagination(
+                    result,
+                    "teams",
+                    |page| build_pagination_url(page, result.page_size, filters, sort_field, sort_order),
+                    "teams-table"
+                ))
             }
         }
     }
 }
 
-/// Pagination component
-fn pagination(result: &PagedResult<TeamEntity>, filters: &TeamFilters) -> Markup {
+/// Sortable table header
+fn sortable_header(
+    label: &str,
+    field: &SortField,
+    current_sort: &SortField,
+    current_order: &SortOrder,
+    filters: &TeamFilters,
+) -> Markup {
+    // Determine if this column is currently sorted
+    let is_active = matches!(
+        (field, current_sort),
+        (SortField::Id, SortField::Id)
+            | (SortField::Name, SortField::Name)
+            | (SortField::Country, SortField::Country)
+    );
+
+    // If this column is active, toggle the order; otherwise default to ASC
+    let next_order = if is_active {
+        current_order.toggle()
+    } else {
+        SortOrder::Asc
+    };
+
+    // Build the URL
+    let url = build_sort_url(field, &next_order, filters);
+
+    // Choose the indicator
+    let indicator = if is_active {
+        match current_order {
+            SortOrder::Asc => "↑",
+            SortOrder::Desc => "↓",
+        }
+    } else {
+        "↕"
+    };
+
     html! {
-        div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);" {
-            // Stats
-            div style="color: var(--gray-600); font-size: 0.875rem;" {
-                "Showing "
-                strong { (((result.page - 1) * result.page_size + 1)) }
-                " to "
-                strong { (std::cmp::min(result.page * result.page_size, result.total)) }
-                " of "
-                strong { (result.total) }
-                " teams"
-            }
-
-            // Page buttons
-            @if result.total_pages > 1 {
-                div style="display: flex; gap: 0.5rem;" {
-                    // Previous button
-                    @if result.has_previous {
-                        button
-                            class="btn btn-sm"
-                            hx-get=(build_pagination_url(result.page - 1, result.page_size, filters))
-                            hx-target="#teams-table"
-                            hx-swap="outerHTML"
-                        {
-                            "Previous"
-                        }
-                    } @else {
-                        button class="btn btn-sm" disabled { "Previous" }
-                    }
-
-                    // Page numbers
-                    @for page in pagination_pages(result.page, result.total_pages) {
-                        @if page == 0 {
-                            span style="padding: 0.25rem 0.5rem; color: var(--gray-400);" { "..." }
-                        } @else if page == result.page {
-                            button class="btn btn-sm btn-primary" disabled {
-                                (page)
-                            }
-                        } @else {
-                            button
-                                class="btn btn-sm"
-                                hx-get=(build_pagination_url(page, result.page_size, filters))
-                                hx-target="#teams-table"
-                                hx-swap="outerHTML"
-                            {
-                                (page)
-                            }
-                        }
-                    }
-
-                    // Next button
-                    @if result.has_next {
-                        button
-                            class="btn btn-sm"
-                            hx-get=(build_pagination_url(result.page + 1, result.page_size, filters))
-                            hx-target="#teams-table"
-                            hx-swap="outerHTML"
-                        {
-                            "Next"
-                        }
-                    } @else {
-                        button class="btn btn-sm" disabled { "Next" }
-                    }
-                }
+        button
+            class="sort-button"
+            hx-get=(url)
+            hx-target="#teams-table"
+            hx-swap="outerHTML"
+            style="background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;"
+        {
+            (label)
+            span style=(if is_active { "font-size: 0.75rem; color: var(--primary-color);" } else { "font-size: 0.75rem;" }) {
+                (indicator)
             }
         }
     }
 }
 
-/// Helper to build pagination URLs with filters
-fn build_pagination_url(page: usize, page_size: usize, filters: &TeamFilters) -> String {
-    let mut url = format!("/teams/list?page={}&page_size={}", page, page_size);
+/// Helper to build sort URLs
+fn build_sort_url(field: &SortField, order: &SortOrder, filters: &TeamFilters) -> String {
+    let mut url = format!("/teams/list?sort={}&order={}", field.as_str(), order.as_str());
 
     if let Some(name) = &filters.name {
         url.push_str(&format!("&name={}", urlencoding::encode(name)));
@@ -295,197 +247,134 @@ fn build_pagination_url(page: usize, page_size: usize, filters: &TeamFilters) ->
     url
 }
 
-/// Helper to generate page numbers for pagination
-fn pagination_pages(current_page: usize, total_pages: usize) -> Vec<usize> {
-    let mut pages = Vec::new();
+/// Helper to build pagination URLs with filters and sorting
+fn build_pagination_url(
+    page: usize,
+    page_size: usize,
+    filters: &TeamFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+) -> String {
+    let mut url = format!(
+        "/teams/list?page={}&page_size={}&sort={}&order={}",
+        page,
+        page_size,
+        sort_field.as_str(),
+        sort_order.as_str()
+    );
 
-    if total_pages <= 7 {
-        // Show all pages if there are 7 or fewer
-        for page in 1..=total_pages {
-            pages.push(page);
-        }
-    } else {
-        // Show first page
-        pages.push(1);
-
-        // Show pages around current page
-        let start = std::cmp::max(2, current_page.saturating_sub(1));
-        let end = std::cmp::min(total_pages - 1, current_page + 1);
-
-        if start > 2 {
-            pages.push(0); // Placeholder for "..."
-        }
-
-        for page in start..=end {
-            pages.push(page);
-        }
-
-        if end < total_pages - 1 {
-            pages.push(0); // Placeholder for "..."
-        }
-
-        // Show last page
-        pages.push(total_pages);
+    if let Some(name) = &filters.name {
+        url.push_str(&format!("&name={}", urlencoding::encode(name)));
     }
 
-    pages
+    if let Some(country_id) = filters.country_id {
+        url.push_str(&format!("&country_id={}", country_id));
+    }
+
+    url
+}
+
+/// Helper to build delete URL with current filters and sorting
+fn build_delete_url(
+    team_id: i64,
+    filters: &TeamFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+) -> String {
+    let mut url = format!(
+        "/teams/{}/delete?sort={}&order={}",
+        team_id,
+        sort_field.as_str(),
+        sort_order.as_str()
+    );
+
+    if let Some(name) = &filters.name {
+        url.push_str(&format!("&name={}", urlencoding::encode(name)));
+    }
+
+    if let Some(country_id) = filters.country_id {
+        url.push_str(&format!("&country_id={}", country_id));
+    }
+
+    url
 }
 
 /// Create team modal
 pub fn team_create_modal(error: Option<&str>) -> Markup {
-    html! {
-        div
-            class="modal-backdrop"
-            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;"
-            id="team-modal"
-        {
-            div
-                class="modal"
-                style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
-                onclick="event.stopPropagation()"
-            {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    "Create Team"
-                }
-
-                @if let Some(error_msg) = error {
-                    div class="error" style="margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;" {
-                        (error_msg)
-                    }
-                }
-
-                form hx-post="/teams" hx-target="#team-modal" hx-swap="outerHTML" {
-                    div style="margin-bottom: 1rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Team Name"
-                            span style="color: red;" { "*" }
-                        }
-                        input
-                            type="text"
-                            name="name"
-                            required
-                            autofocus
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
-                    }
-
-                    div style="margin-bottom: 1.5rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Country"
-                        }
-                        country-selector
-                            name="country_id"
-                            placeholder="Select a country" {}
-                    }
-
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
-                        button
-                            type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
-                            onclick="document.getElementById('team-modal').remove()"
-                        {
-                            "Cancel"
-                        }
-                        button type="submit" class="btn btn-primary" {
-                            "Create Team"
-                        }
-                    }
-                }
+    let form_fields = html! {
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Team Name"
+                span style="color: red;" { "*" }
             }
+            input
+                type="text"
+                name="name"
+                required
+                autofocus
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
-        (PreEscaped(r#"
-        <script>
-            document.getElementById('team-modal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.remove();
-                }
-            });
-        </script>
-        "#))
-    }
+
+        div style="margin-bottom: 1.5rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Country"
+            }
+            country-selector
+                name="country_id"
+                placeholder="Select a country" {}
+        }
+    };
+
+    modal_form(
+        "team-modal",
+        "Create Team",
+        error,
+        "/teams",
+        form_fields,
+        "Create Team"
+    )
 }
 
 /// Edit team modal
-pub fn team_edit_modal(
-    team: &TeamEntity,
-    error: Option<&str>,
-) -> Markup {
-    html! {
-        div
-            class="modal-backdrop"
-            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;"
-            id="team-modal"
-        {
-            div
-                class="modal"
-                style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
-                onclick="event.stopPropagation()"
-            {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    "Edit Team"
-                }
+pub fn team_edit_modal(team: &TeamEntity, error: Option<&str>) -> Markup {
+    let form_fields = html! {
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Team Name"
+                span style="color: red;" { "*" }
+            }
+            input
+                type="text"
+                name="name"
+                value=(team.name)
+                required
+                autofocus
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+        }
 
-                @if let Some(error_msg) = error {
-                    div class="error" style="margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;" {
-                        (error_msg)
-                    }
-                }
-
-                form hx-post=(format!("/teams/{}", team.id)) hx-target="#team-modal" hx-swap="outerHTML" {
-                    div style="margin-bottom: 1rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Team Name"
-                            span style="color: red;" { "*" }
-                        }
-                        input
-                            type="text"
-                            name="name"
-                            value=(team.name)
-                            required
-                            autofocus
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
-                    }
-
-                    div style="margin-bottom: 1.5rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Country"
-                        }
-                        @if let Some(country_id) = team.country_id {
-                            country-selector
-                                name="country_id"
-                                placeholder="Select a country"
-                                value=(country_id) {}
-                        } @else {
-                            country-selector
-                                name="country_id"
-                                placeholder="Select a country" {}
-                        }
-                    }
-
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
-                        button
-                            type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
-                            onclick="document.getElementById('team-modal').remove()"
-                        {
-                            "Cancel"
-                        }
-                        button type="submit" class="btn btn-primary" {
-                            "Save Changes"
-                        }
-                    }
-                }
+        div style="margin-bottom: 1.5rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Country"
+            }
+            @if let Some(country_id) = team.country_id {
+                country-selector
+                    name="country_id"
+                    placeholder="Select a country"
+                    value=(country_id) {}
+            } @else {
+                country-selector
+                    name="country_id"
+                    placeholder="Select a country" {}
             }
         }
-        (PreEscaped(r#"
-        <script>
-            document.getElementById('team-modal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.remove();
-                }
-            });
-        </script>
-        "#))
-    }
+    };
+
+    modal_form(
+        "team-modal",
+        "Edit Team",
+        error,
+        &format!("/teams/{}", team.id),
+        form_fields,
+        "Save Changes"
+    )
 }
