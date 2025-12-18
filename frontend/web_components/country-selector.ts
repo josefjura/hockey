@@ -14,6 +14,8 @@ interface Country {
 
 @customElement('country-selector')
 export class CountrySelector extends LitElement {
+  static formAssociated = true;
+
   static styles = css`
     :host {
       display: block;
@@ -58,10 +60,7 @@ export class CountrySelector extends LitElement {
     }
 
     .dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
+      position: fixed;
       margin-top: 4px;
       background: white;
       border: 1px solid var(--gray-300, #d1d5db);
@@ -69,7 +68,7 @@ export class CountrySelector extends LitElement {
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       max-height: 300px;
       overflow-y: auto;
-      z-index: 1000;
+      z-index: 10000;
     }
 
     .search-box {
@@ -158,14 +157,25 @@ export class CountrySelector extends LitElement {
   @state() private loading = false;
   @state() private selectedCountry: Country | null = null;
 
+  private internals: ElementInternals;
+
+  constructor() {
+    super();
+    this.internals = this.attachInternals();
+  }
+
   async connectedCallback() {
     super.connectedCallback();
     await this.loadCountries();
   }
 
   updated(changedProperties: PropertyValues) {
-    if (changedProperties.has('value') && this.value !== null) {
-      this.selectedCountry = this.countries.find(c => c.id === this.value) || null;
+    if (changedProperties.has('value')) {
+      if (this.value !== null) {
+        this.selectedCountry = this.countries.find(c => c.id === this.value) || null;
+      }
+      // Update form value using ElementInternals
+      this.internals.setFormValue(this.value?.toString() ?? '');
     }
   }
 
@@ -198,6 +208,7 @@ export class CountrySelector extends LitElement {
     if (this.isOpen) {
       this.searchQuery = '';
       this.filteredCountries = this.countries;
+      this.requestUpdate();
     }
   }
 
@@ -217,6 +228,9 @@ export class CountrySelector extends LitElement {
     this.value = country.id;
     this.isOpen = false;
 
+    // Set form value
+    this.internals.setFormValue(country.id.toString());
+
     // Dispatch change event
     this.dispatchEvent(new CustomEvent('change', {
       detail: { id: country.id, name: country.name },
@@ -229,6 +243,9 @@ export class CountrySelector extends LitElement {
     this.selectedCountry = null;
     this.value = null;
     this.isOpen = false;
+
+    // Clear form value
+    this.internals.setFormValue('');
 
     // Dispatch change event
     this.dispatchEvent(new CustomEvent('change', {
@@ -259,6 +276,14 @@ export class CountrySelector extends LitElement {
     document.removeEventListener('click', this.handleClickOutside);
   }
 
+  private getDropdownPosition(): string {
+    const button = this.shadowRoot?.querySelector('.selected-display');
+    if (!button) return '';
+
+    const rect = button.getBoundingClientRect();
+    return `top: ${rect.bottom}px; left: ${rect.left}px; width: ${rect.width}px;`;
+  }
+
   render() {
     return html`
       <div class="selector-container">
@@ -274,7 +299,7 @@ export class CountrySelector extends LitElement {
                   ? html`
                       <img
                         class="flag-icon"
-                        src="/static/flags/${this.selectedCountry.iso2Code.toLowerCase()}.svg"
+                        src="https://flagcdn.com/w40/${this.selectedCountry.iso2Code.toLowerCase()}.png"
                         alt="${this.selectedCountry.name}"
                         @error=${(e: Event) => {
                           (e.target as HTMLImageElement).style.display = 'none';
@@ -289,7 +314,7 @@ export class CountrySelector extends LitElement {
 
         ${this.isOpen
           ? html`
-              <div class="dropdown">
+              <div class="dropdown" style=${this.getDropdownPosition()}>
                 <div class="search-box">
                   <input
                     type="text"
@@ -329,7 +354,7 @@ export class CountrySelector extends LitElement {
                                       ? html`
                                           <img
                                             class="flag-icon"
-                                            src="/static/flags/${country.iso2Code.toLowerCase()}.svg"
+                                            src="https://flagcdn.com/w40/${country.iso2Code.toLowerCase()}.png"
                                             alt="${country.name}"
                                             @error=${(e: Event) => {
                                               (e.target as HTMLImageElement).style.display = 'none';
@@ -348,17 +373,6 @@ export class CountrySelector extends LitElement {
                       </ul>
                     `}
               </div>
-            `
-          : ''}
-
-        <!-- Hidden input for form submission -->
-        ${this.name
-          ? html`
-              <input
-                type="hidden"
-                name=${this.name}
-                .value=${this.value?.toString() ?? ''}
-              />
             `
           : ''}
       </div>

@@ -122,7 +122,7 @@ pub fn event_list_content(result: &PagedResult<EventEntity>, filters: &EventFilt
                                         @if let Some(iso2) = &event.country_iso2_code {
                                             span style="display: inline-flex; align-items: center; gap: 0.5rem;" {
                                                 img
-                                                    src=(format!("/static/flags/{}.svg", iso2.to_lowercase()))
+                                                    src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
                                                     alt=(country_name)
                                                     style="width: 20px; height: 15px; object-fit: cover; border: 1px solid var(--gray-300);"
                                                     onerror="this.style.display='none'";

@@ -15,6 +15,23 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 (base_styles())
                 // HTMX library for dynamic HTML updates
                 script src="https://unpkg.com/htmx.org@2.0.4" {}
+                // Import map for Lit web components
+                script type="importmap" {
+                    (maud::PreEscaped(r#"
+{
+    "imports": {
+        "lit": "https://cdn.jsdelivr.net/npm/lit@3/index.js",
+        "lit/": "https://cdn.jsdelivr.net/npm/lit@3/",
+        "lit/decorators.js": "https://cdn.jsdelivr.net/npm/lit@3/decorators.js",
+        "@lit/reactive-element": "https://cdn.jsdelivr.net/npm/@lit/reactive-element@2/reactive-element.js",
+        "@lit/reactive-element/": "https://cdn.jsdelivr.net/npm/@lit/reactive-element@2/",
+        "lit-html": "https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js",
+        "lit-html/": "https://cdn.jsdelivr.net/npm/lit-html@3/",
+        "lit-element/": "https://cdn.jsdelivr.net/npm/lit-element@4/"
+    }
+}
+                    "#))
+                }
                 // Web Components
                 script type="module" src="/static/js/components/country-selector.js" {}
             }

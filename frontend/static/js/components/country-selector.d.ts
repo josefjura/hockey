@@ -1,5 +1,6 @@
 import { LitElement, PropertyValues } from 'lit';
 export declare class CountrySelector extends LitElement {
+    static formAssociated: boolean;
     static styles: import("lit").CSSResult;
     name: string;
     value: number | null;
@@ -12,6 +13,8 @@ export declare class CountrySelector extends LitElement {
     private searchQuery;
     private loading;
     private selectedCountry;
+    private internals;
+    constructor();
     connectedCallback(): Promise<void>;
     updated(changedProperties: PropertyValues): void;
     private loadCountries;
@@ -23,6 +26,7 @@ export declare class CountrySelector extends LitElement {
     private handleKeyDown;
     firstUpdated(): void;
     disconnectedCallback(): void;
+    private getDropdownPosition;
     render(): import("lit-html").TemplateResult<1>;
 }
 declare global {

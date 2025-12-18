@@ -51,7 +51,7 @@ pub fn match_detail_page(detail: &MatchDetailEntity) -> Markup {
                             div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;" {
                                 @if let Some(iso2) = &match_info.home_team_country_iso2 {
                                     img
-                                        src=(format!("/static/flags/{}.svg", iso2.to_lowercase()))
+                                        src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
                                         alt=(match_info.home_team_name)
                                         style="width: 24px; height: 18px; object-fit: cover; border: 1px solid var(--gray-300);"
                                         onerror="this.style.display='none'";
@@ -77,7 +77,7 @@ pub fn match_detail_page(detail: &MatchDetailEntity) -> Markup {
                                 }
                                 @if let Some(iso2) = &match_info.away_team_country_iso2 {
                                     img
-                                        src=(format!("/static/flags/{}.svg", iso2.to_lowercase()))
+                                        src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
                                         alt=(match_info.away_team_name)
                                         style="width: 24px; height: 18px; object-fit: cover; border: 1px solid var(--gray-300);"
                                         onerror="this.style.display='none'";
