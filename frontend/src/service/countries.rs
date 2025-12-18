@@ -104,3 +104,28 @@ pub async fn get_countries_simple(db: &SqlitePool) -> Result<Vec<(i64, String)>,
         .map(|row| (row.get("id"), row.get("name")))
         .collect())
 }
+
+/// Toggle country enabled status
+/// Returns the new enabled status or None if country not found
+pub async fn toggle_country_enabled(
+    db: &SqlitePool,
+    id: i64,
+) -> Result<Option<bool>, sqlx::Error> {
+    // Toggle the enabled status
+    let result = sqlx::query("UPDATE country SET enabled = NOT enabled WHERE id = ?")
+        .bind(id)
+        .execute(db)
+        .await?;
+
+    if result.rows_affected() == 0 {
+        return Ok(None);
+    }
+
+    // Return the new status
+    let row = sqlx::query("SELECT enabled FROM country WHERE id = ?")
+        .bind(id)
+        .fetch_one(db)
+        .await?;
+
+    Ok(Some(row.get("enabled")))
+}

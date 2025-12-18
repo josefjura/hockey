@@ -34,6 +34,11 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 }
                 // Web Components
                 script type="module" src="/static/js/components/country-selector.js" {}
+                script type="module" src="/static/js/components/badge.js" {}
+                script type="module" src="/static/js/components/flag-icon.js" {}
+                script type="module" src="/static/js/components/toggle-switch.js" {}
+                script type="module" src="/static/js/components/client-data-table.js" {}
+                script type="module" src="/static/js/components/countries-table.js" {}
             }
             body {
                 (content)
