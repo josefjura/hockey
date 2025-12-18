@@ -1,7 +1,7 @@
 use maud::{html, Markup, PreEscaped};
 
-use crate::common::pagination::PagedResult;
-use crate::views::components::table::pagination_pages;
+// Re-export table components for convenience
+pub use crate::views::components::table::pagination;
 
 /// Page header with title, description, and create button
 pub fn page_header(
@@ -44,91 +44,6 @@ pub fn empty_state(entity_name: &str, has_filters: bool) -> Markup {
                     "No " (entity_name) " match your search criteria. Try adjusting your filters."
                 } @else {
                     "No " (entity_name) " have been added yet."
-                }
-            }
-        }
-    }
-}
-
-/// Generic pagination component
-///
-/// # Parameters
-/// - `result`: The paged result with items and pagination metadata
-/// - `entity_name`: Name of the entity for display (e.g., "players", "seasons")
-/// - `build_url`: Function that takes a page number and returns the URL for that page
-/// - `target_id`: The ID of the element to update (e.g., "players-table")
-pub fn pagination<T, F>(
-    result: &PagedResult<T>,
-    entity_name: &str,
-    build_url: F,
-    target_id: &str,
-) -> Markup
-where
-    F: Fn(usize) -> String,
-{
-    html! {
-        div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);" {
-            // Stats
-            div style="color: var(--gray-600); font-size: 0.875rem;" {
-                "Showing "
-                strong { (((result.page - 1) * result.page_size + 1)) }
-                " to "
-                strong { (std::cmp::min(result.page * result.page_size, result.total)) }
-                " of "
-                strong { (result.total) }
-                " " (entity_name)
-            }
-
-            // Page buttons
-            @if result.total_pages > 1 {
-                div style="display: flex; gap: 0.5rem;" {
-                    // Previous button
-                    @if result.has_previous {
-                        button
-                            class="btn btn-sm"
-                            hx-get=(build_url(result.page - 1))
-                            hx-target=(format!("#{}", target_id))
-                            hx-swap="outerHTML"
-                        {
-                            "Previous"
-                        }
-                    } @else {
-                        button class="btn btn-sm" disabled { "Previous" }
-                    }
-
-                    // Page numbers
-                    @for page in pagination_pages(result.page, result.total_pages) {
-                        @if page == 0 {
-                            span style="padding: 0.25rem 0.5rem; color: var(--gray-400);" { "..." }
-                        } @else if page == result.page {
-                            button class="btn btn-sm btn-primary" disabled {
-                                (page)
-                            }
-                        } @else {
-                            button
-                                class="btn btn-sm"
-                                hx-get=(build_url(page))
-                                hx-target=(format!("#{}", target_id))
-                                hx-swap="outerHTML"
-                            {
-                                (page)
-                            }
-                        }
-                    }
-
-                    // Next button
-                    @if result.has_next {
-                        button
-                            class="btn btn-sm"
-                            hx-get=(build_url(result.page + 1))
-                            hx-target=(format!("#{}", target_id))
-                            hx-swap="outerHTML"
-                        {
-                            "Next"
-                        }
-                    } @else {
-                        button class="btn btn-sm" disabled { "Next" }
-                    }
                 }
             }
         }

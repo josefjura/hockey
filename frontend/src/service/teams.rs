@@ -1,5 +1,7 @@
 use sqlx::{Row, SqlitePool};
 
+use crate::common::pagination::PagedResult;
+
 #[derive(Debug, Clone)]
 pub struct TeamEntity {
     pub id: i64,
@@ -27,31 +29,73 @@ pub struct TeamFilters {
     pub country_id: Option<i64>,
 }
 
-#[derive(Debug, Clone)]
-pub struct PagedResult<T> {
-    pub items: Vec<T>,
-    pub total: usize,
-    pub page: usize,
-    pub page_size: usize,
-    pub total_pages: usize,
-    pub has_next: bool,
-    pub has_previous: bool,
+/// Sortable fields for teams
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SortField {
+    Id,
+    Name,
+    Country,
 }
 
-impl<T> PagedResult<T> {
-    pub fn new(items: Vec<T>, total: usize, page: usize, page_size: usize) -> Self {
-        let total_pages = total.div_ceil(page_size);
-        let has_next = page < total_pages;
-        let has_previous = page > 1;
+impl SortField {
+    pub fn from_str(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "id" => Self::Id,
+            "country" => Self::Country,
+            _ => Self::Name,
+        }
+    }
 
-        Self {
-            items,
-            total,
-            page,
-            page_size,
-            total_pages,
-            has_next,
-            has_previous,
+    pub fn to_sql(&self) -> &'static str {
+        match self {
+            Self::Id => "t.id",
+            Self::Name => "t.name",
+            Self::Country => "c.name",
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Id => "id",
+            Self::Name => "name",
+            Self::Country => "country",
+        }
+    }
+}
+
+/// Sort order (ascending/descending)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SortOrder {
+    Asc,
+    Desc,
+}
+
+impl SortOrder {
+    pub fn from_str(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "desc" => Self::Desc,
+            _ => Self::Asc,
+        }
+    }
+
+    pub fn to_sql(&self) -> &'static str {
+        match self {
+            Self::Asc => "ASC",
+            Self::Desc => "DESC",
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Asc => "asc",
+            Self::Desc => "desc",
+        }
+    }
+
+    pub fn toggle(&self) -> Self {
+        match self {
+            Self::Asc => Self::Desc,
+            Self::Desc => Self::Asc,
         }
     }
 }
@@ -67,10 +111,12 @@ pub async fn create_team(db: &SqlitePool, team: CreateTeamEntity) -> Result<i64,
     Ok(result.last_insert_rowid())
 }
 
-/// Get teams with filters and pagination
+/// Get teams with filters, sorting, and pagination
 pub async fn get_teams(
     db: &SqlitePool,
     filters: &TeamFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
     page: usize,
     page_size: usize,
 ) -> Result<PagedResult<TeamEntity>, sqlx::Error> {
@@ -90,7 +136,9 @@ pub async fn get_teams(
          WHERE 1=1",
     );
     apply_filters(&mut data_query, filters);
-    data_query.push(" ORDER BY t.name");
+
+    // Apply sorting
+    data_query.push(format!(" ORDER BY {} {}", sort_field.to_sql(), sort_order.to_sql()));
 
     // Apply pagination
     let offset = (page - 1) * page_size;

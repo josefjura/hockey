@@ -5,6 +5,26 @@ import { Column } from './shared/types.js';
  *
  * All operations are performed client-side for optimal performance with small to medium datasets.
  *
+ * **Performance Characteristics:**
+ * - Optimal: < 100 rows (instant filtering/sorting)
+ * - Good: 100-300 rows (smooth performance on all devices)
+ * - Acceptable: 300-500 rows (slight lag on older devices)
+ * - Not recommended: > 500 rows (use server-side tables instead)
+ *
+ * The component loads all data once and performs filtering, sorting, and pagination
+ * client-side using JavaScript. This provides instant responsiveness but requires
+ * the entire dataset to be loaded into browser memory.
+ *
+ * **When to use:**
+ * - Small datasets that change infrequently
+ * - Fast filtering/sorting without server round-trips
+ * - Reference data (countries, categories, settings)
+ *
+ * **When to use server-side tables:**
+ * - Large datasets (> 500 rows)
+ * - Real-time data that updates frequently
+ * - Complex server-side filtering/aggregation
+ *
  * @example
  * ```html
  * <client-data-table

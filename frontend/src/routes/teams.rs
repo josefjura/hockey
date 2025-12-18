@@ -8,7 +8,7 @@ use serde::Deserialize;
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::Locale;
-use crate::service::teams::{self, CreateTeamEntity, TeamFilters, UpdateTeamEntity};
+use crate::service::teams::{self, CreateTeamEntity, SortField, SortOrder, TeamFilters, UpdateTeamEntity};
 use crate::views::{
     layout::admin_layout,
     pages::teams::{team_create_modal, team_edit_modal, team_list_content, teams_page},
@@ -24,11 +24,9 @@ pub struct TeamsQuery {
     name: Option<String>,
     #[serde(default, deserialize_with = "crate::utils::empty_string_as_none_i64")]
     country_id: Option<i64>,
-    #[serde(default)]
-    #[allow(dead_code)]
+    #[serde(default = "default_sort")]
     sort: String,
-    #[serde(default = "default_sort_order")]
-    #[allow(dead_code)]
+    #[serde(default = "default_order")]
     order: String,
 }
 
@@ -40,7 +38,11 @@ fn default_page_size() -> usize {
     20
 }
 
-fn default_sort_order() -> String {
+fn default_sort() -> String {
+    "name".to_string()
+}
+
+fn default_order() -> String {
     "asc".to_string()
 }
 
@@ -70,8 +72,12 @@ pub async fn teams_get(
         country_id: query.country_id,
     };
 
+    // Parse sort parameters
+    let sort_field = SortField::from_str(&query.sort);
+    let sort_order = SortOrder::from_str(&query.order);
+
     // Get teams
-    let result = match teams::get_teams(&state.db, &filters, query.page, query.page_size).await {
+    let result = match teams::get_teams(&state.db, &filters, &sort_field, &sort_order, query.page, query.page_size).await {
         Ok(result) => result,
         Err(e) => {
             tracing::error!("Failed to fetch teams: {}", e);
@@ -92,7 +98,7 @@ pub async fn teams_get(
     // Get countries for filter
     let countries = teams::get_countries(&state.db).await.unwrap_or_default();
 
-    let content = teams_page(&result, &filters, &countries);
+    let content = teams_page(&result, &filters, &sort_field, &sort_order, &countries);
     Html(admin_layout("Teams", &session, "/teams", &state.i18n, locale, content).into_string())
 }
 
@@ -106,7 +112,11 @@ pub async fn teams_list_partial(
         country_id: query.country_id,
     };
 
-    let result = match teams::get_teams(&state.db, &filters, query.page, query.page_size).await {
+    // Parse sort parameters
+    let sort_field = SortField::from_str(&query.sort);
+    let sort_order = SortOrder::from_str(&query.order);
+
+    let result = match teams::get_teams(&state.db, &filters, &sort_field, &sort_order, query.page, query.page_size).await {
         Ok(result) => result,
         Err(e) => {
             tracing::error!("Failed to fetch teams: {}", e);
@@ -117,7 +127,7 @@ pub async fn teams_list_partial(
         }
     };
 
-    Html(team_list_content(&result, &filters).into_string())
+    Html(team_list_content(&result, &filters, &sort_field, &sort_order).into_string())
 }
 
 /// GET /teams/new - Show create modal
@@ -250,11 +260,32 @@ pub async fn team_update(
 }
 
 /// POST /teams/{id}/delete - Delete team
-pub async fn team_delete(State(state): State<AppState>, Path(id): Path<i64>) -> impl IntoResponse {
+pub async fn team_delete(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+    Query(query): Query<TeamsQuery>,
+) -> impl IntoResponse {
     match teams::delete_team(&state.db, id).await {
         Ok(true) => {
-            // Return HTMX response to reload table
-            Html("<div hx-get=\"/teams/list\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            // Build URL to reload table with current filters and sorting
+            let mut reload_url = format!(
+                "/teams/list?page={}&page_size={}&sort={}&order={}",
+                query.page, query.page_size, query.sort, query.order
+            );
+
+            if let Some(name) = &query.name {
+                reload_url.push_str(&format!("&name={}", urlencoding::encode(name)));
+            }
+
+            if let Some(country_id) = query.country_id {
+                reload_url.push_str(&format!("&country_id={}", country_id));
+            }
+
+            // Return HTMX response to reload table with filters
+            Html(format!(
+                "<div hx-get=\"{}\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>",
+                reload_url
+            ))
         }
         Ok(false) => {
             Html(crate::views::components::error::error_message("Team not found").into_string())

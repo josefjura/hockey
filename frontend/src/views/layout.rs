@@ -451,6 +451,11 @@ fn base_styles() -> Markup {
                 .nav-link {
                     justify-content: center;
                 }
+
+                /* Hide page numbers in pagination on mobile, show only prev/next */
+                .desktop-only {
+                    display: none !important;
+                }
             }
             "#
         }

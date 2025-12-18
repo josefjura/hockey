@@ -13,6 +13,26 @@ import { get } from './shared/api-client.js';
  *
  * All operations are performed client-side for optimal performance with small to medium datasets.
  *
+ * **Performance Characteristics:**
+ * - Optimal: < 100 rows (instant filtering/sorting)
+ * - Good: 100-300 rows (smooth performance on all devices)
+ * - Acceptable: 300-500 rows (slight lag on older devices)
+ * - Not recommended: > 500 rows (use server-side tables instead)
+ *
+ * The component loads all data once and performs filtering, sorting, and pagination
+ * client-side using JavaScript. This provides instant responsiveness but requires
+ * the entire dataset to be loaded into browser memory.
+ *
+ * **When to use:**
+ * - Small datasets that change infrequently
+ * - Fast filtering/sorting without server round-trips
+ * - Reference data (countries, categories, settings)
+ *
+ * **When to use server-side tables:**
+ * - Large datasets (> 500 rows)
+ * - Real-time data that updates frequently
+ * - Complex server-side filtering/aggregation
+ *
  * @example
  * ```html
  * <client-data-table
@@ -49,6 +69,7 @@ let ClientDataTable = class ClientDataTable extends LitElement {
         }
         this.loading = true;
         this.error = '';
+        const startTime = performance.now();
         const response = await get(this.apiEndpoint);
         this.loading = false;
         if (response.error) {
@@ -56,7 +77,15 @@ let ClientDataTable = class ClientDataTable extends LitElement {
             return;
         }
         this.data = response.data || [];
+        const loadTime = performance.now() - startTime;
+        const filterStartTime = performance.now();
         this.applyFiltersAndSort();
+        const filterTime = performance.now() - filterStartTime;
+        // Log performance metrics (helpful for debugging large datasets)
+        if (this.data.length > 100) {
+            console.debug(`[client-data-table] Loaded ${this.data.length} rows in ${loadTime.toFixed(2)}ms, ` +
+                `filtered/sorted in ${filterTime.toFixed(2)}ms`);
+        }
         this.dispatchEvent(new CustomEvent('data-loaded', {
             detail: { total: this.data.length },
             bubbles: true,
