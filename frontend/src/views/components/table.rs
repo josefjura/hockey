@@ -46,20 +46,27 @@ pub fn pagination_pages(current_page: usize, total_pages: usize) -> Vec<usize> {
     pages
 }
 
-/// Render pagination controls for a paged result
+/// Generic pagination component with responsive design
 ///
-/// This is a generic pagination component that works with any entity type.
-/// Callers provide URL builders for navigation links.
-pub fn pagination_controls<T, F>(
+/// Desktop: Shows full page numbers with ellipsis
+/// Mobile: Shows only prev/next buttons
+///
+/// # Parameters
+/// - `result`: The paged result with items and pagination metadata
+/// - `entity_name`: Name of the entity for display (e.g., "players", "seasons")
+/// - `build_url`: Function that takes a page number and returns the URL for that page
+/// - `target_id`: The ID of the element to update (e.g., "players-table")
+pub fn pagination<T, F>(
     result: &PagedResult<T>,
     entity_name: &str,
-    build_page_url: F,
+    build_url: F,
+    target_id: &str,
 ) -> Markup
 where
     F: Fn(usize) -> String,
 {
     html! {
-        div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);" {
+        div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200); flex-wrap: wrap; gap: 1rem;" {
             // Stats
             div style="color: var(--gray-600); font-size: 0.875rem;" {
                 "Showing "
@@ -78,8 +85,8 @@ where
                     @if result.has_previous {
                         button
                             class="btn btn-sm"
-                            hx-get=(build_page_url(result.page - 1))
-                            hx-target=(format!("#{}-table", entity_name))
+                            hx-get=(build_url(result.page - 1))
+                            hx-target=(format!("#{}", target_id))
                             hx-swap="outerHTML"
                         {
                             "Previous"
@@ -88,22 +95,24 @@ where
                         button class="btn btn-sm" disabled { "Previous" }
                     }
 
-                    // Page numbers
-                    @for page in pagination_pages(result.page, result.total_pages) {
-                        @if page == 0 {
-                            span style="padding: 0.25rem 0.5rem; color: var(--gray-400);" { "..." }
-                        } @else if page == result.page {
-                            button class="btn btn-sm btn-primary" disabled {
-                                (page)
-                            }
-                        } @else {
-                            button
-                                class="btn btn-sm"
-                                hx-get=(build_page_url(page))
-                                hx-target=(format!("#{}-table", entity_name))
-                                hx-swap="outerHTML"
-                            {
-                                (page)
+                    // Page numbers (hidden on mobile)
+                    div class="desktop-only" style="display: flex; gap: 0.5rem;" {
+                        @for page in pagination_pages(result.page, result.total_pages) {
+                            @if page == 0 {
+                                span style="padding: 0.25rem 0.5rem; color: var(--gray-400);" { "..." }
+                            } @else if page == result.page {
+                                button class="btn btn-sm btn-primary" disabled {
+                                    (page)
+                                }
+                            } @else {
+                                button
+                                    class="btn btn-sm"
+                                    hx-get=(build_url(page))
+                                    hx-target=(format!("#{}", target_id))
+                                    hx-swap="outerHTML"
+                                {
+                                    (page)
+                                }
                             }
                         }
                     }
@@ -112,8 +121,8 @@ where
                     @if result.has_next {
                         button
                             class="btn btn-sm"
-                            hx-get=(build_page_url(result.page + 1))
-                            hx-target=(format!("#{}-table", entity_name))
+                            hx-get=(build_url(result.page + 1))
+                            hx-target=(format!("#{}", target_id))
                             hx-swap="outerHTML"
                         {
                             "Next"
