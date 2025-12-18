@@ -77,7 +77,12 @@ async fn main() -> Result<(), anyhow::Error> {
     // Protected routes (authentication required)
     let protected_routes = Router::new()
         .route("/", get(root_handler))
+        .route("/countries", get(routes::countries::countries_get))
         .route("/api/countries", get(routes::countries::countries_list_api))
+        .route(
+            "/api/countries/:id/toggle",
+            post(routes::countries::country_toggle_enabled),
+        )
         .route("/events", get(routes::events::events_get))
         .route("/events/list", get(routes::events::events_list_partial))
         .route("/events/new", get(routes::events::event_create_form))
