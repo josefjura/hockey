@@ -105,6 +105,13 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/players/:id/edit", get(routes::players::player_edit_form))
         .route("/players/:id", post(routes::players::player_update))
         .route("/players/:id/delete", post(routes::players::player_delete))
+        .route("/seasons", get(routes::seasons::seasons_get))
+        .route("/seasons/list", get(routes::seasons::seasons_list_partial))
+        .route("/seasons/new", get(routes::seasons::season_create_form))
+        .route("/seasons", post(routes::seasons::season_create))
+        .route("/seasons/:id/edit", get(routes::seasons::season_edit_form))
+        .route("/seasons/:id", post(routes::seasons::season_update))
+        .route("/seasons/:id/delete", post(routes::seasons::season_delete))
         .route("/matches/:id", get(routes::matches::match_detail))
         .route("/matches/:id/delete", post(routes::matches::match_delete))
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));
