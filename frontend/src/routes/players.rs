@@ -299,11 +299,40 @@ pub async fn player_update(
 pub async fn player_delete(
     State(state): State<AppState>,
     Path(id): Path<i64>,
+    Query(query): Query<PlayersQuery>,
 ) -> impl IntoResponse {
     match players::delete_player(&state.db, id).await {
         Ok(true) => {
-            // Return HTMX response to reload table
-            Html("<div hx-get=\"/players/list\" hx-target=\"#players-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            // Reload the table content after successful delete
+            let filters = PlayerFilters {
+                name: query.name.clone(),
+                country_id: query.country_id,
+            };
+
+            let sort_field = SortField::from_str(&query.sort);
+            let sort_order = SortOrder::from_str(&query.order);
+
+            let result = match players::get_players(
+                &state.db,
+                &filters,
+                &sort_field,
+                &sort_order,
+                query.page,
+                query.page_size,
+            )
+            .await
+            {
+                Ok(result) => result,
+                Err(e) => {
+                    tracing::error!("Failed to fetch players after delete: {}", e);
+                    return Html(
+                        crate::views::components::error::error_message("Failed to reload players")
+                            .into_string(),
+                    );
+                }
+            };
+
+            Html(player_list_content(&result, &filters, &sort_field, &sort_order).into_string())
         }
         Ok(false) => Html(
             crate::views::components::error::error_message("Player not found").into_string(),

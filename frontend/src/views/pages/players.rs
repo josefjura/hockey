@@ -1,7 +1,7 @@
-use maud::{html, Markup, PreEscaped};
+use maud::{html, Markup};
 
 use crate::service::players::{PagedResult, PlayerEntity, PlayerFilters, SortField, SortOrder};
-use crate::views::components::table::pagination_pages;
+use crate::views::components::crud::{empty_state, modal_form, page_header, pagination, table_actions};
 
 /// Main players page with table and filters
 pub fn players_page(
@@ -14,24 +14,12 @@ pub fn players_page(
     html! {
         div class="card" {
             // Header with title and create button
-            div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
-                div {
-                    h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;" {
-                        "Players"
-                    }
-                    p style="color: var(--gray-600);" {
-                        "Manage and view all players in the system."
-                    }
-                }
-                button
-                    class="btn btn-primary"
-                    hx-get="/players/new"
-                    hx-target="#modal-container"
-                    hx-swap="innerHTML"
-                {
-                    "+ New Player"
-                }
-            }
+            (page_header(
+                "Players",
+                "Manage and view all players in the system.",
+                "/players/new",
+                "+ New Player"
+            ))
 
             // Filters
             div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--gray-50); border-radius: 8px;" {
@@ -107,18 +95,10 @@ pub fn player_list_content(
     html! {
         div id="players-table" {
             @if result.items.is_empty() {
-                div style="padding: 3rem; text-align: center; color: var(--gray-500);" {
-                    h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;" {
-                        "No players found"
-                    }
-                    p {
-                        @if filters.name.is_some() || filters.country_id.is_some() {
-                            "No players match your search criteria. Try adjusting your filters."
-                        } @else {
-                            "No players have been added yet."
-                        }
-                    }
-                }
+                (empty_state(
+                    "players",
+                    filters.name.is_some() || filters.country_id.is_some()
+                ))
             } @else {
                 table class="table" {
                     thead {
@@ -184,33 +164,24 @@ pub fn player_list_content(
                                         (&player.country_name)
                                     }
                                 }
-                                td style="text-align: right;" {
-                                    button
-                                        class="btn btn-sm"
-                                        hx-get=(format!("/players/{}/edit", player.id))
-                                        hx-target="#modal-container"
-                                        hx-swap="innerHTML"
-                                        style="margin-right: 0.5rem;"
-                                    {
-                                        "Edit"
-                                    }
-                                    button
-                                        class="btn btn-sm btn-danger"
-                                        hx-post=(format!("/players/{}/delete", player.id))
-                                        hx-target="#players-table"
-                                        hx-swap="outerHTML"
-                                        hx-confirm="Are you sure you want to delete this player?"
-                                    {
-                                        "Delete"
-                                    }
-                                }
+                                (table_actions(
+                                    &format!("/players/{}/edit", player.id),
+                                    &build_delete_url(player.id, filters, sort_field, sort_order),
+                                    "players-table",
+                                    "player"
+                                ))
                             }
                         }
                     }
                 }
 
                 // Pagination
-                (pagination(result, filters, sort_field, sort_order))
+                (pagination(
+                    result,
+                    "players",
+                    |page| build_pagination_url(page, result.page_size, filters, sort_field, sort_order),
+                    "players-table"
+                ))
             }
         }
     }
@@ -283,82 +254,6 @@ fn build_sort_url(field: &SortField, order: &SortOrder, filters: &PlayerFilters)
     url
 }
 
-/// Pagination component
-fn pagination(
-    result: &PagedResult<PlayerEntity>,
-    filters: &PlayerFilters,
-    sort_field: &SortField,
-    sort_order: &SortOrder,
-) -> Markup {
-    html! {
-        div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);" {
-            // Stats
-            div style="color: var(--gray-600); font-size: 0.875rem;" {
-                "Showing "
-                strong { (((result.page - 1) * result.page_size + 1)) }
-                " to "
-                strong { (std::cmp::min(result.page * result.page_size, result.total)) }
-                " of "
-                strong { (result.total) }
-                " players"
-            }
-
-            // Page buttons
-            @if result.total_pages > 1 {
-                div style="display: flex; gap: 0.5rem;" {
-                    // Previous button
-                    @if result.has_previous {
-                        button
-                            class="btn btn-sm"
-                            hx-get=(build_pagination_url(result.page - 1, result.page_size, filters, sort_field, sort_order))
-                            hx-target="#players-table"
-                            hx-swap="outerHTML"
-                        {
-                            "Previous"
-                        }
-                    } @else {
-                        button class="btn btn-sm" disabled { "Previous" }
-                    }
-
-                    // Page numbers
-                    @for page in pagination_pages(result.page, result.total_pages) {
-                        @if page == 0 {
-                            span style="padding: 0.25rem 0.5rem; color: var(--gray-400);" { "..." }
-                        } @else if page == result.page {
-                            button class="btn btn-sm btn-primary" disabled {
-                                (page)
-                            }
-                        } @else {
-                            button
-                                class="btn btn-sm"
-                                hx-get=(build_pagination_url(page, result.page_size, filters, sort_field, sort_order))
-                                hx-target="#players-table"
-                                hx-swap="outerHTML"
-                            {
-                                (page)
-                            }
-                        }
-                    }
-
-                    // Next button
-                    @if result.has_next {
-                        button
-                            class="btn btn-sm"
-                            hx-get=(build_pagination_url(result.page + 1, result.page_size, filters, sort_field, sort_order))
-                            hx-target="#players-table"
-                            hx-swap="outerHTML"
-                        {
-                            "Next"
-                        }
-                    } @else {
-                        button class="btn btn-sm" disabled { "Next" }
-                    }
-                }
-            }
-        }
-    }
-}
-
 /// Helper to build pagination URLs with filters and sorting
 fn build_pagination_url(
     page: usize,
@@ -386,102 +281,89 @@ fn build_pagination_url(
     url
 }
 
+/// Helper to build delete URL with current filters and sorting
+fn build_delete_url(
+    player_id: i64,
+    filters: &PlayerFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+) -> String {
+    let mut url = format!(
+        "/players/{}/delete?sort={}&order={}",
+        player_id,
+        sort_field.as_str(),
+        sort_order.as_str()
+    );
+
+    if let Some(name) = &filters.name {
+        url.push_str(&format!("&name={}", urlencoding::encode(name)));
+    }
+
+    if let Some(country_id) = filters.country_id {
+        url.push_str(&format!("&country_id={}", country_id));
+    }
+
+    url
+}
+
 /// Create player modal
 pub fn player_create_modal(error: Option<&str>, countries: &[(i64, String)]) -> Markup {
-    html! {
-        div
-            class="modal-backdrop"
-            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;"
-            id="player-modal"
-        {
-            div
-                class="modal"
-                style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
-                onclick="event.stopPropagation()"
+    let form_fields = html! {
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Player Name"
+                span style="color: red;" { "*" }
+            }
+            input
+                type="text"
+                name="name"
+                required
+                autofocus
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+        }
+
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Country"
+                span style="color: red;" { "*" }
+            }
+            select
+                name="country_id"
+                required
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    "Create Player"
-                }
-
-                @if let Some(error_msg) = error {
-                    div class="error" style="margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;" {
-                        (error_msg)
-                    }
-                }
-
-                form hx-post="/players" hx-target="#player-modal" hx-swap="outerHTML" {
-                    div style="margin-bottom: 1rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Player Name"
-                            span style="color: red;" { "*" }
-                        }
-                        input
-                            type="text"
-                            name="name"
-                            required
-                            autofocus
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
-                    }
-
-                    div style="margin-bottom: 1rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Country"
-                            span style="color: red;" { "*" }
-                        }
-                        select
-                            name="country_id"
-                            required
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-                        {
-                            option value="" { "Select a country" }
-                            @for (id, name) in countries {
-                                option value=(id) {
-                                    (name)
-                                }
-                            }
-                        }
-                    }
-
-                    div style="margin-bottom: 1.5rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Photo URL"
-                        }
-                        input
-                            type="url"
-                            name="photo_path"
-                            placeholder="https://example.com/photo.jpg"
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
-                        p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                            "Optional: URL to player photo"
-                        }
-                    }
-
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
-                        button
-                            type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
-                            onclick="document.getElementById('player-modal').remove()"
-                        {
-                            "Cancel"
-                        }
-                        button type="submit" class="btn btn-primary" {
-                            "Create Player"
-                        }
+                option value="" { "Select a country" }
+                @for (id, name) in countries {
+                    option value=(id) {
+                        (name)
                     }
                 }
             }
         }
-        (PreEscaped(r#"
-        <script>
-            document.getElementById('player-modal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.remove();
-                }
-            });
-        </script>
-        "#))
-    }
+
+        div style="margin-bottom: 1.5rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Photo URL"
+            }
+            input
+                type="url"
+                name="photo_path"
+                placeholder="https://example.com/photo.jpg"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
+                "Optional: URL to player photo"
+            }
+        }
+    };
+
+    modal_form(
+        "player-modal",
+        "Create Player",
+        error,
+        "/players",
+        form_fields,
+        "Create Player"
+    )
 }
 
 /// Edit player modal
@@ -490,100 +372,62 @@ pub fn player_edit_modal(
     error: Option<&str>,
     countries: &[(i64, String)],
 ) -> Markup {
-    html! {
-        div
-            class="modal-backdrop"
-            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;"
-            id="player-modal"
-        {
-            div
-                class="modal"
-                style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
-                onclick="event.stopPropagation()"
+    let form_fields = html! {
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Player Name"
+                span style="color: red;" { "*" }
+            }
+            input
+                type="text"
+                name="name"
+                value=(player.name)
+                required
+                autofocus
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+        }
+
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Country"
+                span style="color: red;" { "*" }
+            }
+            select
+                name="country_id"
+                required
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    "Edit Player"
-                }
-
-                @if let Some(error_msg) = error {
-                    div class="error" style="margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;" {
-                        (error_msg)
-                    }
-                }
-
-                form hx-post=(format!("/players/{}", player.id)) hx-target="#player-modal" hx-swap="outerHTML" {
-                    div style="margin-bottom: 1rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Player Name"
-                            span style="color: red;" { "*" }
-                        }
-                        input
-                            type="text"
-                            name="name"
-                            value=(player.name)
-                            required
-                            autofocus
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
-                    }
-
-                    div style="margin-bottom: 1rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Country"
-                            span style="color: red;" { "*" }
-                        }
-                        select
-                            name="country_id"
-                            required
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-                        {
-                            option value="" { "Select a country" }
-                            @for (id, name) in countries {
-                                option value=(id) selected[*id == player.country_id] {
-                                    (name)
-                                }
-                            }
-                        }
-                    }
-
-                    div style="margin-bottom: 1.5rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            "Photo URL"
-                        }
-                        input
-                            type="url"
-                            name="photo_path"
-                            value=[player.photo_path.as_ref()]
-                            placeholder="https://example.com/photo.jpg"
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
-                        p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                            "Optional: URL to player photo"
-                        }
-                    }
-
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
-                        button
-                            type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
-                            onclick="document.getElementById('player-modal').remove()"
-                        {
-                            "Cancel"
-                        }
-                        button type="submit" class="btn btn-primary" {
-                            "Save Changes"
-                        }
+                option value="" { "Select a country" }
+                @for (id, name) in countries {
+                    option value=(id) selected[*id == player.country_id] {
+                        (name)
                     }
                 }
             }
         }
-        (PreEscaped(r#"
-        <script>
-            document.getElementById('player-modal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.remove();
-                }
-            });
-        </script>
-        "#))
-    }
+
+        div style="margin-bottom: 1.5rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Photo URL"
+            }
+            input
+                type="url"
+                name="photo_path"
+                value=[player.photo_path.as_ref()]
+                placeholder="https://example.com/photo.jpg"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
+                "Optional: URL to player photo"
+            }
+        }
+    };
+
+    modal_form(
+        "player-modal",
+        "Edit Player",
+        error,
+        &format!("/players/{}", player.id),
+        form_fields,
+        "Save Changes"
+    )
 }
