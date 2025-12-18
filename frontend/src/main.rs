@@ -1,5 +1,6 @@
 mod app_state;
 mod auth;
+mod common;
 mod config;
 mod i18n;
 mod routes;
@@ -97,6 +98,13 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/teams/:id/edit", get(routes::teams::team_edit_form))
         .route("/teams/:id", post(routes::teams::team_update))
         .route("/teams/:id/delete", post(routes::teams::team_delete))
+        .route("/players", get(routes::players::players_get))
+        .route("/players/list", get(routes::players::players_list_partial))
+        .route("/players/new", get(routes::players::player_create_form))
+        .route("/players", post(routes::players::player_create))
+        .route("/players/:id/edit", get(routes::players::player_edit_form))
+        .route("/players/:id", post(routes::players::player_update))
+        .route("/players/:id/delete", post(routes::players::player_delete))
         .route("/matches/:id", get(routes::matches::match_detail))
         .route("/matches/:id/delete", post(routes::matches::match_delete))
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));
