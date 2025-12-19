@@ -120,6 +120,11 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/matches/:id/edit", get(routes::matches::match_edit_form))
         .route("/matches/:id", post(routes::matches::match_update))
         .route("/matches/:id/delete", post(routes::matches::match_delete))
+        .route("/matches/:match_id/score-events/new", get(routes::matches::score_event_create_form))
+        .route("/matches/:match_id/score-events", post(routes::matches::score_event_create))
+        .route("/matches/score-events/:id/edit", get(routes::matches::score_event_edit_form))
+        .route("/matches/score-events/:id", post(routes::matches::score_event_update))
+        .route("/matches/score-events/:id/delete", post(routes::matches::score_event_delete))
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));
 
     // Health check (no auth)

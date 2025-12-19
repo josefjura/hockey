@@ -23,3 +23,15 @@ where
         Some(s) => s.parse().map(Some).map_err(serde::de::Error::custom),
     }
 }
+
+/// Deserialize an optional i32, treating empty strings as None
+pub fn empty_string_as_none_i32<'de, D>(deserializer: D) -> Result<Option<i32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::<String>::deserialize(deserializer)?;
+    match opt.as_deref() {
+        None | Some("") => Ok(None),
+        Some(s) => s.parse().map(Some).map_err(serde::de::Error::custom),
+    }
+}
