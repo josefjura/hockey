@@ -4,12 +4,7 @@ use maud::{html, Markup, PreEscaped};
 pub use crate::views::components::table::pagination;
 
 /// Page header with title, description, and create button
-pub fn page_header(
-    title: &str,
-    description: &str,
-    create_url: &str,
-    create_label: &str,
-) -> Markup {
+pub fn page_header(title: &str, description: &str, create_url: &str, create_label: &str) -> Markup {
     html! {
         div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
             div {

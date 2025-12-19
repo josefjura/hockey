@@ -84,15 +84,17 @@ pub async fn events_get(
     // Get countries for filter
     let countries = events::get_countries(&state.db).await.unwrap_or_default();
 
-    let content = events_page(&result, &filters, &countries);
+    let content = events_page(&state.i18n, locale, &result, &filters, &countries);
     Html(admin_layout("Events", &session, "/events", &state.i18n, locale, content).into_string())
 }
 
 /// GET /events/list - HTMX endpoint for table updates
 pub async fn events_list_partial(
     State(state): State<AppState>,
+    jar: CookieJar,
     Query(query): Query<EventsQuery>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let filters = EventFilters {
         name: query.name.clone(),
         country_id: query.country_id,
@@ -109,34 +111,48 @@ pub async fn events_list_partial(
         }
     };
 
-    Html(event_list_content(&result, &filters).into_string())
+    Html(event_list_content(&state.i18n, locale, &result, &filters).into_string())
 }
 
 /// GET /events/new - Show create modal
-pub async fn event_create_form(State(state): State<AppState>) -> impl IntoResponse {
+pub async fn event_create_form(State(state): State<AppState>, jar: CookieJar) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let countries = events::get_countries(&state.db).await.unwrap_or_default();
-    Html(event_create_modal(&countries, None).into_string())
+    Html(event_create_modal(&state.i18n, locale, &countries, None).into_string())
 }
 
 /// POST /events - Create new event
 pub async fn event_create(
     State(state): State<AppState>,
+    jar: CookieJar,
     Form(form): Form<CreateEventForm>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     // Validation
     let name = form.name.trim();
     if name.is_empty() {
         let countries = events::get_countries(&state.db).await.unwrap_or_default();
         return Html(
-            event_create_modal(&countries, Some("Event name cannot be empty")).into_string(),
+            event_create_modal(
+                &state.i18n,
+                locale,
+                &countries,
+                Some("Event name cannot be empty"),
+            )
+            .into_string(),
         );
     }
 
     if name.len() > 255 {
         let countries = events::get_countries(&state.db).await.unwrap_or_default();
         return Html(
-            event_create_modal(&countries, Some("Event name cannot exceed 255 characters"))
-                .into_string(),
+            event_create_modal(
+                &state.i18n,
+                locale,
+                &countries,
+                Some("Event name cannot exceed 255 characters"),
+            )
+            .into_string(),
         );
     }
 
@@ -157,7 +173,15 @@ pub async fn event_create(
         Err(e) => {
             tracing::error!("Failed to create event: {}", e);
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
-            Html(event_create_modal(&countries, Some("Failed to create event")).into_string())
+            Html(
+                event_create_modal(
+                    &state.i18n,
+                    locale,
+                    &countries,
+                    Some("Failed to create event"),
+                )
+                .into_string(),
+            )
         }
     }
 }
@@ -165,8 +189,10 @@ pub async fn event_create(
 /// GET /events/{id}/edit - Show edit modal
 pub async fn event_edit_form(
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let event = match events::get_event_by_id(&state.db, id).await {
         Ok(Some(event)) => event,
         Ok(None) => {
@@ -184,15 +210,17 @@ pub async fn event_edit_form(
     };
 
     let countries = events::get_countries(&state.db).await.unwrap_or_default();
-    Html(event_edit_modal(&event, &countries, None).into_string())
+    Html(event_edit_modal(&state.i18n, locale, &event, &countries, None).into_string())
 }
 
 /// POST /events/{id} - Update event
 pub async fn event_update(
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
     Form(form): Form<UpdateEventForm>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     // Validation
     let name = form.name.trim();
     if name.is_empty() {
@@ -200,6 +228,8 @@ pub async fn event_update(
         let countries = events::get_countries(&state.db).await.unwrap_or_default();
         return Html(
             event_edit_modal(
+                &state.i18n,
+                locale,
                 &event.unwrap(),
                 &countries,
                 Some("Event name cannot be empty"),
@@ -213,6 +243,8 @@ pub async fn event_update(
         let countries = events::get_countries(&state.db).await.unwrap_or_default();
         return Html(
             event_edit_modal(
+                &state.i18n,
+                locale,
                 &event.unwrap(),
                 &countries,
                 Some("Event name cannot exceed 255 characters"),
@@ -240,8 +272,14 @@ pub async fn event_update(
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
             Html(
-                event_edit_modal(&event.unwrap(), &countries, Some("Event not found"))
-                    .into_string(),
+                event_edit_modal(
+                    &state.i18n,
+                    locale,
+                    &event.unwrap(),
+                    &countries,
+                    Some("Event not found"),
+                )
+                .into_string(),
             )
         }
         Err(e) => {
@@ -249,8 +287,14 @@ pub async fn event_update(
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
             Html(
-                event_edit_modal(&event.unwrap(), &countries, Some("Failed to update event"))
-                    .into_string(),
+                event_edit_modal(
+                    &state.i18n,
+                    locale,
+                    &event.unwrap(),
+                    &countries,
+                    Some("Failed to update event"),
+                )
+                .into_string(),
             )
         }
     }

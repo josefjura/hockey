@@ -113,15 +113,36 @@ pub async fn seasons_get(
     // Get events for filter
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
 
-    let content = seasons_page(&result, &filters, &sort_field, &sort_order, &events);
-    Html(admin_layout("Seasons", &session, "/seasons", &state.i18n, locale, content).into_string())
+    let content = seasons_page(
+        &state.i18n,
+        locale,
+        &result,
+        &filters,
+        &sort_field,
+        &sort_order,
+        &events,
+    );
+    Html(
+        admin_layout(
+            "Seasons",
+            &session,
+            "/seasons",
+            &state.i18n,
+            locale,
+            content,
+        )
+        .into_string(),
+    )
 }
 
 /// GET /seasons/list - HTMX endpoint for table updates
 pub async fn seasons_list_partial(
     State(state): State<AppState>,
+    jar: CookieJar,
     Query(query): Query<SeasonsQuery>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
+
     let filters = SeasonFilters {
         event_id: query.event_id,
         year: query.year,
@@ -151,26 +172,51 @@ pub async fn seasons_list_partial(
         }
     };
 
-    Html(season_list_content(&result, &filters, &sort_field, &sort_order).into_string())
+    Html(
+        season_list_content(
+            &state.i18n,
+            locale,
+            &result,
+            &filters,
+            &sort_field,
+            &sort_order,
+        )
+        .into_string(),
+    )
 }
 
 /// GET /seasons/new - Show create modal
-pub async fn season_create_form(State(state): State<AppState>) -> impl IntoResponse {
+pub async fn season_create_form(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
-    Html(season_create_modal(None, &events).into_string())
+    Html(season_create_modal(&state.i18n, locale, None, &events).into_string())
 }
 
 /// POST /seasons - Create new season
 pub async fn season_create(
     State(state): State<AppState>,
+    jar: CookieJar,
     Form(form): Form<CreateSeasonForm>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
+
     // Get events for form re-render on error
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
 
     // Validation
     if form.year < 1900 || form.year > 2100 {
-        return Html(season_create_modal(Some("Year must be between 1900 and 2100"), &events).into_string());
+        return Html(
+            season_create_modal(
+                &state.i18n,
+                locale,
+                Some("Year must be between 1900 and 2100"),
+                &events,
+            )
+            .into_string(),
+        );
     }
 
     if let Some(display_name) = &form.display_name {
@@ -178,6 +224,8 @@ pub async fn season_create(
         if !trimmed.is_empty() && trimmed.len() > 255 {
             return Html(
                 season_create_modal(
+                    &state.i18n,
+                    locale,
                     Some("Display name cannot exceed 255 characters"),
                     &events,
                 )
@@ -210,7 +258,15 @@ pub async fn season_create(
         }
         Err(e) => {
             tracing::error!("Failed to create season: {}", e);
-            Html(season_create_modal(Some("Failed to create season"), &events).into_string())
+            Html(
+                season_create_modal(
+                    &state.i18n,
+                    locale,
+                    Some("Failed to create season"),
+                    &events,
+                )
+                .into_string(),
+            )
         }
     }
 }
@@ -218,8 +274,10 @@ pub async fn season_create(
 /// GET /seasons/{id}/edit - Show edit modal
 pub async fn season_edit_form(
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
 
     let season = match seasons::get_season_by_id(&state.db, id).await {
@@ -238,22 +296,29 @@ pub async fn season_edit_form(
         }
     };
 
-    Html(season_edit_modal(&season, None, &events).into_string())
+    Html(season_edit_modal(&state.i18n, locale, &season, None, &events).into_string())
 }
 
 /// POST /seasons/{id} - Update season
 pub async fn season_update(
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
     Form(form): Form<UpdateSeasonForm>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
 
     // Validation
     if form.year < 1900 || form.year > 2100 {
-        let season = seasons::get_season_by_id(&state.db, id).await.ok().flatten();
+        let season = seasons::get_season_by_id(&state.db, id)
+            .await
+            .ok()
+            .flatten();
         return Html(
             season_edit_modal(
+                &state.i18n,
+                locale,
                 &season.unwrap(),
                 Some("Year must be between 1900 and 2100"),
                 &events,
@@ -265,9 +330,14 @@ pub async fn season_update(
     if let Some(display_name) = &form.display_name {
         let trimmed = display_name.trim();
         if !trimmed.is_empty() && trimmed.len() > 255 {
-            let season = seasons::get_season_by_id(&state.db, id).await.ok().flatten();
+            let season = seasons::get_season_by_id(&state.db, id)
+                .await
+                .ok()
+                .flatten();
             return Html(
                 season_edit_modal(
+                    &state.i18n,
+                    locale,
                     &season.unwrap(),
                     Some("Display name cannot exceed 255 characters"),
                     &events,
@@ -301,15 +371,36 @@ pub async fn season_update(
             Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
         }
         Ok(false) => {
-            let season = seasons::get_season_by_id(&state.db, id).await.ok().flatten();
-            Html(season_edit_modal(&season.unwrap(), Some("Season not found"), &events).into_string())
+            let season = seasons::get_season_by_id(&state.db, id)
+                .await
+                .ok()
+                .flatten();
+            Html(
+                season_edit_modal(
+                    &state.i18n,
+                    locale,
+                    &season.unwrap(),
+                    Some("Season not found"),
+                    &events,
+                )
+                .into_string(),
+            )
         }
         Err(e) => {
             tracing::error!("Failed to update season: {}", e);
-            let season = seasons::get_season_by_id(&state.db, id).await.ok().flatten();
+            let season = seasons::get_season_by_id(&state.db, id)
+                .await
+                .ok()
+                .flatten();
             Html(
-                season_edit_modal(&season.unwrap(), Some("Failed to update season"), &events)
-                    .into_string(),
+                season_edit_modal(
+                    &state.i18n,
+                    locale,
+                    &season.unwrap(),
+                    Some("Failed to update season"),
+                    &events,
+                )
+                .into_string(),
             )
         }
     }
@@ -318,9 +409,12 @@ pub async fn season_update(
 /// POST /seasons/{id}/delete - Delete season
 pub async fn season_delete(
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
     Query(query): Query<SeasonsQuery>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
+
     match seasons::delete_season(&state.db, id).await {
         Ok(true) => {
             // Reload the table content after successful delete
@@ -352,11 +446,21 @@ pub async fn season_delete(
                 }
             };
 
-            Html(season_list_content(&result, &filters, &sort_field, &sort_order).into_string())
+            Html(
+                season_list_content(
+                    &state.i18n,
+                    locale,
+                    &result,
+                    &filters,
+                    &sort_field,
+                    &sort_order,
+                )
+                .into_string(),
+            )
         }
-        Ok(false) => Html(
-            crate::views::components::error::error_message("Season not found").into_string(),
-        ),
+        Ok(false) => {
+            Html(crate::views::components::error::error_message("Season not found").into_string())
+        }
         Err(e) => {
             tracing::error!("Failed to delete season: {}", e);
             Html(

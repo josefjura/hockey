@@ -1,24 +1,30 @@
 use maud::{html, Markup};
 
+use crate::i18n::{I18n, Locale};
 use crate::service::players::{PagedResult, PlayerEntity, PlayerFilters, SortField, SortOrder};
-use crate::views::components::crud::{empty_state, modal_form_multipart, page_header, pagination, table_actions};
+use crate::views::components::crud::{
+    empty_state, modal_form_multipart, page_header, pagination, table_actions,
+};
 
 /// Main players page with table and filters
 pub fn players_page(
+    i18n: &I18n,
+    locale: Locale,
     result: &PagedResult<PlayerEntity>,
     filters: &PlayerFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
     countries: &[(i64, String)],
 ) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div class="card" {
             // Header with title and create button
             (page_header(
-                "Players",
-                "Manage and view all players in the system.",
+                &t("players-title"),
+                &t("players-description"),
                 "/players/new",
-                "+ New Player"
+                &t("players-create")
             ))
 
             // Filters
@@ -28,26 +34,26 @@ pub fn players_page(
                         // Name filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Search by name"
+                                (t("common-search-by-name"))
                             }
                             input
                                 type="text"
                                 name="name"
                                 value=[filters.name.as_ref()]
-                                placeholder="Enter player name..."
+                                placeholder=(t("players-name-placeholder"))
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
                         }
 
                         // Country filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Filter by country"
+                                (t("common-filter-by-country"))
                             }
                             select
                                 name="country_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { "All countries" }
+                                option value="" { (t("common-all-countries")) }
                                 @for (id, name) in countries {
                                     option
                                         value=(id)
@@ -69,7 +75,7 @@ pub fn players_page(
                                 hx-target="#players-table"
                                 hx-swap="outerHTML"
                             {
-                                "Clear"
+                                (t("common-clear"))
                             }
                         }
                     }
@@ -77,7 +83,7 @@ pub fn players_page(
             }
 
             // Table
-            (player_list_content(result, filters, sort_field, sort_order))
+            (player_list_content(i18n, locale, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -87,26 +93,29 @@ pub fn players_page(
 
 /// Players table content (for HTMX updates)
 pub fn player_list_content(
+    i18n: &I18n,
+    locale: Locale,
     result: &PagedResult<PlayerEntity>,
     filters: &PlayerFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
 ) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div id="players-table" {
             @if result.items.is_empty() {
                 (empty_state(
-                    "players",
+                    &t("players-entity"),
                     filters.name.is_some() || filters.country_id.is_some()
                 ))
             } @else {
                 table class="table" {
                     thead {
                         tr {
-                            th { "Photo" }
+                            th { (t("form-photo")) }
                             th {
                                 (sortable_header(
-                                    "ID",
+                                    &t("common-id"),
                                     &SortField::Id,
                                     sort_field,
                                     sort_order,
@@ -115,7 +124,7 @@ pub fn player_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    "Name",
+                                    &t("form-name"),
                                     &SortField::Name,
                                     sort_field,
                                     sort_order,
@@ -124,14 +133,14 @@ pub fn player_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    "Country",
+                                    &t("form-country"),
                                     &SortField::Country,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th style="text-align: right;" { "Actions" }
+                            th style="text-align: right;" { (t("common-actions")) }
                         }
                     }
                     tbody {
@@ -168,7 +177,7 @@ pub fn player_list_content(
                                     &format!("/players/{}/edit", player.id),
                                     &build_delete_url(player.id, filters, sort_field, sort_order),
                                     "players-table",
-                                    "player"
+                                    &t("players-entity")
                                 ))
                             }
                         }
@@ -241,7 +250,11 @@ fn sortable_header(
 
 /// Helper to build sort URLs
 fn build_sort_url(field: &SortField, order: &SortOrder, filters: &PlayerFilters) -> String {
-    let mut url = format!("/players/list?sort={}&order={}", field.as_str(), order.as_str());
+    let mut url = format!(
+        "/players/list?sort={}&order={}",
+        field.as_str(),
+        order.as_str()
+    );
 
     if let Some(name) = &filters.name {
         url.push_str(&format!("&name={}", urlencoding::encode(name)));
@@ -307,11 +320,17 @@ fn build_delete_url(
 }
 
 /// Create player modal
-pub fn player_create_modal(error: Option<&str>, countries: &[(i64, String)]) -> Markup {
+pub fn player_create_modal(
+    i18n: &I18n,
+    locale: Locale,
+    error: Option<&str>,
+    countries: &[(i64, String)],
+) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Player Name"
+                (t("players-name-label"))
                 span style="color: red;" { "*" }
             }
             input
@@ -324,7 +343,7 @@ pub fn player_create_modal(error: Option<&str>, countries: &[(i64, String)]) -> 
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Country"
+                (t("form-country"))
                 span style="color: red;" { "*" }
             }
             select
@@ -332,7 +351,7 @@ pub fn player_create_modal(error: Option<&str>, countries: &[(i64, String)]) -> 
                 required
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "Select a country" }
+                option value="" { (t("players-select-country")) }
                 @for (id, name) in countries {
                     option value=(id) {
                         (name)
@@ -343,7 +362,7 @@ pub fn player_create_modal(error: Option<&str>, countries: &[(i64, String)]) -> 
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Upload Photo"
+                (t("players-upload-photo"))
             }
             input
                 type="file"
@@ -351,13 +370,13 @@ pub fn player_create_modal(error: Option<&str>, countries: &[(i64, String)]) -> 
                 accept="image/jpeg,image/png,image/gif,image/webp"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                "Optional: Upload player photo (JPG, PNG, GIF, or WebP)"
+                (t("players-photo-hint"))
             }
         }
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Or Photo URL"
+                (t("players-photo-url"))
             }
             input
                 type="url"
@@ -365,31 +384,34 @@ pub fn player_create_modal(error: Option<&str>, countries: &[(i64, String)]) -> 
                 placeholder="https://example.com/photo.jpg"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                "Optional: URL to player photo (used if no file uploaded)"
+                (t("players-photo-url-hint"))
             }
         }
     };
 
     modal_form_multipart(
         "player-modal",
-        "Create Player",
+        &t("players-create-title"),
         error,
         "/players",
         form_fields,
-        "Create Player"
+        &t("players-create-submit"),
     )
 }
 
 /// Edit player modal
 pub fn player_edit_modal(
+    i18n: &I18n,
+    locale: Locale,
     player: &PlayerEntity,
     error: Option<&str>,
     countries: &[(i64, String)],
 ) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Player Name"
+                (t("players-name-label"))
                 span style="color: red;" { "*" }
             }
             input
@@ -403,7 +425,7 @@ pub fn player_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Country"
+                (t("form-country"))
                 span style="color: red;" { "*" }
             }
             select
@@ -411,7 +433,7 @@ pub fn player_edit_modal(
                 required
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "Select a country" }
+                option value="" { (t("players-select-country")) }
                 @for (id, name) in countries {
                     option value=(id) selected[*id == player.country_id] {
                         (name)
@@ -423,11 +445,11 @@ pub fn player_edit_modal(
         @if let Some(current_photo) = &player.photo_path {
             div style="margin-bottom: 1rem;" {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Current Photo"
+                    (t("players-current-photo"))
                 }
                 img
                     src=(current_photo)
-                    alt="Current player photo"
+                    alt=(t("players-current-photo"))
                     style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid var(--gray-300);"
                     onerror="this.style.display='none'";
             }
@@ -435,7 +457,7 @@ pub fn player_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Upload New Photo"
+                (t("players-upload-new-photo"))
             }
             input
                 type="file"
@@ -443,13 +465,13 @@ pub fn player_edit_modal(
                 accept="image/jpeg,image/png,image/gif,image/webp"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                "Optional: Upload new player photo (JPG, PNG, GIF, or WebP)"
+                (t("players-photo-hint"))
             }
         }
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Or Photo URL"
+                (t("players-photo-url"))
             }
             input
                 type="url"
@@ -458,17 +480,17 @@ pub fn player_edit_modal(
                 placeholder="https://example.com/photo.jpg"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                "Optional: URL to player photo (used if no file uploaded)"
+                (t("players-photo-url-hint"))
             }
         }
     };
 
     modal_form_multipart(
         "player-modal",
-        "Edit Player",
+        &t("players-edit-title"),
         error,
         &format!("/players/{}", player.id),
         form_fields,
-        "Save Changes"
+        &t("common-save"),
     )
 }

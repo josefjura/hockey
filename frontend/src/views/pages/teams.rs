@@ -1,25 +1,31 @@
 use maud::{html, Markup};
 
 use crate::common::pagination::PagedResult;
+use crate::i18n::{I18n, Locale};
 use crate::service::teams::{SortField, SortOrder, TeamEntity, TeamFilters};
-use crate::views::components::crud::{empty_state, modal_form, page_header, pagination, table_actions};
+use crate::views::components::crud::{
+    empty_state, modal_form, page_header, pagination, table_actions,
+};
 
 /// Main teams page with table and filters
 pub fn teams_page(
+    i18n: &I18n,
+    locale: Locale,
     result: &PagedResult<TeamEntity>,
     filters: &TeamFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
     countries: &[(i64, String)],
 ) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div class="card" {
             // Header with title and create button
             (page_header(
-                "Teams",
-                "Manage and view all teams in the system.",
+                &t("teams-title"),
+                &t("teams-description"),
                 "/teams/new",
-                "+ New Team"
+                &t("teams-create")
             ))
 
             // Filters
@@ -29,26 +35,26 @@ pub fn teams_page(
                         // Name filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Search by name"
+                                (t("common-search-by-name"))
                             }
                             input
                                 type="text"
                                 name="name"
                                 value=[filters.name.as_ref()]
-                                placeholder="Enter team name..."
+                                placeholder=(t("teams-name-placeholder"))
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
                         }
 
                         // Country filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Filter by country"
+                                (t("common-filter-by-country"))
                             }
                             select
                                 name="country_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { "All countries" }
+                                option value="" { (t("common-all-countries")) }
                                 @for (id, name) in countries {
                                     option
                                         value=(id)
@@ -70,7 +76,7 @@ pub fn teams_page(
                                 hx-target="#teams-table"
                                 hx-swap="outerHTML"
                             {
-                                "Clear"
+                                (t("common-clear"))
                             }
                         }
                     }
@@ -78,7 +84,7 @@ pub fn teams_page(
             }
 
             // Table
-            (team_list_content(result, filters, sort_field, sort_order))
+            (team_list_content(i18n, locale, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -88,16 +94,19 @@ pub fn teams_page(
 
 /// Teams table content (for HTMX updates)
 pub fn team_list_content(
+    i18n: &I18n,
+    locale: Locale,
     result: &PagedResult<TeamEntity>,
     filters: &TeamFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
 ) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div id="teams-table" {
             @if result.items.is_empty() {
                 (empty_state(
-                    "teams",
+                    &t("teams-entity"),
                     filters.name.is_some() || filters.country_id.is_some()
                 ))
             } @else {
@@ -106,7 +115,7 @@ pub fn team_list_content(
                         tr {
                             th {
                                 (sortable_header(
-                                    "ID",
+                                    &t("common-id"),
                                     &SortField::Id,
                                     sort_field,
                                     sort_order,
@@ -115,7 +124,7 @@ pub fn team_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    "Name",
+                                    &t("form-name"),
                                     &SortField::Name,
                                     sort_field,
                                     sort_order,
@@ -124,14 +133,14 @@ pub fn team_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    "Country",
+                                    &t("form-country"),
                                     &SortField::Country,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th style="text-align: right;" { "Actions" }
+                            th style="text-align: right;" { (t("common-actions")) }
                         }
                     }
                     tbody {
@@ -154,14 +163,14 @@ pub fn team_list_content(
                                             (country_name)
                                         }
                                     } @else {
-                                        span style="color: var(--gray-400); font-style: italic;" { "No country" }
+                                        span style="color: var(--gray-400); font-style: italic;" { (t("common-no-country")) }
                                     }
                                 }
                                 (table_actions(
                                     &format!("/teams/{}/edit", team.id),
                                     &build_delete_url(team.id, filters, sort_field, sort_order),
                                     "teams-table",
-                                    "team"
+                                    &t("teams-entity")
                                 ))
                             }
                         }
@@ -234,7 +243,11 @@ fn sortable_header(
 
 /// Helper to build sort URLs
 fn build_sort_url(field: &SortField, order: &SortOrder, filters: &TeamFilters) -> String {
-    let mut url = format!("/teams/list?sort={}&order={}", field.as_str(), order.as_str());
+    let mut url = format!(
+        "/teams/list?sort={}&order={}",
+        field.as_str(),
+        order.as_str()
+    );
 
     if let Some(name) = &filters.name {
         url.push_str(&format!("&name={}", urlencoding::encode(name)));
@@ -300,11 +313,12 @@ fn build_delete_url(
 }
 
 /// Create team modal
-pub fn team_create_modal(error: Option<&str>) -> Markup {
+pub fn team_create_modal(i18n: &I18n, locale: Locale, error: Option<&str>) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Team Name"
+                (t("teams-name-label"))
                 span style="color: red;" { "*" }
             }
             input
@@ -317,30 +331,36 @@ pub fn team_create_modal(error: Option<&str>) -> Markup {
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Country"
+                (t("form-country"))
             }
             country-selector
                 name="country_id"
-                placeholder="Select a country" {}
+                placeholder=(t("teams-select-country")) {}
         }
     };
 
     modal_form(
         "team-modal",
-        "Create Team",
+        &t("teams-create-title"),
         error,
         "/teams",
         form_fields,
-        "Create Team"
+        &t("teams-create-submit"),
     )
 }
 
 /// Edit team modal
-pub fn team_edit_modal(team: &TeamEntity, error: Option<&str>) -> Markup {
+pub fn team_edit_modal(
+    i18n: &I18n,
+    locale: Locale,
+    team: &TeamEntity,
+    error: Option<&str>,
+) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Team Name"
+                (t("teams-name-label"))
                 span style="color: red;" { "*" }
             }
             input
@@ -354,27 +374,27 @@ pub fn team_edit_modal(team: &TeamEntity, error: Option<&str>) -> Markup {
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Country"
+                (t("form-country"))
             }
             @if let Some(country_id) = team.country_id {
                 country-selector
                     name="country_id"
-                    placeholder="Select a country"
+                    placeholder=(t("teams-select-country"))
                     value=(country_id) {}
             } @else {
                 country-selector
                     name="country_id"
-                    placeholder="Select a country" {}
+                    placeholder=(t("teams-select-country")) {}
             }
         }
     };
 
     modal_form(
         "team-modal",
-        "Edit Team",
+        &t("teams-edit-title"),
         error,
         &format!("/teams/{}", team.id),
         form_fields,
-        "Save Changes"
+        &t("common-save"),
     )
 }

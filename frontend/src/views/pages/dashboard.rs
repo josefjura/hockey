@@ -1,48 +1,55 @@
 use maud::{html, Markup};
 
+use crate::i18n::{I18n, Locale};
 use crate::service::dashboard::{DashboardStats, RecentActivity};
 
-pub fn dashboard_page(stats: &DashboardStats, recent_activity: &[RecentActivity]) -> Markup {
+pub fn dashboard_page(
+    i18n: &I18n,
+    locale: Locale,
+    stats: &DashboardStats,
+    recent_activity: &[RecentActivity],
+) -> Markup {
+    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div class="card" {
             h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;" {
-                "Dashboard"
+                (t("dashboard-title"))
             }
             p style="color: var(--gray-600); margin-bottom: 2rem;" {
-                "Welcome to the Hockey Management Application. This is the main dashboard where you can see an overview of your hockey management data."
+                (t("dashboard-subtitle"))
             }
 
             // Stats cards
             div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;" {
-                (stat_card("Teams", &stats.teams_count.to_string(), "🏒", "/teams"))
-                (stat_card("Players", &stats.players_count.to_string(), "👤", "/players"))
-                (stat_card("Events", &stats.events_count.to_string(), "🏆", "/events"))
-                (stat_card("Seasons", &stats.seasons_count.to_string(), "📅", "/seasons"))
-                (stat_card("Matches", &stats.matches_count.to_string(), "⚔️", "/matches"))
+                (stat_card(&t("nav-teams"), &stats.teams_count.to_string(), "/teams"))
+                (stat_card(&t("nav-players"), &stats.players_count.to_string(), "/players"))
+                (stat_card(&t("nav-events"), &stats.events_count.to_string(), "/events"))
+                (stat_card(&t("nav-seasons"), &stats.seasons_count.to_string(), "/seasons"))
+                (stat_card(&t("nav-matches"), &stats.matches_count.to_string(), "/matches"))
             }
 
             // Quick actions section
             div style="margin-top: 3rem;" {
                 h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;" {
-                    "Quick Actions"
+                    (t("dashboard-quick-actions"))
                 }
                 div style="display: flex; flex-wrap: wrap; gap: 0.75rem;" {
-                    (quick_action_button("Add Team", "/teams/new", "🏒"))
-                    (quick_action_button("Add Player", "/players/new", "�"))
-                    (quick_action_button("Add Event", "/events/new", "🏆"))
-                    (quick_action_button("Add Season", "/seasons/new", "�📅"))
-                    (quick_action_button("Add Match", "/matches/new", "⚔️"))
+                    (quick_action_button(&t("dashboard-add-team"), "/teams/new"))
+                    (quick_action_button(&t("dashboard-add-player"), "/players/new"))
+                    (quick_action_button(&t("dashboard-add-event"), "/events/new"))
+                    (quick_action_button(&t("dashboard-add-season"), "/seasons/new"))
+                    (quick_action_button(&t("dashboard-add-match"), "/matches/new"))
                 }
             }
 
             // Recent activity section
             div style="margin-top: 3rem;" {
                 h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;" {
-                    "Recent Activity"
+                    (t("dashboard-recent-activity"))
                 }
                 @if recent_activity.is_empty() {
                     div class="info" style="padding: 1rem;" {
-                        "No recent activity to display."
+                        (t("dashboard-no-activity"))
                     }
                 } @else {
                     div style="background: var(--gray-50); border-radius: 8px; overflow: hidden;" {
@@ -77,15 +84,16 @@ pub fn dashboard_page(stats: &DashboardStats, recent_activity: &[RecentActivity]
             // Getting started info
             div style="margin-top: 3rem;" {
                 div class="info" {
-                    strong { "Getting Started: " }
-                    "Use the sidebar navigation to manage teams, players, events, seasons, and matches."
+                    strong { (t("dashboard-getting-started")) }
+                    " "
+                    (t("dashboard-getting-started-text"))
                 }
             }
         }
     }
 }
 
-fn stat_card(title: &str, value: &str, icon: &str, link: &str) -> Markup {
+fn stat_card(title: &str, value: &str, link: &str) -> Markup {
     html! {
         a href=(link) style="text-decoration: none;" {
             div style="
@@ -101,7 +109,6 @@ fn stat_card(title: &str, value: &str, icon: &str, link: &str) -> Markup {
             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)';"
             {
                 div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;" {
-                    div style="font-size: 2rem;" { (icon) }
                     div style="font-size: 2.5rem; font-weight: 700; line-height: 1;" { (value) }
                 }
                 div style="font-size: 0.875rem; opacity: 0.9; font-weight: 500;" { (title) }
@@ -110,7 +117,7 @@ fn stat_card(title: &str, value: &str, icon: &str, link: &str) -> Markup {
     }
 }
 
-fn quick_action_button(label: &str, href: &str, icon: &str) -> Markup {
+fn quick_action_button(label: &str, href: &str) -> Markup {
     html! {
         a
             href=(href)
@@ -133,7 +140,6 @@ fn quick_action_button(label: &str, href: &str, icon: &str) -> Markup {
             onmouseover="this.style.borderColor='var(--primary-color)'; this.style.color='var(--primary-color)';"
             onmouseout="this.style.borderColor='var(--gray-300)'; this.style.color='var(--gray-700)';"
         {
-            span { (icon) }
             span { (label) }
         }
     }
@@ -159,4 +165,3 @@ fn format_timestamp(timestamp: &str) -> String {
         timestamp.to_string()
     }
 }
-

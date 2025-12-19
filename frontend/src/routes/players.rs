@@ -99,7 +99,15 @@ pub async fn players_get(
     // Get countries for filter
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
-    let content = players_page(&result, &filters, &sort_field, &sort_order, &countries);
+    let content = players_page(
+        &state.i18n,
+        locale,
+        &result,
+        &filters,
+        &sort_field,
+        &sort_order,
+        &countries,
+    );
     Html(
         admin_layout(
             "Players",
@@ -116,8 +124,10 @@ pub async fn players_get(
 /// GET /players/list - HTMX endpoint for table updates
 pub async fn players_list_partial(
     State(state): State<AppState>,
+    jar: CookieJar,
     Query(query): Query<PlayersQuery>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let filters = PlayerFilters {
         name: query.name.clone(),
         country_id: query.country_id,
@@ -147,20 +157,36 @@ pub async fn players_list_partial(
         }
     };
 
-    Html(player_list_content(&result, &filters, &sort_field, &sort_order).into_string())
+    Html(
+        player_list_content(
+            &state.i18n,
+            locale,
+            &result,
+            &filters,
+            &sort_field,
+            &sort_order,
+        )
+        .into_string(),
+    )
 }
 
 /// GET /players/new - Show create modal
-pub async fn player_create_form(State(state): State<AppState>) -> impl IntoResponse {
+pub async fn player_create_form(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
-    Html(player_create_modal(None, &countries).into_string())
+    Html(player_create_modal(&state.i18n, locale, None, &countries).into_string())
 }
 
 /// POST /players - Create new player
 pub async fn player_create(
     State(state): State<AppState>,
+    jar: CookieJar,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     // Get countries for form re-render on error
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
@@ -200,7 +226,7 @@ pub async fn player_create(
                         Ok(path) => photo_path = Some(path),
                         Err(e) => {
                             tracing::error!("Failed to save uploaded file: {}", e);
-                            return Html(player_create_modal(Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string());
+                            return Html(player_create_modal(&state.i18n, locale, Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string());
                         }
                     }
                 }
@@ -213,14 +239,25 @@ pub async fn player_create(
     let name = name.trim();
     if name.is_empty() {
         return Html(
-            player_create_modal(Some("Player name cannot be empty"), &countries).into_string(),
+            player_create_modal(
+                &state.i18n,
+                locale,
+                Some("Player name cannot be empty"),
+                &countries,
+            )
+            .into_string(),
         );
     }
 
     if name.len() > 255 {
         return Html(
-            player_create_modal(Some("Player name cannot exceed 255 characters"), &countries)
-                .into_string(),
+            player_create_modal(
+                &state.i18n,
+                locale,
+                Some("Player name cannot exceed 255 characters"),
+                &countries,
+            )
+            .into_string(),
         );
     }
 
@@ -228,7 +265,13 @@ pub async fn player_create(
         Some(id) => id,
         None => {
             return Html(
-                player_create_modal(Some("Please select a country"), &countries).into_string(),
+                player_create_modal(
+                    &state.i18n,
+                    locale,
+                    Some("Please select a country"),
+                    &countries,
+                )
+                .into_string(),
             );
         }
     };
@@ -263,7 +306,15 @@ pub async fn player_create(
         }
         Err(e) => {
             tracing::error!("Failed to create player: {}", e);
-            Html(player_create_modal(Some("Failed to create player"), &countries).into_string())
+            Html(
+                player_create_modal(
+                    &state.i18n,
+                    locale,
+                    Some("Failed to create player"),
+                    &countries,
+                )
+                .into_string(),
+            )
         }
     }
 }
@@ -271,8 +322,10 @@ pub async fn player_create(
 /// GET /players/{id}/edit - Show edit modal
 pub async fn player_edit_form(
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
     let player = match players::get_player_by_id(&state.db, id).await {
@@ -291,15 +344,17 @@ pub async fn player_edit_form(
         }
     };
 
-    Html(player_edit_modal(&player, None, &countries).into_string())
+    Html(player_edit_modal(&state.i18n, locale, &player, None, &countries).into_string())
 }
 
 /// POST /players/{id} - Update player
 pub async fn player_update(
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
     // Get current player for fallback
@@ -308,6 +363,8 @@ pub async fn player_update(
         Ok(None) => {
             return Html(
                 player_edit_modal(
+                    &state.i18n,
+                    locale,
                     &players::get_player_by_id(&state.db, id)
                         .await
                         .ok()
@@ -323,6 +380,8 @@ pub async fn player_update(
             tracing::error!("Failed to fetch player: {}", e);
             return Html(
                 player_edit_modal(
+                    &state.i18n,
+                    locale,
                     &players::get_player_by_id(&state.db, id)
                         .await
                         .ok()
@@ -382,7 +441,7 @@ pub async fn player_update(
                         }
                         Err(e) => {
                             tracing::error!("Failed to save uploaded file: {}", e);
-                            return Html(player_edit_modal(&current_player, Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string());
+                            return Html(player_edit_modal(&state.i18n, locale, &current_player, Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string());
                         }
                     }
                 }
@@ -396,6 +455,8 @@ pub async fn player_update(
     if name.is_empty() {
         return Html(
             player_edit_modal(
+                &state.i18n,
+                locale,
                 &current_player,
                 Some("Player name cannot be empty"),
                 &countries,
@@ -407,6 +468,8 @@ pub async fn player_update(
     if name.len() > 255 {
         return Html(
             player_edit_modal(
+                &state.i18n,
+                locale,
                 &current_player,
                 Some("Player name cannot exceed 255 characters"),
                 &countries,
@@ -419,8 +482,14 @@ pub async fn player_update(
         Some(id) => id,
         None => {
             return Html(
-                player_edit_modal(&current_player, Some("Please select a country"), &countries)
-                    .into_string(),
+                player_edit_modal(
+                    &state.i18n,
+                    locale,
+                    &current_player,
+                    Some("Please select a country"),
+                    &countries,
+                )
+                .into_string(),
             );
         }
     };
@@ -455,13 +524,26 @@ pub async fn player_update(
             Html("<div hx-get=\"/players/list\" hx-target=\"#players-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
         }
         Ok(false) => Html(
-            player_edit_modal(&current_player, Some("Player not found"), &countries).into_string(),
+            player_edit_modal(
+                &state.i18n,
+                locale,
+                &current_player,
+                Some("Player not found"),
+                &countries,
+            )
+            .into_string(),
         ),
         Err(e) => {
             tracing::error!("Failed to update player: {}", e);
             Html(
-                player_edit_modal(&current_player, Some("Failed to update player"), &countries)
-                    .into_string(),
+                player_edit_modal(
+                    &state.i18n,
+                    locale,
+                    &current_player,
+                    Some("Failed to update player"),
+                    &countries,
+                )
+                .into_string(),
             )
         }
     }
@@ -470,9 +552,11 @@ pub async fn player_update(
 /// POST /players/{id}/delete - Delete player
 pub async fn player_delete(
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
     Query(query): Query<PlayersQuery>,
 ) -> impl IntoResponse {
+    let locale = get_locale_from_cookies(&jar);
     match players::delete_player(&state.db, id).await {
         Ok(true) => {
             // Reload the table content after successful delete
@@ -504,7 +588,17 @@ pub async fn player_delete(
                 }
             };
 
-            Html(player_list_content(&result, &filters, &sort_field, &sort_order).into_string())
+            Html(
+                player_list_content(
+                    &state.i18n,
+                    locale,
+                    &result,
+                    &filters,
+                    &sort_field,
+                    &sort_order,
+                )
+                .into_string(),
+            )
         }
         Ok(false) => {
             Html(crate::views::components::error::error_message("Player not found").into_string())

@@ -1,11 +1,18 @@
 use maud::{html, Markup};
 
 use crate::common::pagination::{PagedResult, SortOrder};
-use crate::service::matches::{MatchDetailEntity, MatchEntity, MatchFilters, ScoreEventEntity, SortField};
-use crate::views::components::crud::{empty_state, modal_form, page_header, pagination};
+use crate::i18n::{I18n, Locale};
+use crate::service::matches::{
+    MatchDetailEntity, MatchEntity, MatchFilters, ScoreEventEntity, SortField,
+};
+use crate::views::components::crud::{
+    empty_state_i18n, modal_form_i18n, page_header_i18n, pagination, table_actions_i18n,
+};
 
 /// Main matches page with table and filters
 pub fn matches_page(
+    i18n: &I18n,
+    locale: Locale,
     result: &PagedResult<MatchEntity>,
     filters: &MatchFilters,
     sort_field: &SortField,
@@ -13,14 +20,16 @@ pub fn matches_page(
     seasons: &[(i64, String)],
     teams: &[(i64, String)],
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     html! {
         div class="card" {
             // Header with title and create button
-            (page_header(
-                "Matches",
-                "Manage and view all matches in the system.",
+            (page_header_i18n(
+                &t("matches-title"),
+                &t("matches-description"),
                 "/matches/new",
-                "+ New Match"
+                &t("matches-new")
             ))
 
             // Filters
@@ -30,13 +39,13 @@ pub fn matches_page(
                         // Season filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Season"
+                                (t("matches-filter-season"))
                             }
                             select
                                 name="season_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { "All seasons" }
+                                option value="" { (t("matches-all-seasons")) }
                                 @for (id, name) in seasons {
                                     option
                                         value=(id)
@@ -51,13 +60,13 @@ pub fn matches_page(
                         // Team filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Team"
+                                (t("matches-filter-team"))
                             }
                             select
                                 name="team_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { "All teams" }
+                                option value="" { (t("matches-all-teams")) }
                                 @for (id, name) in teams {
                                     option
                                         value=(id)
@@ -72,36 +81,36 @@ pub fn matches_page(
                         // Status filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Status"
+                                (t("matches-filter-status"))
                             }
                             select
                                 name="status"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { "All statuses" }
+                                option value="" { (t("matches-all-statuses")) }
                                 option
                                     value="scheduled"
                                     selected[filters.status.as_deref() == Some("scheduled")]
                                 {
-                                    "Scheduled"
+                                    (t("matches-status-scheduled"))
                                 }
                                 option
                                     value="in_progress"
                                     selected[filters.status.as_deref() == Some("in_progress")]
                                 {
-                                    "In Progress"
+                                    (t("matches-status-in-progress"))
                                 }
                                 option
                                     value="finished"
                                     selected[filters.status.as_deref() == Some("finished")]
                                 {
-                                    "Finished"
+                                    (t("matches-status-finished"))
                                 }
                                 option
                                     value="cancelled"
                                     selected[filters.status.as_deref() == Some("cancelled")]
                                 {
-                                    "Cancelled"
+                                    (t("matches-status-cancelled"))
                                 }
                             }
                         }
@@ -116,7 +125,7 @@ pub fn matches_page(
                                 hx-target="#matches-table"
                                 hx-swap="outerHTML"
                             {
-                                "Clear"
+                                (t("common-clear"))
                             }
                         }
                     }
@@ -125,7 +134,7 @@ pub fn matches_page(
                     div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;" {
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "From Date"
+                                (t("matches-filter-date-from"))
                             }
                             input
                                 type="date"
@@ -136,7 +145,7 @@ pub fn matches_page(
 
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "To Date"
+                                (t("matches-filter-date-to"))
                             }
                             input
                                 type="date"
@@ -149,7 +158,7 @@ pub fn matches_page(
             }
 
             // Table
-            (match_list_content(result, filters, sort_field, sort_order))
+            (match_list_content(i18n, locale, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -159,16 +168,21 @@ pub fn matches_page(
 
 /// Matches table content (for HTMX updates)
 pub fn match_list_content(
+    i18n: &I18n,
+    locale: Locale,
     result: &PagedResult<MatchEntity>,
     filters: &MatchFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     html! {
         div id="matches-table" {
             @if result.items.is_empty() {
-                (empty_state(
-                    "matches",
+                (empty_state_i18n(
+                    &t("matches-empty-title"),
+                    &t("matches-empty-message"),
                     filters.season_id.is_some() || filters.team_id.is_some() || filters.status.is_some() || filters.date_from.is_some() || filters.date_to.is_some()
                 ))
             } @else {
@@ -177,7 +191,7 @@ pub fn match_list_content(
                         tr {
                             th {
                                 (sortable_header(
-                                    "Date",
+                                    &t("matches-date"),
                                     &SortField::Date,
                                     sort_field,
                                     sort_order,
@@ -186,25 +200,25 @@ pub fn match_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    "Event",
+                                    &t("events-title"),
                                     &SortField::Event,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th { "Match" }
-                            th { "Score" }
+                            th { (t("nav-matches")) }
+                            th { (t("matches-score")) }
                             th {
                                 (sortable_header(
-                                    "Status",
+                                    &t("matches-status"),
                                     &SortField::Status,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th style="text-align: right;" { "Actions" }
+                            th style="text-align: right;" { (t("common-actions")) }
                         }
                     }
                     tbody {
@@ -275,7 +289,7 @@ pub fn match_list_content(
                                         class="btn btn-sm"
                                         style="margin-right: 0.5rem;"
                                     {
-                                        "View"
+                                        (t("matches-view"))
                                     }
                                     button
                                         class="btn btn-sm"
@@ -284,16 +298,16 @@ pub fn match_list_content(
                                         hx-swap="innerHTML"
                                         style="margin-right: 0.5rem;"
                                     {
-                                        "Edit"
+                                        (t("common-edit"))
                                     }
                                     button
                                         class="btn btn-sm btn-danger"
                                         hx-post=(build_delete_url(match_item.id, filters, sort_field, sort_order))
                                         hx-target="#matches-table"
                                         hx-swap="outerHTML"
-                                        hx-confirm="Are you sure you want to delete this match?"
+                                        hx-confirm=(t("matches-confirm-delete"))
                                     {
-                                        "Delete"
+                                        (t("common-delete"))
                                     }
                                 }
                             }
@@ -370,7 +384,11 @@ fn sortable_header(
 
 /// Helper to build sort URLs
 fn build_sort_url(field: &SortField, order: &SortOrder, filters: &MatchFilters) -> String {
-    let mut url = format!("/matches/list?sort={}&order={}", field.as_str(), order.as_str());
+    let mut url = format!(
+        "/matches/list?sort={}&order={}",
+        field.as_str(),
+        order.as_str()
+    );
 
     if let Some(season_id) = filters.season_id {
         url.push_str(&format!("&season_id={}", season_id));
@@ -472,7 +490,8 @@ fn build_delete_url(
 }
 
 /// Match detail page with score tracking
-pub fn match_detail_page(detail: &MatchDetailEntity) -> Markup {
+pub fn match_detail_page(i18n: &I18n, locale: Locale, detail: &MatchDetailEntity) -> Markup {
+    let t = |key| i18n.translate(locale, key);
     let match_info = &detail.match_info;
 
     html! {
@@ -485,10 +504,10 @@ pub fn match_detail_page(detail: &MatchDetailEntity) -> Markup {
                         class="btn"
                         style="background: white; border: 1px solid var(--gray-300);"
                     {
-                        "← Back to Matches"
+                        (format!("← {}", t("matches-back-to-list")))
                     }
                     h1 style="font-size: 2rem; font-weight: 700; margin: 0;" {
-                        "Match Detail"
+                        (t("matches-match-info"))
                     }
                 }
                 div style="display: flex; gap: 0.5rem;" {
@@ -498,14 +517,14 @@ pub fn match_detail_page(detail: &MatchDetailEntity) -> Markup {
                         hx-target="#modal-container"
                         hx-swap="innerHTML"
                     {
-                        "Edit Match"
+                        (t("matches-edit"))
                     }
                     button
                         class="btn btn-danger"
                         hx-post=(format!("/matches/{}/delete", match_info.id))
-                        hx-confirm="Are you sure you want to delete this match? This will also delete all score events."
+                        hx-confirm=(t("matches-confirm-delete"))
                     {
-                        "Delete Match"
+                        (t("matches-delete"))
                     }
                 }
             }
@@ -846,15 +865,19 @@ fn format_date(date: &str) -> String {
 
 /// Create match modal
 pub fn match_create_modal(
+    i18n: &I18n,
+    locale: Locale,
     error: Option<&str>,
     seasons: &[(i64, String)],
     teams: &[(i64, String)],
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     let form_fields = html! {
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Season"
+                    (t("matches-season"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -862,7 +885,7 @@ pub fn match_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="" { "Select season" }
+                    option value="" { (t("matches-select-season")) }
                     @for (id, name) in seasons {
                         option value=(id) { (name) }
                     }
@@ -871,7 +894,7 @@ pub fn match_create_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Status"
+                    (t("matches-status"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -879,10 +902,10 @@ pub fn match_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="scheduled" selected { "Scheduled" }
-                    option value="in_progress" { "In Progress" }
-                    option value="finished" { "Finished" }
-                    option value="cancelled" { "Cancelled" }
+                    option value="scheduled" selected { (t("matches-status-scheduled")) }
+                    option value="in_progress" { (t("matches-status-in-progress")) }
+                    option value="finished" { (t("matches-status-finished")) }
+                    option value="cancelled" { (t("matches-status-cancelled")) }
                 }
             }
         }
@@ -890,7 +913,7 @@ pub fn match_create_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Home Team"
+                    (t("matches-home-team"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -898,7 +921,7 @@ pub fn match_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="" { "Select home team" }
+                    option value="" { (t("matches-select-team")) }
                     @for (id, name) in teams {
                         option value=(id) { (name) }
                     }
@@ -907,7 +930,7 @@ pub fn match_create_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Away Team"
+                    (t("matches-away-team"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -915,7 +938,7 @@ pub fn match_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="" { "Select away team" }
+                    option value="" { (t("matches-select-team")) }
                     @for (id, name) in teams {
                         option value=(id) { (name) }
                     }
@@ -926,7 +949,7 @@ pub fn match_create_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Home Score"
+                    (t("matches-score")) " (Home)"
                 }
                 input
                     type="number"
@@ -938,7 +961,7 @@ pub fn match_create_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Away Score"
+                    (t("matches-score")) " (Away)"
                 }
                 input
                     type="number"
@@ -951,7 +974,7 @@ pub fn match_create_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Match Date"
+                (t("matches-date"))
             }
             input
                 type="datetime-local"
@@ -961,38 +984,43 @@ pub fn match_create_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Venue"
+                (t("matches-location"))
             }
             input
                 type="text"
                 name="venue"
-                placeholder="Enter venue name..."
+                placeholder=(t("matches-location-placeholder"))
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
     };
 
-    modal_form(
+    modal_form_i18n(
         "match-modal",
-        "Create Match",
+        &t("matches-create-title"),
         error,
         "/matches",
         form_fields,
-        "Create Match"
+        &t("matches-create-submit"),
+        &t("common-cancel"),
     )
 }
 
 /// Edit match modal
 pub fn match_edit_modal(
+    i18n: &I18n,
+    locale: Locale,
     match_entity: &MatchEntity,
     error: Option<&str>,
     seasons: &[(i64, String)],
     teams: &[(i64, String)],
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     let form_fields = html! {
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Season"
+                    (t("matches-season"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1013,7 +1041,7 @@ pub fn match_edit_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Status"
+                    (t("matches-status"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1021,10 +1049,10 @@ pub fn match_edit_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="scheduled" selected[match_entity.status == "scheduled"] { "Scheduled" }
-                    option value="in_progress" selected[match_entity.status == "in_progress"] { "In Progress" }
-                    option value="finished" selected[match_entity.status == "finished"] { "Finished" }
-                    option value="cancelled" selected[match_entity.status == "cancelled"] { "Cancelled" }
+                    option value="scheduled" selected[match_entity.status == "scheduled"] { (t("matches-status-scheduled")) }
+                    option value="in_progress" selected[match_entity.status == "in_progress"] { (t("matches-status-in-progress")) }
+                    option value="finished" selected[match_entity.status == "finished"] { (t("matches-status-finished")) }
+                    option value="cancelled" selected[match_entity.status == "cancelled"] { (t("matches-status-cancelled")) }
                 }
             }
         }
@@ -1032,7 +1060,7 @@ pub fn match_edit_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Home Team"
+                    (t("matches-home-team"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1053,7 +1081,7 @@ pub fn match_edit_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Away Team"
+                    (t("matches-away-team"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1076,7 +1104,7 @@ pub fn match_edit_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Home Score"
+                    (t("matches-score")) " (Home)"
                 }
                 input
                     type="number"
@@ -1088,7 +1116,7 @@ pub fn match_edit_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Away Score"
+                    (t("matches-score")) " (Away)"
                 }
                 input
                     type="number"
@@ -1101,7 +1129,7 @@ pub fn match_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Match Date"
+                (t("matches-date"))
             }
             input
                 type="datetime-local"
@@ -1112,38 +1140,43 @@ pub fn match_edit_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Venue"
+                (t("matches-location"))
             }
             input
                 type="text"
                 name="venue"
                 value=[match_entity.venue.as_ref()]
-                placeholder="Enter venue name..."
+                placeholder=(t("matches-location-placeholder"))
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
     };
 
-    modal_form(
+    modal_form_i18n(
         "match-modal",
-        "Edit Match",
+        &t("matches-edit-title"),
         error,
         &format!("/matches/{}", match_entity.id),
         form_fields,
-        "Save Changes"
+        &t("matches-edit-submit"),
+        &t("common-cancel"),
     )
 }
 
 /// Create score event modal
 pub fn score_event_create_modal(
+    i18n: &I18n,
+    locale: Locale,
     error: Option<&str>,
     match_info: &MatchEntity,
     home_players: &[(i64, String)],
     away_players: &[(i64, String)],
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Team"
+                (t("matches-filter-team"))
                 span style="color: red;" { "*" }
             }
             select
@@ -1159,7 +1192,7 @@ pub fn score_event_create_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Period"
+                    (t("matches-period"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1167,17 +1200,17 @@ pub fn score_event_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="1" selected { "1st Period" }
-                    option value="2" { "2nd Period" }
-                    option value="3" { "3rd Period" }
-                    option value="4" { "Overtime" }
-                    option value="5" { "Shootout" }
+                    option value="1" selected { "1st" }
+                    option value="2" { "2nd" }
+                    option value="3" { "3rd" }
+                    option value="4" { (t("matches-overtime")) }
+                    option value="5" { (t("matches-shootout")) }
                 }
             }
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Minutes"
+                    (t("matches-minutes"))
                 }
                 input
                     type="number"
@@ -1190,7 +1223,7 @@ pub fn score_event_create_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Seconds"
+                    (t("matches-seconds"))
                 }
                 input
                     type="number"
@@ -1204,30 +1237,30 @@ pub fn score_event_create_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Goal Type"
+                (t("matches-goal-type"))
             }
             select
                 name="goal_type"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "Select type (optional)" }
-                option value="even_strength" { "Even Strength" }
-                option value="power_play" { "Power Play" }
-                option value="short_handed" { "Short Handed" }
-                option value="penalty_shot" { "Penalty Shot" }
-                option value="empty_net" { "Empty Net" }
+                option value="" { "---" }
+                option value="even_strength" { (t("matches-regular")) }
+                option value="power_play" { (t("matches-power-play")) }
+                option value="short_handed" { (t("matches-short-handed")) }
+                option value="penalty_shot" { (t("matches-penalty-shot")) }
+                option value="empty_net" { (t("matches-empty-net")) }
             }
         }
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Scorer"
+                (t("matches-goal-scorer"))
             }
             select
                 name="scorer_id"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "Unknown scorer" }
+                option value="" { "---" }
                 optgroup label=(match_info.home_team_name) {
                     @for (id, name) in home_players {
                         option value=(id) { (name) }
@@ -1243,13 +1276,13 @@ pub fn score_event_create_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "First Assist"
+                (t("matches-goal-assist1"))
             }
             select
                 name="assist1_id"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "No assist" }
+                option value="" { "---" }
                 optgroup label=(match_info.home_team_name) {
                     @for (id, name) in home_players {
                         option value=(id) { (name) }
@@ -1265,13 +1298,13 @@ pub fn score_event_create_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Second Assist"
+                (t("matches-goal-assist2"))
             }
             select
                 name="assist2_id"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "No assist" }
+                option value="" { "---" }
                 optgroup label=(match_info.home_team_name) {
                     @for (id, name) in home_players {
                         option value=(id) { (name) }
@@ -1286,28 +1319,33 @@ pub fn score_event_create_modal(
         }
     };
 
-    modal_form(
+    modal_form_i18n(
         "score-event-modal",
-        "Identify Goal",
+        &t("matches-add-score-event"),
         error,
         &format!("/matches/{}/score-events", match_info.id),
         form_fields,
-        "Identify Goal"
+        &t("common-save"),
+        &t("common-cancel"),
     )
 }
 
 /// Edit score event modal
 pub fn score_event_edit_modal(
+    i18n: &I18n,
+    locale: Locale,
     error: Option<&str>,
     score_event: &ScoreEventEntity,
     match_info: &MatchEntity,
     home_players: &[(i64, String)],
     away_players: &[(i64, String)],
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Team"
+                (t("matches-filter-team"))
                 span style="color: red;" { "*" }
             }
             select
@@ -1333,7 +1371,7 @@ pub fn score_event_edit_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Period"
+                    (t("matches-period"))
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1341,17 +1379,17 @@ pub fn score_event_edit_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="1" selected[score_event.period == 1] { "1st Period" }
-                    option value="2" selected[score_event.period == 2] { "2nd Period" }
-                    option value="3" selected[score_event.period == 3] { "3rd Period" }
-                    option value="4" selected[score_event.period == 4] { "Overtime" }
-                    option value="5" selected[score_event.period == 5] { "Shootout" }
+                    option value="1" selected[score_event.period == 1] { "1st" }
+                    option value="2" selected[score_event.period == 2] { "2nd" }
+                    option value="3" selected[score_event.period == 3] { "3rd" }
+                    option value="4" selected[score_event.period == 4] { (t("matches-overtime")) }
+                    option value="5" selected[score_event.period == 5] { (t("matches-shootout")) }
                 }
             }
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Minutes"
+                    (t("matches-minutes"))
                 }
                 input
                     type="number"
@@ -1365,7 +1403,7 @@ pub fn score_event_edit_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    "Seconds"
+                    (t("matches-seconds"))
                 }
                 input
                     type="number"
@@ -1380,30 +1418,30 @@ pub fn score_event_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Goal Type"
+                (t("matches-goal-type"))
             }
             select
                 name="goal_type"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" selected[score_event.goal_type.is_none()] { "Select type (optional)" }
-                option value="even_strength" selected[score_event.goal_type.as_deref() == Some("even_strength")] { "Even Strength" }
-                option value="power_play" selected[score_event.goal_type.as_deref() == Some("power_play")] { "Power Play" }
-                option value="short_handed" selected[score_event.goal_type.as_deref() == Some("short_handed")] { "Short Handed" }
-                option value="penalty_shot" selected[score_event.goal_type.as_deref() == Some("penalty_shot")] { "Penalty Shot" }
-                option value="empty_net" selected[score_event.goal_type.as_deref() == Some("empty_net")] { "Empty Net" }
+                option value="" selected[score_event.goal_type.is_none()] { "---" }
+                option value="even_strength" selected[score_event.goal_type.as_deref() == Some("even_strength")] { (t("matches-regular")) }
+                option value="power_play" selected[score_event.goal_type.as_deref() == Some("power_play")] { (t("matches-power-play")) }
+                option value="short_handed" selected[score_event.goal_type.as_deref() == Some("short_handed")] { (t("matches-short-handed")) }
+                option value="penalty_shot" selected[score_event.goal_type.as_deref() == Some("penalty_shot")] { (t("matches-penalty-shot")) }
+                option value="empty_net" selected[score_event.goal_type.as_deref() == Some("empty_net")] { (t("matches-empty-net")) }
             }
         }
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Scorer"
+                (t("matches-goal-scorer"))
             }
             select
                 name="scorer_id"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" selected[score_event.scorer_id.is_none()] { "Unknown scorer" }
+                option value="" selected[score_event.scorer_id.is_none()] { "---" }
                 optgroup label=(match_info.home_team_name) {
                     @for (id, name) in home_players {
                         option value=(id) selected[score_event.scorer_id == Some(*id)] { (name) }
@@ -1419,13 +1457,13 @@ pub fn score_event_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "First Assist"
+                (t("matches-goal-assist1"))
             }
             select
                 name="assist1_id"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" selected[score_event.assist1_id.is_none()] { "No assist" }
+                option value="" selected[score_event.assist1_id.is_none()] { "---" }
                 optgroup label=(match_info.home_team_name) {
                     @for (id, name) in home_players {
                         option value=(id) selected[score_event.assist1_id == Some(*id)] { (name) }
@@ -1441,13 +1479,13 @@ pub fn score_event_edit_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Second Assist"
+                (t("matches-goal-assist2"))
             }
             select
                 name="assist2_id"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" selected[score_event.assist2_id.is_none()] { "No assist" }
+                option value="" selected[score_event.assist2_id.is_none()] { "---" }
                 optgroup label=(match_info.home_team_name) {
                     @for (id, name) in home_players {
                         option value=(id) selected[score_event.assist2_id == Some(*id)] { (name) }
@@ -1462,12 +1500,13 @@ pub fn score_event_edit_modal(
         }
     };
 
-    modal_form(
+    modal_form_i18n(
         "score-event-modal",
-        "Edit Goal",
+        &t("matches-edit-score-event"),
         error,
         &format!("/matches/score-events/{}", score_event.id),
         form_fields,
-        "Save Changes"
+        &t("common-save"),
+        &t("common-cancel"),
     )
 }

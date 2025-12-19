@@ -1,24 +1,31 @@
 use maud::{html, Markup};
 
+use crate::i18n::{I18n, Locale};
 use crate::service::seasons::{PagedResult, SeasonEntity, SeasonFilters, SortField, SortOrder};
-use crate::views::components::crud::{empty_state, modal_form, page_header, pagination, table_actions};
+use crate::views::components::crud::{
+    empty_state_i18n, modal_form_i18n, page_header_i18n, pagination, table_actions_i18n,
+};
 
 /// Main seasons page with table and filters
 pub fn seasons_page(
+    i18n: &I18n,
+    locale: Locale,
     result: &PagedResult<SeasonEntity>,
     filters: &SeasonFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
     events: &[(i64, String)],
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     html! {
         div class="card" {
             // Header with title and create button
-            (page_header(
-                "Seasons",
-                "Manage seasons for events.",
+            (page_header_i18n(
+                &t("seasons-title"),
+                &t("seasons-description"),
                 "/seasons/new",
-                "+ New Season"
+                &t("seasons-new")
             ))
 
             // Filters
@@ -28,13 +35,13 @@ pub fn seasons_page(
                         // Event filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Filter by event"
+                                (t("seasons-filter-by-event"))
                             }
                             select
                                 name="event_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { "All events" }
+                                option value="" { (t("seasons-all-events")) }
                                 @for (id, name) in events {
                                     option
                                         value=(id)
@@ -49,13 +56,13 @@ pub fn seasons_page(
                         // Year filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                "Filter by year"
+                                (t("seasons-filter-by-year"))
                             }
                             input
                                 type="number"
                                 name="year"
                                 value=[filters.year.as_ref()]
-                                placeholder="Enter year..."
+                                placeholder=(t("seasons-enter-year"))
                                 min="1900"
                                 max="2100"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
@@ -71,7 +78,7 @@ pub fn seasons_page(
                                 hx-target="#seasons-table"
                                 hx-swap="outerHTML"
                             {
-                                "Clear"
+                                (t("common-clear"))
                             }
                         }
                     }
@@ -79,7 +86,7 @@ pub fn seasons_page(
             }
 
             // Table
-            (season_list_content(result, filters, sort_field, sort_order))
+            (season_list_content(i18n, locale, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -89,16 +96,21 @@ pub fn seasons_page(
 
 /// Seasons table content (for HTMX updates)
 pub fn season_list_content(
+    i18n: &I18n,
+    locale: Locale,
     result: &PagedResult<SeasonEntity>,
     filters: &SeasonFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     html! {
         div id="seasons-table" {
             @if result.items.is_empty() {
-                (empty_state(
-                    "seasons",
+                (empty_state_i18n(
+                    &t("seasons-empty-title"),
+                    &t("seasons-empty-message"),
                     filters.event_id.is_some() || filters.year.is_some()
                 ))
             } @else {
@@ -116,24 +128,24 @@ pub fn season_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    "Year",
+                                    &t("seasons-year"),
                                     &SortField::Year,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th { "Display Name" }
+                            th { (t("seasons-display-name")) }
                             th {
                                 (sortable_header(
-                                    "Event",
+                                    &t("seasons-event"),
                                     &SortField::Event,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th style="text-align: right;" { "Actions" }
+                            th style="text-align: right;" { (t("common-actions")) }
                         }
                     }
                     tbody {
@@ -151,11 +163,12 @@ pub fn season_list_content(
                                     }
                                 }
                                 td { (&season.event_name) }
-                                (table_actions(
+                                (table_actions_i18n(
                                     &format!("/seasons/{}/edit", season.id),
                                     &build_delete_url(season.id, filters, sort_field, sort_order),
                                     "seasons-table",
-                                    "season"
+                                    &t("common-edit"),
+                                    &t("common-delete"),
                                 ))
                             }
                         }
@@ -231,7 +244,11 @@ fn sortable_header(
 
 /// Helper to build sort URLs
 fn build_sort_url(field: &SortField, order: &SortOrder, filters: &SeasonFilters) -> String {
-    let mut url = format!("/seasons/list?sort={}&order={}", field.as_str(), order.as_str());
+    let mut url = format!(
+        "/seasons/list?sort={}&order={}",
+        field.as_str(),
+        order.as_str()
+    );
 
     if let Some(event_id) = filters.event_id {
         url.push_str(&format!("&event_id={}", event_id));
@@ -297,11 +314,18 @@ fn build_delete_url(
 }
 
 /// Create season modal
-pub fn season_create_modal(error: Option<&str>, events: &[(i64, String)]) -> Markup {
+pub fn season_create_modal(
+    i18n: &I18n,
+    locale: Locale,
+    error: Option<&str>,
+    events: &[(i64, String)],
+) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Event"
+                (t("seasons-event"))
                 span style="color: red;" { "*" }
             }
             select
@@ -310,7 +334,7 @@ pub fn season_create_modal(error: Option<&str>, events: &[(i64, String)]) -> Mar
                 autofocus
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "Select an event" }
+                option value="" { (t("seasons-select-event")) }
                 @for (id, name) in events {
                     option value=(id) {
                         (name)
@@ -321,7 +345,7 @@ pub fn season_create_modal(error: Option<&str>, events: &[(i64, String)]) -> Mar
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Year"
+                (t("seasons-year-label"))
                 span style="color: red;" { "*" }
             }
             input
@@ -330,45 +354,50 @@ pub fn season_create_modal(error: Option<&str>, events: &[(i64, String)]) -> Mar
                 required
                 min="1900"
                 max="2100"
-                placeholder="2024"
+                placeholder=(t("seasons-year-placeholder"))
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Display Name"
+                (t("seasons-display-name-label"))
             }
             input
                 type="text"
                 name="display_name"
-                placeholder="e.g., 2024 Championship"
+                placeholder=(t("seasons-display-name-placeholder"))
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                "Optional: Custom display name (defaults to year)"
+                (t("seasons-display-name-help"))
             }
         }
     };
 
-    modal_form(
+    modal_form_i18n(
         "season-modal",
-        "Create Season",
+        &t("seasons-create-title"),
         error,
         "/seasons",
         form_fields,
-        "Create Season"
+        &t("seasons-create-submit"),
+        &t("common-cancel"),
     )
 }
 
 /// Edit season modal
 pub fn season_edit_modal(
+    i18n: &I18n,
+    locale: Locale,
     season: &SeasonEntity,
     error: Option<&str>,
     events: &[(i64, String)],
 ) -> Markup {
+    let t = |key| i18n.translate(locale, key);
+
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Event"
+                (t("seasons-event"))
                 span style="color: red;" { "*" }
             }
             select
@@ -377,7 +406,7 @@ pub fn season_edit_modal(
                 autofocus
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "Select an event" }
+                option value="" { (t("seasons-select-event")) }
                 @for (id, name) in events {
                     option value=(id) selected[*id == season.event_id] {
                         (name)
@@ -388,7 +417,7 @@ pub fn season_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Year"
+                (t("seasons-year-label"))
                 span style="color: red;" { "*" }
             }
             input
@@ -403,26 +432,27 @@ pub fn season_edit_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Display Name"
+                (t("seasons-display-name-label"))
             }
             input
                 type="text"
                 name="display_name"
                 value=[season.display_name.as_ref()]
-                placeholder="e.g., 2024 Championship"
+                placeholder=(t("seasons-display-name-placeholder"))
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                "Optional: Custom display name (defaults to year)"
+                (t("seasons-display-name-help"))
             }
         }
     };
 
-    modal_form(
+    modal_form_i18n(
         "season-modal",
-        "Edit Season",
+        &t("seasons-edit-title"),
         error,
         &format!("/seasons/{}", season.id),
         form_fields,
-        "Save Changes"
+        &t("seasons-edit-submit"),
+        &t("common-cancel"),
     )
 }
