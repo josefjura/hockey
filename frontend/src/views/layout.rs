@@ -1,5 +1,6 @@
 use maud::{html, Markup, DOCTYPE};
 
+use super::components::loading::htmx_loading_styles;
 use super::components::sidebar;
 use crate::auth::Session;
 use crate::i18n::TranslationContext;
@@ -13,6 +14,7 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 meta name="viewport" content="width=device-width, initial-scale=1.0";
                 title { (title) " - Hockey Management" }
                 (base_styles())
+                (htmx_loading_styles())
                 // HTMX library for dynamic HTML updates
                 script src="https://unpkg.com/htmx.org@2.0.4" {}
                 // Import map for Lit web components
@@ -39,6 +41,8 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 script type="module" src="/static/js/components/toggle-switch.js" {}
                 script type="module" src="/static/js/components/client-data-table.js" {}
                 script type="module" src="/static/js/components/countries-table.js" {}
+                script type="module" src="/static/js/components/loading-spinner.js" {}
+                script type="module" src="/static/js/components/loading-state.js" {}
             }
             body {
                 (content)
