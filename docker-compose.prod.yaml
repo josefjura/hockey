@@ -17,7 +17,7 @@ services:
       - "traefik.http.routers.hockey.middlewares=www-redirect"
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
-      - DATABASE_URL=sqlite:/app/data/hockey.db?mode=rwc
+      - DATABASE_URL=sqlite:///app/data/hockey.db?mode=rwc
       - SESSION_SECRET=${SESSION_SECRET}
       - ENVIRONMENT=production
       - RUST_LOG=${RUST_LOG:-info,hockey=debug}

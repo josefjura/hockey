@@ -23,7 +23,7 @@ RUN mkdir -p src/bin && \
 	echo "fn main() {}" > src/main.rs && \
 	echo "fn main() {}" > src/bin/create_admin.rs && \
 	cargo build --release && \
-	rm -rf src
+	rm -rf src target/release/hockey target/release/create_admin target/release/deps/hockey-* target/release/deps/create_admin-*
 
 # Copy source code and migrations
 COPY src ./src
@@ -43,15 +43,19 @@ COPY --from=builder /app/target/release/create_admin /app/create_admin
 # Copy migrations (needed for runtime schema checks)
 COPY migrations /app/migrations
 
+# Copy static files (CSS, JS, images)
+COPY static /app/static
+
 # Create data directory (distroless runs as nonroot by default)
 WORKDIR /app
 
+# Note: /app/data directory will be created by Docker when volume is mounted
 # Expose port
 EXPOSE 8080
 
 # Set environment variables
 ENV RUST_LOG=info
-ENV DATABASE_URL=sqlite:///app/data/hockey.db
+ENV DATABASE_URL=sqlite:///app/data/hockey.db?mode=rwc
 ENV ENVIRONMENT=production
 
 # Note: Distroless doesn't support healthcheck commands with shell

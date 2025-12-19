@@ -17,11 +17,21 @@ axum = { version = "0.7", features = ["macros", "multipart"] }
 axum-extra = { version = "0.9", features = ["cookie"] }
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["fs", "trace", "compression-gzip", "cors"] }
+tower-http = { version = "0.6", features = [
+	"fs",
+	"trace",
+	"compression-gzip",
+	"cors",
+] }
 
 # Database
 # Using bundled feature to statically link SQLite for distroless compatibility
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"] }
+sqlx = { version = "0.8", features = [
+	"runtime-tokio-rustls",
+	"sqlite",
+	"chrono",
+	"uuid",
+] }
 libsqlite3-sys = { version = "*", features = ["bundled"] }
 
 # Templating

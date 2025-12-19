@@ -1,0 +1,53 @@
+# Debugging Dockerfile - uses debian-slim instead of distroless
+# This gives us shell access to debug issues
+
+# Stage 1: Build the Rust application
+FROM rust:1.85-slim-bookworm AS builder
+
+# Install build dependencies
+RUN apt-get update && \
+	apt-get install -y \
+	pkg-config \
+	libssl-dev \
+	&& rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY Cargo.toml Cargo.lock ./
+
+RUN mkdir -p src/bin && \
+	echo "fn main() {}" > src/main.rs && \
+	echo "fn main() {}" > src/bin/create_admin.rs && \
+	cargo build --release && \
+	rm -rf src
+
+COPY src ./src
+COPY migrations ./migrations
+COPY static ./static
+
+RUN cargo build --release
+
+# Stage 2: Runtime image - using debian-slim for debugging
+FROM debian:bookworm-slim
+
+# Install runtime dependencies
+RUN apt-get update && \
+	apt-get install -y \
+	ca-certificates \
+	libssl3 \
+	&& rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/target/release/hockey /app/hockey
+COPY --from=builder /app/target/release/create_admin /app/create_admin
+COPY migrations /app/migrations
+COPY static /app/static
+
+WORKDIR /app
+
+ENV RUST_LOG=info
+ENV DATABASE_URL=sqlite:///app/data/hockey.db?mode=rwc
+ENV ENVIRONMENT=production
+
+EXPOSE 8080
+
+CMD ["/app/hockey"]
