@@ -1,6 +1,7 @@
 use axum::{
     extract::{Path, Query, State},
     response::{Html, IntoResponse},
+    http::{HeaderMap, HeaderName},
     Extension, Form,
 };
 use serde::Deserialize;
@@ -331,7 +332,7 @@ pub async fn match_update(
                 &teams,
             )
             .into_string(),
-        );
+        ).into_response();
     }
 
     if form.home_score_unidentified < 0 || form.away_score_unidentified < 0 {
@@ -343,7 +344,7 @@ pub async fn match_update(
                 &teams,
             )
             .into_string(),
-        );
+        ).into_response();
     }
 
     // Update match
@@ -364,14 +365,19 @@ pub async fn match_update(
     .await
     {
         Ok(true) => {
-            // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/matches/list\" hx-target=\"#matches-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            // Redirect back to match detail page using HX-Redirect header
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-redirect"),
+                format!("/matches/{}", id).parse().unwrap(),
+            );
+            (headers, Html("".to_string())).into_response()
         }
         Ok(false) => {
             Html(
                 match_edit_modal(&match_entity.unwrap(), Some("Match not found"), &seasons, &teams)
                     .into_string(),
-            )
+            ).into_response()
         }
         Err(e) => {
             tracing::error!("Failed to update match: {}", e);
@@ -383,7 +389,7 @@ pub async fn match_update(
                     &teams,
                 )
                 .into_string(),
-            )
+            ).into_response()
         }
     }
 }
@@ -532,7 +538,7 @@ pub async fn score_event_create(
                 &away_players,
             )
             .into_string(),
-        );
+        ).into_response();
     }
 
     if let Some(minutes) = form.time_minutes {
@@ -545,7 +551,7 @@ pub async fn score_event_create(
                     &away_players,
                 )
                 .into_string(),
-            );
+            ).into_response();
         }
     }
 
@@ -559,7 +565,7 @@ pub async fn score_event_create(
                     &away_players,
                 )
                 .into_string(),
-            );
+            ).into_response();
         }
     }
 
@@ -581,11 +587,13 @@ pub async fn score_event_create(
     .await
     {
         Ok(_) => {
-            // Redirect back to match detail page
-            Html(format!(
-                r#"<div hx-redirect="/matches/{}"></div>"#,
-                match_id
-            ))
+            // Redirect back to match detail page using HX-Redirect header
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-redirect"),
+                format!("/matches/{}", match_id).parse().unwrap(),
+            );
+            (headers, Html("".to_string())).into_response()
         }
         Err(e) => {
             tracing::error!("Failed to create score event: {}", e);
@@ -597,7 +605,7 @@ pub async fn score_event_create(
                     &away_players,
                 )
                 .into_string(),
-            )
+            ).into_response()
         }
     }
 }
@@ -694,7 +702,7 @@ pub async fn score_event_update(
                 &away_players,
             )
             .into_string(),
-        );
+        ).into_response();
     }
 
     if let Some(minutes) = form.time_minutes {
@@ -708,7 +716,7 @@ pub async fn score_event_update(
                     &away_players,
                 )
                 .into_string(),
-            );
+            ).into_response();
         }
     }
 
@@ -723,7 +731,7 @@ pub async fn score_event_update(
                     &away_players,
                 )
                 .into_string(),
-            );
+            ).into_response();
         }
     }
 
@@ -745,11 +753,13 @@ pub async fn score_event_update(
     .await
     {
         Ok(true) => {
-            // Redirect back to match detail page
-            Html(format!(
-                r#"<div hx-redirect="/matches/{}"></div>"#,
-                match_id
-            ))
+            // Redirect back to match detail page using HX-Redirect header
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-redirect"),
+                format!("/matches/{}", match_id).parse().unwrap(),
+            );
+            (headers, Html("".to_string())).into_response()
         }
         Ok(false) => Html(
             score_event_edit_modal(
@@ -760,7 +770,7 @@ pub async fn score_event_update(
                 &away_players,
             )
             .into_string(),
-        ),
+        ).into_response(),
         Err(e) => {
             tracing::error!("Failed to update score event: {}", e);
             Html(
@@ -772,7 +782,7 @@ pub async fn score_event_update(
                     &away_players,
                 )
                 .into_string(),
-            )
+            ).into_response()
         }
     }
 }
@@ -789,34 +799,36 @@ pub async fn score_event_delete(
             return Html(
                 crate::views::components::error::error_message("Score event not found")
                     .into_string(),
-            );
+            ).into_response();
         }
         Err(e) => {
             tracing::error!("Failed to fetch score event: {}", e);
             return Html(
                 crate::views::components::error::error_message("Failed to load score event")
                     .into_string(),
-            );
+            ).into_response();
         }
     };
 
     match matches::delete_score_event(&state.db, id).await {
         Ok(true) => {
-            // Redirect back to match detail page
-            Html(format!(
-                r#"<div hx-redirect="/matches/{}"></div>"#,
-                match_id
-            ))
+            // Redirect back to match detail page using HX-Redirect header
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-redirect"),
+                format!("/matches/{}", match_id).parse().unwrap(),
+            );
+            (headers, Html("".to_string())).into_response()
         }
         Ok(false) => {
-            Html(crate::views::components::error::error_message("Score event not found").into_string())
+            Html(crate::views::components::error::error_message("Score event not found").into_string()).into_response()
         }
         Err(e) => {
             tracing::error!("Failed to delete score event: {}", e);
             Html(
                 crate::views::components::error::error_message("Failed to delete score event")
                     .into_string(),
-            )
+            ).into_response()
         }
     }
 }

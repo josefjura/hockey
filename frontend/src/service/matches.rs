@@ -99,7 +99,7 @@ pub async fn get_match_by_id(db: &SqlitePool, id: i64) -> Result<Option<MatchEnt
         SELECT
             m.id,
             m.season_id,
-            s.name as season_name,
+            COALESCE(s.display_name, CAST(s.year AS TEXT)) as season_name,
             e.name as event_name,
             m.home_team_id,
             ht.name as home_team_name,
@@ -255,7 +255,7 @@ pub async fn get_matches(
 
     let mut data_query = QueryBuilder::new(
         "SELECT \
-            m.id, m.season_id, s.name as season_name, e.name as event_name, \
+            m.id, m.season_id, COALESCE(s.display_name, CAST(s.year AS TEXT)) as season_name, e.name as event_name, \
             m.home_team_id, ht.name as home_team_name, hc.iso2Code as home_team_country_iso2, \
             m.away_team_id, at.name as away_team_name, ac.iso2Code as away_team_country_iso2, \
             m.home_score_unidentified, m.away_score_unidentified, \
@@ -343,9 +343,9 @@ pub async fn get_matches(
 /// Get all seasons for filter dropdown
 pub async fn get_seasons(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query(
-        "SELECT s.id, s.name \
+        "SELECT s.id, COALESCE(s.display_name, CAST(s.year AS TEXT)) as name \
          FROM season s \
-         ORDER BY s.name DESC"
+         ORDER BY s.year DESC"
     )
     .fetch_all(db)
     .await?;
@@ -514,11 +514,15 @@ pub async fn get_score_event_by_id(
     }))
 }
 
-/// Create a new score event
+/// Create a new score event and decrement unidentified goal count
 pub async fn create_score_event(
     db: &SqlitePool,
     entity: CreateScoreEventEntity,
 ) -> Result<i64, sqlx::Error> {
+    // Start a transaction to ensure both operations succeed or fail together
+    let mut tx = db.begin().await?;
+
+    // Insert the score event
     let result = sqlx::query(
         "INSERT INTO score_event (match_id, team_id, scorer_id, assist1_id, assist2_id, period, time_minutes, time_seconds, goal_type) \
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -532,10 +536,38 @@ pub async fn create_score_event(
     .bind(entity.time_minutes)
     .bind(entity.time_seconds)
     .bind(entity.goal_type)
-    .execute(db)
+    .execute(&mut *tx)
     .await?;
 
-    Ok(result.last_insert_rowid())
+    let score_event_id = result.last_insert_rowid();
+
+    // Get the match to determine home/away team
+    let match_row = sqlx::query("SELECT home_team_id, away_team_id, home_score_unidentified, away_score_unidentified FROM match WHERE id = ?")
+        .bind(entity.match_id)
+        .fetch_one(&mut *tx)
+        .await?;
+
+    let home_team_id: i64 = match_row.get("home_team_id");
+    let home_score_unidentified: i32 = match_row.get("home_score_unidentified");
+    let away_score_unidentified: i32 = match_row.get("away_score_unidentified");
+
+    // Decrement the appropriate unidentified score if it's greater than 0
+    if entity.team_id == home_team_id && home_score_unidentified > 0 {
+        sqlx::query("UPDATE match SET home_score_unidentified = home_score_unidentified - 1 WHERE id = ?")
+            .bind(entity.match_id)
+            .execute(&mut *tx)
+            .await?;
+    } else if entity.team_id != home_team_id && away_score_unidentified > 0 {
+        sqlx::query("UPDATE match SET away_score_unidentified = away_score_unidentified - 1 WHERE id = ?")
+            .bind(entity.match_id)
+            .execute(&mut *tx)
+            .await?;
+    }
+
+    // Commit the transaction
+    tx.commit().await?;
+
+    Ok(score_event_id)
 }
 
 /// Update an existing score event
@@ -565,14 +597,57 @@ pub async fn update_score_event(
     Ok(result.rows_affected() > 0)
 }
 
-/// Delete a score event
+/// Delete a score event and increment unidentified goal count
 pub async fn delete_score_event(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM score_event WHERE id = ?")
+    // Start a transaction to ensure both operations succeed or fail together
+    let mut tx = db.begin().await?;
+
+    // Get the score event to determine match and team
+    let score_event_row = sqlx::query("SELECT match_id, team_id FROM score_event WHERE id = ?")
         .bind(id)
-        .execute(db)
+        .fetch_optional(&mut *tx)
         .await?;
 
-    Ok(result.rows_affected() > 0)
+    let (match_id, team_id) = match score_event_row {
+        Some(row) => (row.get::<i64, _>("match_id"), row.get::<i64, _>("team_id")),
+        None => return Ok(false), // Score event not found
+    };
+
+    // Delete the score event
+    let result = sqlx::query("DELETE FROM score_event WHERE id = ?")
+        .bind(id)
+        .execute(&mut *tx)
+        .await?;
+
+    if result.rows_affected() == 0 {
+        return Ok(false);
+    }
+
+    // Get the match to determine home/away team
+    let match_row = sqlx::query("SELECT home_team_id FROM match WHERE id = ?")
+        .bind(match_id)
+        .fetch_one(&mut *tx)
+        .await?;
+
+    let home_team_id: i64 = match_row.get("home_team_id");
+
+    // Increment the appropriate unidentified score
+    if team_id == home_team_id {
+        sqlx::query("UPDATE match SET home_score_unidentified = home_score_unidentified + 1 WHERE id = ?")
+            .bind(match_id)
+            .execute(&mut *tx)
+            .await?;
+    } else {
+        sqlx::query("UPDATE match SET away_score_unidentified = away_score_unidentified + 1 WHERE id = ?")
+            .bind(match_id)
+            .execute(&mut *tx)
+            .await?;
+    }
+
+    // Commit the transaction
+    tx.commit().await?;
+
+    Ok(true)
 }
 
 /// Get players for a specific team participation (for dropdowns)

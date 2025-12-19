@@ -2,7 +2,7 @@ use maud::{html, Markup};
 
 use crate::common::pagination::{PagedResult, SortOrder};
 use crate::service::matches::{MatchDetailEntity, MatchEntity, MatchFilters, ScoreEventEntity, SortField};
-use crate::views::components::crud::{empty_state, modal_form, page_header, pagination, table_actions};
+use crate::views::components::crud::{empty_state, modal_form, page_header, pagination};
 
 /// Main matches page with table and filters
 pub fn matches_page(
@@ -269,12 +269,33 @@ pub fn match_list_content(
                                 }
 
                                 // Actions
-                                (table_actions(
-                                    &format!("/matches/{}", match_item.id),
-                                    &build_delete_url(match_item.id, filters, sort_field, sort_order),
-                                    "matches-table",
-                                    "match"
-                                ))
+                                td style="text-align: right;" {
+                                    a
+                                        href=(format!("/matches/{}", match_item.id))
+                                        class="btn btn-sm"
+                                        style="margin-right: 0.5rem;"
+                                    {
+                                        "View"
+                                    }
+                                    button
+                                        class="btn btn-sm"
+                                        hx-get=(format!("/matches/{}/edit", match_item.id))
+                                        hx-target="#modal-container"
+                                        hx-swap="innerHTML"
+                                        style="margin-right: 0.5rem;"
+                                    {
+                                        "Edit"
+                                    }
+                                    button
+                                        class="btn btn-sm btn-danger"
+                                        hx-post=(build_delete_url(match_item.id, filters, sort_field, sort_order))
+                                        hx-target="#matches-table"
+                                        hx-swap="outerHTML"
+                                        hx-confirm="Are you sure you want to delete this match?"
+                                    {
+                                        "Delete"
+                                    }
+                                }
                             }
                         }
                     }
@@ -651,15 +672,15 @@ pub fn match_detail_page(detail: &MatchDetailEntity) -> Markup {
                         hx-target="#modal-container"
                         hx-swap="innerHTML"
                     {
-                        "+ Add Goal"
+                        "+ Identify Goal"
                     }
                 }
 
                 @if detail.score_events.is_empty() {
                     div style="padding: 3rem; text-align: center; color: var(--gray-500); background: var(--gray-50); border-radius: 8px;" {
-                        p { "No goals recorded yet." }
+                        p { "No goals identified yet." }
                         p style="margin-top: 0.5rem; font-size: 0.875rem;" {
-                            "Click 'Add Goal' to record scoring events."
+                            "Click 'Identify Goal' to assign goals to players."
                         }
                     }
                 } @else {
@@ -1267,11 +1288,11 @@ pub fn score_event_create_modal(
 
     modal_form(
         "score-event-modal",
-        "Add Goal",
+        "Identify Goal",
         error,
         &format!("/matches/{}/score-events", match_info.id),
         form_fields,
-        "Add Goal"
+        "Identify Goal"
     )
 }
 
