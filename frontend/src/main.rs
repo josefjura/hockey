@@ -162,7 +162,16 @@ async fn root_handler(State(state): State<AppState>, request: Request) -> Html<S
     // TODO: Get locale from user preferences or cookie
     let locale = Locale::English;
 
-    let content = dashboard_page();
+    // Fetch dashboard stats
+    let stats = service::dashboard::get_dashboard_stats(&state.db)
+        .await
+        .unwrap_or_default();
+    
+    let recent_activity = service::dashboard::get_recent_activity(&state.db)
+        .await
+        .unwrap_or_default();
+
+    let content = dashboard_page(&stats, &recent_activity);
     let html = admin_layout("Dashboard", &session, "/", &state.i18n, locale, content);
 
     Html(html.into_string())
