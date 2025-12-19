@@ -46,6 +46,7 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 script type="module" src="/static/js/components/loading-state.js" {}
                 script type="module" src="/static/js/components/toast.js" {}
                 script type="module" src="/static/js/components/confirm-dialog.js" {}
+                script type="module" src="/static/js/components/modal.js" {}
             }
             body {
                 (content)
