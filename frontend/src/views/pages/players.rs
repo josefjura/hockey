@@ -67,8 +67,7 @@ pub fn players_page(
                         div {
                             button
                                 type="button"
-                                class="btn"
-                                style="background: white; border: 1px solid var(--gray-300);"
+                                class="btn btn-secondary"
                                 hx-get="/players/list"
                                 hx-target="#players-table"
                                 hx-swap="outerHTML"

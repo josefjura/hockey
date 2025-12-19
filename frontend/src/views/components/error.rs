@@ -145,7 +145,7 @@ pub fn error_state(
                     {
                         "Try Again"
                     }
-                    a href="/" class="btn" style="background: white; border: 1px solid var(--gray-300);" {
+                    a href="/" class="btn btn-secondary" {
                         "Go Home"
                     }
                 }

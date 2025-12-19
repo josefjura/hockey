@@ -117,8 +117,7 @@ pub fn matches_page(
                         div {
                             button
                                 type="button"
-                                class="btn"
-                                style="background: white; border: 1px solid var(--gray-300);"
+                                class="btn btn-secondary"
                                 hx-get="/matches/list"
                                 hx-target="#matches-table"
                                 hx-swap="outerHTML"
@@ -506,8 +505,7 @@ pub fn match_detail_page(t: &TranslationContext, detail: &MatchDetailEntity) -> 
                 div style="display: flex; align-items: center; gap: 1rem;" {
                     a
                         href="/matches"
-                        class="btn"
-                        style="background: white; border: 1px solid var(--gray-300);"
+                        class="btn btn-secondary"
                     {
                         (format!("← {}", t.messages.matches_back_to_list()))
                     }

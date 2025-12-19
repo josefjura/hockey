@@ -124,8 +124,7 @@ pub fn modal_form(
                         }
                         button
                             type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
+                            class="btn btn-secondary"
                             onclick=(format!("document.getElementById('{}').remove()", modal_id))
                         {
                             "Cancel"
@@ -254,8 +253,7 @@ pub fn modal_form_multipart(
                         }
                         button
                             type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
+                            class="btn btn-secondary"
                             onclick=(format!("document.getElementById('{}').remove()", modal_id))
                         {
                             "Cancel"
@@ -501,8 +499,7 @@ pub fn modal_form_i18n(
                         }
                         button
                             type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
+                            class="btn btn-secondary"
                             onclick=(format!("document.getElementById('{}').remove()", modal_id))
                         {
                             (cancel_label)
@@ -622,8 +619,7 @@ pub fn modal_form_multipart_i18n(
                         }
                         button
                             type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
+                            class="btn btn-secondary"
                             onclick=(format!("document.getElementById('{}').remove()", modal_id))
                         {
                             (cancel_label)

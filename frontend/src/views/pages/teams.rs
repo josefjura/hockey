@@ -68,8 +68,7 @@ pub fn teams_page(
                         div {
                             button
                                 type="button"
-                                class="btn"
-                                style="background: white; border: 1px solid var(--gray-300);"
+                                class="btn btn-secondary"
                                 hx-get="/teams/list"
                                 hx-target="#teams-table"
                                 hx-swap="outerHTML"

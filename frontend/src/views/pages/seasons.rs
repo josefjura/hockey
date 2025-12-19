@@ -69,8 +69,7 @@ pub fn seasons_page(
                         div {
                             button
                                 type="button"
-                                class="btn"
-                                style="background: white; border: 1px solid var(--gray-300);"
+                                class="btn btn-secondary"
                                 hx-get="/seasons/list"
                                 hx-target="#seasons-table"
                                 hx-swap="outerHTML"

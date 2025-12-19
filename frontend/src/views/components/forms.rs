@@ -491,6 +491,55 @@ pub fn form_styles() -> Markup {
                 border-color: var(--primary-color);
                 background: rgba(59, 130, 246, 0.05);
             }
+
+            /* Table Styles */
+            .table {
+                width: 100%;
+                border-collapse: collapse;
+                background: white;
+            }
+
+            .table thead {
+                background: var(--gray-50);
+            }
+
+            .table th {
+                text-align: left;
+                padding: 0.875rem 1rem;
+                font-weight: 600;
+                font-size: 0.8125rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--gray-600);
+                border-bottom: 2px solid var(--gray-200);
+                white-space: nowrap;
+            }
+
+            .table td {
+                padding: 0.875rem 1rem;
+                border-bottom: 1px solid var(--gray-200);
+                color: var(--gray-700);
+            }
+
+            .table tbody tr:hover {
+                background: var(--gray-50);
+            }
+
+            .table tbody tr:last-child td {
+                border-bottom: none;
+            }
+
+            /* Ensure proper column widths */
+            .table th:first-child,
+            .table td:first-child {
+                width: auto;
+            }
+
+            .table th:last-child,
+            .table td:last-child {
+                width: auto;
+                text-align: right;
+            }
         </style>
         "#))
     }

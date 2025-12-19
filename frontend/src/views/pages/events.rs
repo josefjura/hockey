@@ -71,8 +71,7 @@ pub fn events_page(
                         div {
                             button
                                 type="button"
-                                class="btn"
-                                style="background: white; border: 1px solid var(--gray-300);"
+                                class="btn btn-secondary"
                                 hx-get="/events/list"
                                 hx-target="#events-table"
                                 hx-swap="outerHTML"
@@ -374,8 +373,7 @@ pub fn event_create_modal(
                     div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
                         button
                             type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
+                            class="btn btn-secondary"
                             onclick="document.getElementById('event-modal').remove()"
                         {
                             (t.messages.common_cancel())
@@ -465,8 +463,7 @@ pub fn event_edit_modal(
                     div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
                         button
                             type="button"
-                            class="btn"
-                            style="background: white; border: 1px solid var(--gray-300);"
+                            class="btn btn-secondary"
                             onclick="document.getElementById('event-modal').remove()"
                         {
                             (t.messages.common_cancel())
