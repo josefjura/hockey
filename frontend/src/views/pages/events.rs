@@ -3,6 +3,7 @@ use maud::{html, Markup, PreEscaped};
 use crate::i18n::TranslationContext;
 use crate::service::events::{EventEntity, EventFilters, PagedResult};
 use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
+use crate::views::components::empty_state::{empty_state_enhanced, EmptyStateIcon};
 
 /// Main events page with table and filters
 pub fn events_page(
@@ -98,17 +99,31 @@ pub fn event_list_content(
     result: &PagedResult<EventEntity>,
     filters: &EventFilters,
 ) -> Markup {
+    let has_filters = filters.name.is_some() || filters.country_id.is_some();
+    let empty_title = t.messages.events_empty_title().to_string();
+    let empty_message = if has_filters {
+        t.messages.events_empty_message().to_string()
+    } else {
+        "Create your first event to get started.".to_string()
+    };
+    let create_label = t.messages.events_create().to_string();
+    
     html! {
-        div id="events-table" {
+        div id="events-table" class="loading-overlay" {
+            // Loading spinner overlay
+            div class="loading-spinner-overlay" {
+                hockey-loading-spinner size="lg" {}
+            }
+            
             @if result.items.is_empty() {
-                div style="padding: 3rem; text-align: center; color: var(--gray-500);" {
-                    p { (t.messages.events_empty_title()) }
-                    @if filters.name.is_some() || filters.country_id.is_some() {
-                        p style="margin-top: 0.5rem; font-size: 0.875rem;" {
-                            (t.messages.events_empty_message())
-                        }
-                    }
-                }
+                (empty_state_enhanced(
+                    if has_filters { EmptyStateIcon::Search } else { EmptyStateIcon::Calendar },
+                    &empty_title,
+                    &empty_message,
+                    if !has_filters { Some(create_label.as_str()) } else { None },
+                    if !has_filters { Some("/events/new") } else { None },
+                    if !has_filters { Some("#modal-container") } else { None }
+                ))
             } @else {
                 table class="table" {
                     thead {
