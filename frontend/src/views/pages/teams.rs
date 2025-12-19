@@ -99,7 +99,12 @@ pub fn team_list_content(
     sort_order: &SortOrder,
 ) -> Markup {
     html! {
-        div id="teams-table" {
+        div id="teams-table" class="loading-overlay" {
+            // Loading spinner overlay
+            div class="loading-spinner-overlay" {
+                hockey-loading-spinner size="lg" {}
+            }
+            
             @if result.items.is_empty() {
                 (empty_state(
                     &t.messages.teams_entity().to_string(),

@@ -98,7 +98,12 @@ pub fn player_list_content(
     sort_order: &SortOrder,
 ) -> Markup {
     html! {
-        div id="players-table" {
+        div id="players-table" class="loading-overlay" {
+            // Loading spinner overlay
+            div class="loading-spinner-overlay" {
+                hockey-loading-spinner size="lg" {}
+            }
+            
             @if result.items.is_empty() {
                 (empty_state(
                     &t.messages.players_entity().to_string(),
