@@ -1,4 +1,4 @@
-.PHONY: help precommit precommit-web precommit-server check-web check-server lint-web lint-server format-web format-server test-web test-server build-web build-server
+.PHONY: help precommit check lint format format-check test build dev clean install docker-build docker-up docker-down create-admin
 
 # Colors for output
 GREEN := \033[0;32m
@@ -12,118 +12,73 @@ help: ## Show this help message
 
 ##@ Pre-commit Commands
 
-precommit: precommit-web precommit-server ## Run all pre-commit checks (web + server)
+precommit: format-check clippy test ## Run all pre-commit checks (format, clippy, test)
 	@echo "$(GREEN)✓ All pre-commit checks passed!$(NC)"
 
-precommit-web: ## Run all pre-commit checks for frontend (lint, format check, type check, build)
-	@echo "$(GREEN)==> Running frontend pre-commit checks...$(NC)"
-	@$(MAKE) lint-web
-	@$(MAKE) format-check-web
-	@$(MAKE) typecheck-web
-	@echo "$(GREEN)✓ Frontend pre-commit checks passed!$(NC)"
+##@ Development Commands
 
-precommit-server: ## Run all pre-commit checks for backend (format, clippy, test)
-	@echo "$(GREEN)==> Running backend pre-commit checks...$(NC)"
-	@$(MAKE) format-check-server
-	@$(MAKE) clippy-server
-	@$(MAKE) test-server
-	@echo "$(GREEN)✓ Backend pre-commit checks passed!$(NC)"
+dev: ## Start development server
+	@echo "$(YELLOW)==> Starting development server...$(NC)"
+	@cargo run
 
-##@ Frontend Commands
+create-admin: ## Create an admin user
+	@echo "$(YELLOW)==> Creating admin user...$(NC)"
+	@cargo run --bin create_admin
 
-lint-web: ## Run ESLint on frontend
-	@echo "$(YELLOW)==> Linting frontend...$(NC)"
-	@cd frontend && yarn lint
+##@ Code Quality Commands
 
-format-web: ## Format frontend code with Prettier
-	@echo "$(YELLOW)==> Formatting frontend code...$(NC)"
-	@cd frontend && yarn format
+format: ## Format code with rustfmt
+	@echo "$(YELLOW)==> Formatting code...$(NC)"
+	@cargo fmt
 
-format-check-web: ## Check frontend code formatting without modifying
-	@echo "$(YELLOW)==> Checking frontend code formatting...$(NC)"
-	@cd frontend && yarn format:check
+format-check: ## Check code formatting without modifying
+	@echo "$(YELLOW)==> Checking code formatting...$(NC)"
+	@cargo fmt --check
 
-typecheck-web: ## Run TypeScript type checking
-	@echo "$(YELLOW)==> Type checking frontend...$(NC)"
-	@cd frontend && yarn typecheck
+clippy: ## Run Clippy linter
+	@echo "$(YELLOW)==> Running Clippy...$(NC)"
+	@cargo clippy -- -D warnings
 
-test-web: ## Run frontend tests
-	@echo "$(YELLOW)==> Running frontend tests...$(NC)"
-	@cd frontend && yarn test
+lint: clippy ## Alias for clippy
 
-build-web: ## Build frontend for production
-	@echo "$(YELLOW)==> Building frontend...$(NC)"
-	@cd frontend && yarn build
+check: ## Run cargo check
+	@echo "$(YELLOW)==> Checking compilation...$(NC)"
+	@cargo check
 
-dev-web: ## Start frontend development server
-	@cd frontend && yarn dev
+test: ## Run tests
+	@echo "$(YELLOW)==> Running tests...$(NC)"
+	@cargo test
 
-##@ Backend Commands
+##@ Build Commands
 
-format-server: ## Format backend code with rustfmt
-	@echo "$(YELLOW)==> Formatting backend code...$(NC)"
-	@cd backend && cargo fmt
+build: ## Build for production
+	@echo "$(YELLOW)==> Building for production...$(NC)"
+	@cargo build --release
 
-format-check-server: ## Check backend code formatting without modifying
-	@echo "$(YELLOW)==> Checking backend code formatting...$(NC)"
-	@cd backend && cargo fmt --check
+##@ Docker Commands
 
-clippy-server: ## Run Clippy linter on backend
-	@echo "$(YELLOW)==> Running Clippy on backend...$(NC)"
-	@cd backend && cargo clippy -- -D warnings
+docker-build: ## Build Docker image
+	@echo "$(YELLOW)==> Building Docker image...$(NC)"
+	@docker build -t hockey:latest .
 
-test-server: ## Run backend tests
-	@echo "$(YELLOW)==> Running backend tests...$(NC)"
-	@cd backend && cargo test
+docker-up: ## Start Docker containers
+	@echo "$(YELLOW)==> Starting Docker containers...$(NC)"
+	@docker compose up -d
 
-build-server: ## Build backend for production
-	@echo "$(YELLOW)==> Building backend...$(NC)"
-	@cd backend && cargo build --release
+docker-down: ## Stop Docker containers
+	@echo "$(YELLOW)==> Stopping Docker containers...$(NC)"
+	@docker compose down
 
-check-server: ## Run cargo check on backend
-	@echo "$(YELLOW)==> Checking backend compilation...$(NC)"
-	@cd backend && cargo check
-
-dev-server: ## Start backend development server
-	@cd backend && cargo run
-
-##@ Combined Commands
-
-lint: lint-web clippy-server ## Run all linters (web + server)
-
-format: format-web format-server ## Format all code (web + server)
-
-format-check: format-check-web format-check-server ## Check all code formatting (web + server)
-
-test: test-web test-server ## Run all tests (web + server)
-
-build: build-web build-server ## Build all projects (web + server)
-
-check: check-web check-server ## Run all checks (web + server)
-
-check-web: ## Run all frontend checks (lint, format, typecheck)
-	@$(MAKE) lint-web
-	@$(MAKE) format-check-web
-	@$(MAKE) typecheck-web
+docker-logs: ## Show Docker container logs
+	@docker compose logs -f
 
 ##@ Utility Commands
 
-clean-web: ## Clean frontend build artifacts and dependencies
-	@echo "$(YELLOW)==> Cleaning frontend...$(NC)"
-	@cd frontend && rm -rf .next node_modules
+clean: ## Clean build artifacts
+	@echo "$(YELLOW)==> Cleaning build artifacts...$(NC)"
+	@cargo clean
 
-clean-server: ## Clean backend build artifacts
-	@echo "$(YELLOW)==> Cleaning backend...$(NC)"
-	@cd backend && cargo clean
+install: ## Install/update dependencies
+	@echo "$(YELLOW)==> Updating dependencies...$(NC)"
+	@cargo build
 
-clean: clean-web clean-server ## Clean all build artifacts
-
-install-web: ## Install frontend dependencies
-	@echo "$(YELLOW)==> Installing frontend dependencies...$(NC)"
-	@cd frontend && yarn install
-
-install-server: ## Install/update backend dependencies
-	@echo "$(YELLOW)==> Updating backend dependencies...$(NC)"
-	@cd backend && cargo build
-
-install: install-web install-server ## Install all dependencies

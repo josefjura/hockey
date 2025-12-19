@@ -1,80 +1,99 @@
 # Hockey Management System
 
-A modern hockey tournament management application built with Rust, HTMX, and Maud. Single-binary deployment with embedded assets, server-rendered HTML, and progressive enhancement.
-
-## 🚧 Active Rewrite
-
-This project is currently being rewritten from Next.js/React to HTMX/Maud for simplified deployment and maintenance.
-
-- **Track progress**: [View GitHub Milestones](https://github.com/josefjura/hockey/milestones)
-- **Implementation plan**: See `REWRITE_ANALYSIS.md` for architecture details
-- **Getting started**: See `GITHUB_PROJECT_SETUP.md` for task breakdown
+A modern hockey tournament management application built with Rust, HTMX, and Maud. Single-binary deployment with server-rendered HTML and progressive enhancement.
 
 ## 🏗️ Project Structure
 
 ```
 hockey/
-├── frontend/           # NEW: Rust + HTMX + Maud application
-│   ├── migrations/     # SQLx database migrations
-│   └── src/           # Rust source code
-├── backend/           # Reference: Old Rust API (for SQL queries)
-├── backup/            # Reference: Old Next.js frontend (gitignored)
-└── docs/              # Analysis and project documentation
+├── src/               # Rust source code (Axum + HTMX + Maud)
+│   ├── main.rs        # Application entry point
+│   ├── routes/        # HTTP route handlers
+│   ├── views/         # Maud HTML templates
+│   ├── business/      # Business logic layer
+│   ├── service/       # Data access layer
+│   ├── auth/          # Authentication & sessions
+│   ├── i18n/          # Internationalization (Czech/English)
+│   └── bin/           # Utility binaries (create_admin)
+├── migrations/        # SQLx database migrations
+├── static/            # Static assets (CSS, JS, images)
+│   └── js/components/ # Built Lit web components
+├── web_components/    # Lit TypeScript source (built to static/js/)
+├── backup/            # Archived previous implementations (gitignored)
+└── data/              # SQLite database (gitignored)
 ```
 
-## 🚀 Features (Planned)
+## 🚀 Features
 
 - **Complete Hockey Management** - Teams, Players, Events, Seasons, Matches
 - **Score Tracking** - Individual goals with scorer/assist tracking
-- **Multi-language Support** (English & Czech) via fluent-rs
+- **Multi-language Support** - English & Czech via fluent-rs
 - **Responsive Design** - Mobile-first with Tailwind CSS
-- **Two Table Strategies**:
-  - Small datasets (≤500 rows): Client-side Lit Web Components
-  - Large datasets: Server-side HTMX datagrids
-- **Session-based Authentication** - Simplified auth with cookies
-- **Progressive Enhancement** - Works without JavaScript, enhanced with JS
+- **Hybrid Table Strategy**:
+  - Small datasets: Client-side Lit Web Components with sorting/filtering
+  - Large datasets: Server-side HTMX pagination
+- **Session-based Authentication** - Cookie-based auth with bcrypt
+- **Progressive Enhancement** - Works without JavaScript, enhanced with it
+- **Single Binary Deployment** - All assets served from one executable
 
 ## 🛠️ Tech Stack
 
-### Backend & Frontend (Single Binary)
 - **Framework**: [Axum](https://github.com/tokio-rs/axum) - Async Rust web framework
-- **Templating**: [Maud](https://maud.lambda.xyz/) - Type-safe HTML templates
-- **Interactivity**: [HTMX](https://htmx.org/) - Server-driven dynamic HTML
-- **Components**: [Lit](https://lit.dev/) - Web Components for rich client-side features
-- **Database**: SQLite with [SQLx](https://github.com/launchbadge/sqlx)
+- **Templating**: [Maud](https://maud.lambda.xyz/) - Type-safe HTML templates in Rust
+- **Interactivity**: [HTMX](https://htmx.org/) - Hypermedia-driven updates
+- **Components**: [Lit](https://lit.dev/) - Lightweight web components
+- **Database**: SQLite with [SQLx](https://github.com/launchbadge/sqlx) compile-time checked queries
 - **Authentication**: Session-based with bcrypt password hashing
 - **Internationalization**: [fluent-rs](https://docs.rs/fluent/) for Czech/English
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 
-### Architecture
-- **Three-layer**: Routes → Business Logic → Service (preserved from old backend)
-- **Server-first**: HTML rendered on server, progressive enhancement with JS
-- **Embedded Assets**: CSS, JS, flags, images compiled into binary
-- **Type-safe queries**: SQLx compile-time verification
-
 ## 📋 Prerequisites
 
-- Rust 1.81+ (or latest stable)
-- SQLite (for development)
-- Node.js 18+ (for Lit component compilation only)
+- **Rust 1.81+** (or latest stable)
+- **SQLite 3** (for local development)
+- **Node.js 20+** (only for web components development)
+- **Docker & Docker Compose** (for containerized deployment)
 
 ## 🚀 Getting Started
 
-### Development Setup
+### Local Development
 
-```bash
-cd frontend
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/josefjura/hockey.git
+   cd hockey
+   ```
 
-# First run: Database will be created from migrations
-cargo run
+2. **Copy environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
 
-# Application available at http://localhost:8080
-```
+3. **Generate session secret:**
+   ```bash
+   openssl rand -hex 32
+   ```
+   Add the output to `.env` as `SESSION_SECRET`
+
+4. **Run the application:**
+   ```bash
+   cargo run
+   ```
+   The database will be created automatically from migrations on first run.
+
+5. **Visit the application:**
+   Open http://localhost:8080 in your browser
+   ```bash
+   cargo run
+   ```
+   The database will be created automatically from migrations on first run.
+
+5. **Visit the application:**
+   Open http://localhost:8080 in your browser
 
 ### Create Admin User
 
 ```bash
-cd frontend
 cargo run --bin create_admin
 ```
 
@@ -83,189 +102,139 @@ The tool will prompt for:
 - Password (min 8 characters)
 - Name (optional)
 
-### Environment Variables
-
-Create `.env` in `frontend/`:
+### Using Make Commands
 
 ```bash
-DATABASE_URL=sqlite:./hockey.db
-ENVIRONMENT=development
-SESSION_SECRET=your-secret-key-change-in-production
+# Show all available commands
+make help
+
+# Run pre-commit checks (format, clippy, tests)
+make precommit
+
+# Start development server
+make dev
+
+# Run tests
+make test
+
+# Build for production
+make build
+
+# Create admin user
+make create-admin
+
+# Docker commands
+make docker-build    # Build Docker image
+make docker-up       # Start containers
+make docker-down     # Stop containers
+make docker-logs     # View logs
 ```
 
-**Production**: Use secure random keys generated with `openssl rand -hex 32`
+### Web Components Development
 
-## 📡 API Structure
-
-The application uses HTMX for dynamic updates, returning HTML fragments instead of JSON:
-
-### Pages
-- `/` - Dashboard with stats and quick actions
-- `/teams` - Teams management with search/filters
-- `/players` - Players management
-- `/events` - Events/tournaments management
-- `/seasons` - Seasons management
-- `/matches` - Matches list with complex filtering
-- `/matches/{id}` - Match detail with score tracking
-- `/management` - Countries and system settings
-
-### Authentication
-- `POST /auth/login` - Login form submission
-- `POST /auth/logout` - Logout and destroy session
-
-### HTMX Endpoints
-Most endpoints accept both full page loads and HTMX requests:
-- Full page: Returns complete HTML with layout
-- HTMX: Returns HTML fragment for target element
-
-Example:
-```html
-<!-- HTMX request for pagination -->
-<div hx-get="/teams/list?page=2" hx-target="#teams-table">
-  Load more
-</div>
-```
-
-## 🌍 Internationalization
-
-The app supports multiple languages using fluent-rs:
-- 🇺🇸 English (default)
-- 🇨🇿 Czech
-
-Language switching via locale parameter in URL or user preference cookie.
-
-## 📊 Data Management
-
-### Database Schema
-- **Authentication**: users, sessions (cookie-based)
-- **Core entities**: country, event, season, team, player
-- **Relationships**: team_participation, player_contract
-- **Matches**: match, score_event (goals with scorer/assists)
-
-### Historical Data
-Supports historical countries (Soviet Union, East Germany, etc.) with year ranges.
-
-## 🎨 Design System
-
-- **Server-rendered**: Maud templates for type-safe HTML
-- **Styling**: Tailwind CSS utility classes
-- **Components**:
-  - Reusable Maud templates for tables, forms, modals
-  - Lit Web Components for rich interactions (small tables, selectors)
-- **Icons**: Inline SVG or icon font
-- **Responsive**: Mobile-first design with breakpoints
-
-## 🔐 Authentication
-
-Session-based authentication with cookies:
-
-1. **Login**: User submits email/password
-   - Backend validates against bcrypt hash
-   - Creates session, sets HttpOnly cookie
-
-2. **Requests**: Session cookie sent automatically
-   - Middleware validates session
-   - Extracts user from session store
-
-3. **Logout**: Destroy session and clear cookie
-
-**Security Features**:
-- Bcrypt password hashing
-- HttpOnly, Secure, SameSite cookies
-- CSRF protection
-- Session expiration
-
-## 📁 Project Documentation
-
-- **REWRITE_ANALYSIS.md** - Complete architecture analysis and implementation plan
-- **GITHUB_PROJECT_SETUP.md** - Milestones, issues, and task breakdown
-- **CLAUDE.md** - AI assistant instructions and project patterns
-- **SECURITY.md** - Security guidelines and best practices
-
-## 🏗️ Implementation Status
-
-**Current Phase**: Phase 1 - Foundation
-
-Track progress at: https://github.com/josefjura/hockey/milestones
-
-### Timeline (9 weeks total)
-- ✅ Week 0: Analysis and planning
-- 🔄 Weeks 1-2: Phase 1 - Foundation (auth, layout, Teams CRUD)
-- ⏳ Weeks 3-4: Phase 2 - Core entities
-- ⏳ Week 5: Phase 3 - Table components
-- ⏳ Weeks 6-7: Phase 4 - Matches & scoring
-- ⏳ Week 8: Phase 5 - Dashboard & polish
-- ⏳ Week 9: Phase 6 - Deployment
-
-## 🚢 Deployment
-
-### Single Binary
-
-Build for production:
+If you need to modify Lit web components:
 
 ```bash
-cd frontend
-cargo build --release
+cd web_components
 
-# Binary with embedded assets:
-./target/release/hockey
+# Install dependencies (first time only)
+npm install
+
+# Build components (outputs to ../static/js/components/)
+npm run build
+
+# Watch mode for development
+npm run watch
+
+# Run Storybook for component development
+npm run storybook
 ```
 
-### Systemd Service
+**Note:** Built JS files are committed to `static/js/components/`. After building, commit both TypeScript source and built output.
 
-Example service file:
+## 🐳 Docker Deployment
 
-```ini
-[Unit]
-Description=Hockey Management System
-After=network.target
-
-[Service]
-Type=simple
-User=hockey
-WorkingDirectory=/opt/hockey
-ExecStart=/opt/hockey/hockey
-Restart=on-failure
-Environment="DATABASE_URL=sqlite:/opt/hockey/data/hockey.db"
-Environment="ENVIRONMENT=production"
-Environment="SESSION_SECRET=your-production-secret"
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### Reverse Proxy
-
-Use Nginx or Caddy for SSL termination:
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name hockey.example.com;
-
-    ssl_certificate /etc/letsencrypt/live/hockey.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/hockey.example.com/privkey.pem;
-
-    location / {
-        proxy_pass http://localhost:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-## 🔧 Development
-
-### Project Commands
+### Development
 
 ```bash
-# Run application
+docker compose up -d
+```
+
+Access at http://localhost:8080
+
+### Production
+
+1. **Set up environment variables:**
+   ```bash
+   cp .env.prod.example .env.prod
+   # Edit .env.prod with production values
+   ```
+
+2. **Deploy:**
+   ```bash
+   docker compose -f docker-compose.prod.yaml up -d
+   ```
+
+## 🔧 Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | `sqlite:./hockey.db` | SQLite database file path |
+| `SESSION_SECRET` | ⚠️ development key | Session encryption secret (required for production) |
+| `ENVIRONMENT` | `development` | Environment mode (`development` or `production`) |
+| `PORT` | `8080` | Server port |
+| `RUST_LOG` | `info` | Logging level |
+
+## 📦 CI/CD
+
+The project uses **cargo-dist style** GitHub Actions workflow:
+
+- **On Push to Master**: Runs tests only (format, clippy, cargo test)
+- **On Tag (v*.*.*)**: 
+  - Runs full test suite
+  - Builds Docker image
+  - Pushes to GitHub Container Registry (`ghcr.io/josefjura/hockey:latest`)
+  - Auto-creates GitHub Release with notes
+
+### Release Workflow
+
+1. **Create and push a tag:**
+   ```bash
+   git tag v0.1.0
+   git push --tags
+   ```
+
+2. **GitHub Actions automatically:**
+   - Runs tests
+   - Builds multi-platform Docker image
+   - Pushes to `ghcr.io/josefjura/hockey:latest`
+   - Creates GitHub Release with deployment instructions
+
+3. **Deploy to server:**
+   ```bash
+   # On your production server
+   cd ~/hockey
+   docker compose -f docker-compose.prod.yaml pull
+   docker compose -f docker-compose.prod.yaml up -d
+   ```
+
+4. **Or use Watchtower** for automatic updates (see DEPLOYMENT.md)
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
+
+## 📚 Development Commands
+
+```bash
+# Start development server
 cargo run
+
+# Build project
+cargo build --release
 
 # Run tests
 cargo test
 
-# Check code without building
+# Check code (faster than build)
 cargo check
 
 # Format code
@@ -274,36 +243,26 @@ cargo fmt
 # Lint code
 cargo clippy
 
-# Create admin user
-cargo run --bin create_admin
-```
-
-### Hot Reload
-
-Use `cargo-watch` for automatic recompilation:
-
-```bash
+# Hot reload (requires cargo-watch)
 cargo install cargo-watch
 cargo watch -x run
 ```
 
-## 📚 Learning Resources
+## 🗂️ Project History
 
-- **Axum**: https://docs.rs/axum/
-- **Maud**: https://maud.lambda.xyz/
-- **HTMX**: https://htmx.org/docs/
-- **Lit**: https://lit.dev/docs/
-- **SQLx**: https://docs.rs/sqlx/
-- **fluent-rs**: https://docs.rs/fluent/
+This project was rewritten in 2025 from a dual-service architecture (Next.js frontend + Rust API backend) to a unified Rust application with HTMX. The new architecture provides:
 
-## 🤝 Contributing
+- **Simpler Deployment** - Single Docker container instead of two services
+- **Better Performance** - No API overhead, direct database queries
+- **Type Safety** - End-to-end Rust with compile-time HTML templates
+- **Progressive Enhancement** - Server-rendered HTML with HTMX
 
-See `GITHUB_PROJECT_SETUP.md` for current issues and milestones.
+The old implementations are preserved locally in the `backup/` directory (gitignored).
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
+This project is licensed under the MIT License.
 
----
+## 🤝 Contributing
 
-**Old Architecture Reference**: See `backup/` directory for previous Next.js/React implementation
+Contributions are welcome! Please feel free to submit a Pull Request.

@@ -1,60 +1,28 @@
 version: '3.8'
 
 services:
-  hockey-backend:
-    image: ghcr.io/josefjura/hockey/backend:latest
-    container_name: hockey_server
+  hockey:
+    image: ghcr.io/josefjura/hockey:latest
+    container_name: hockey
     networks:
       - traefik-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.hockey-server.rule=Host(`api.hockey.joseforge.cz`)"
-      - "traefik.http.routers.hockey-server.entrypoints=websecure"
-      - "traefik.http.routers.hockey-server.tls.certresolver=myresolver"
-      - "traefik.http.services.hockey-server.loadbalancer.server.port=8080"
+      - "traefik.http.routers.hockey.rule=Host(`hockey.joseforge.cz`)"
+      - "traefik.http.routers.hockey.entrypoints=websecure"
+      - "traefik.http.routers.hockey.tls.certresolver=myresolver"
+      - "traefik.http.services.hockey.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https?://www\\.(.+)"
+      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}"
+      - "traefik.http.routers.hockey.middlewares=www-redirect"
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
       - DATABASE_URL=sqlite:/app/data/hockey.db?mode=rwc
-      - HMAC_KEY=${HOCKEY_HMAC_KEY}
-      - JWT_PRIVATE_KEY_PATH=/app/keys/jwt_private.pem
-      - JWT_PUBLIC_KEY_PATH=/app/keys/jwt_public.pem
-      - JWT_ACCESS_TOKEN_DURATION_MINUTES=${JWT_ACCESS_TOKEN_DURATION_MINUTES:-15}
-      - JWT_REFRESH_TOKEN_DURATION_DAYS=${JWT_REFRESH_TOKEN_DURATION_DAYS:-7}
+      - SESSION_SECRET=${SESSION_SECRET}
       - ENVIRONMENT=production
-      - RUST_LOG=${RUST_LOG:-info,jura_hockey=debug}
-      - CORS_ORIGINS=${CORS_ORIGINS}
-      - CORS_METHODS=${CORS_METHODS:-GET,POST,PUT,DELETE,OPTIONS}
-      - CORS_HEADERS=${CORS_HEADERS:-Content-Type,Authorization}
+      - RUST_LOG=${RUST_LOG:-info,hockey=debug}
     volumes:
       - /home/beardo/data/hockey:/app/data
-      - /home/beardo/keys/hockey:/app/keys:ro
-    restart: always
-
-  hockey-frontend:
-    image: ghcr.io/josefjura/hockey/frontend:latest
-    container_name: hockey_web
-    networks:
-      - traefik-net
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.hockey-web.rule=Host(`hockey.joseforge.cz`)"
-      - "traefik.http.routers.hockey-web.entrypoints=websecure"
-      - "traefik.http.routers.hockey-web.tls.certresolver=myresolver"
-      - "traefik.http.services.hockey-web.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https?://www\\.(.+)"
-      - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}"
-      - "traefik.http.routers.hockey-web.middlewares=www-redirect"
-      - "com.centurylinklabs.watchtower.enable=true"
-    environment:
-      - NEXTAUTH_URL=${NEXTAUTH_URL}
-      - NEXTAUTH_URL_INTERNAL=${NEXTAUTH_URL_INTERNAL:-http://hockey_web:3000}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - AUTH_TRUST_HOST=true
-      - HOCKEY_BACKEND_URL=${HOCKEY_BACKEND_URL:-http://hockey-backend:8080}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - NEXT_PUBLIC_ENV=${NEXT_PUBLIC_ENV:-production}
-    depends_on:
-      - hockey-backend
     restart: always
 
 networks:

@@ -1,1 +1,0 @@
-INSERT INTO event (name, country_id) VALUES ('Friendly', NULL), ('Championship', 1);

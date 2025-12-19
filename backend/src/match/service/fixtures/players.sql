@@ -1,1 +1,0 @@
-INSERT INTO player (name, country_id, photo_path) VALUES ('Player A', 1, NULL), ('Player B', 2, NULL);

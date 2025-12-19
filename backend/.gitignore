@@ -1,6 +1,0 @@
-/target
-/data
-
-# JWT RSA keys - never commit these!
-jwt_private.pem
-jwt_public.pem

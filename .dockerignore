@@ -1,19 +1,49 @@
-# Docker ignore file for root directory
+# Build artifacts
+target/
+node_modules/
+
+# Web components source (built files are in static/js/)
+web_components/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Environment files
 .env
 .env.local
 .env.*.local
-.git
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+
+# Git
+.git/
 .gitignore
-README.md
+
+# Docker files (not needed in image)
 docker-compose*.yaml
 .dockerignore
 
-# Backend specific (when building from root)
-backend/target/
-backend/.env
+# Documentation (not needed in container)
+*.md
+docs/
 
-# Frontend specific (when building from root)  
-frontend/node_modules/
-frontend/.next/
-frontend/.env*
-frontend/out/
+# Backup directory
+backup/
+
+# Testing
+tests/

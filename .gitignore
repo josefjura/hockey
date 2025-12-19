@@ -1,90 +1,28 @@
-# Monorepo .gitignore for hockey management system
+# Rust build artifacts
+/target/
+Cargo.lock
 
-# Backup directory (old Next.js frontend)
-backup/
+# Database
+*.db
+*.db-shm
+*.db-wal
 
-# Dependencies (frontend and backend)
-**/node_modules/
-**/.pnp
-**/.pnp.*
-**/yarn/*
-!**/yarn/patches
-!**/yarn/plugins
-!**/yarn/releases
-!**/yarn/versions
+# Node.js
+/web_components/node_modules/
 
-# Build outputs
-**/target/           # Rust builds
-**/.next/            # Next.js builds
-frontend/.next/      # Next.js builds (explicit)
-**/out/              # Next.js exports
-**/build/            # General builds
-**/dist/             # Distribution builds
+# Archived code
+/backup/
 
-# Testing
-**/coverage/
+# Environment
+.env
 
-# Environment files
-**/.env
-**/.env.local
-**/.env.development.local
-**/.env.test.local
-**/.env.production.local
-**/.env.prod
-
-# Logs
-**/npm-debug.log*
-**/yarn-debug.log*
-**/yarn-error.log*
-**/.pnpm-debug.log*
-**/logs/
-**/*.log
-
-# Runtime data
-**/pids/
-**/*.pid
-**/*.seed
-**/*.pid.lock
-
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Editor files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-
-# Deployment
-.vercel
-
-# Database files
-**/data/*.db
-**/data/*.sqlite
-**/data/*.sqlite3
-frontend/hockey.db
-frontend/*.db
-
-# Uploaded files (local development)
-frontend/static/uploads/
-
-# Temporary files
-**/tmp/
-**/temp/
-
-# JWT RSA keys - never commit these!
-**/jwt_private.pem
-**/jwt_public.pem
-
-databackend/jura_hockey.db
+# OS
+.DS_Store
+Thumbs.db
