@@ -2,7 +2,7 @@
 # Builds a production-ready single binary with embedded assets
 
 # Stage 1: Build the Rust application
-FROM rust:1.81-slim-bookworm AS builder
+FROM rust:1.83-slim-bookworm AS builder
 
 # Install build dependencies
 RUN apt-get update && \
