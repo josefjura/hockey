@@ -67,6 +67,8 @@ pub fn admin_layout(
                     }
                 }
             }
+            // Modal container for HTMX modal loading
+            div id="modal-container" {}
         },
     )
 }
