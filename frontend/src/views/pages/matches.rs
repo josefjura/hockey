@@ -1,6 +1,454 @@
 use maud::{html, Markup};
 
-use crate::service::matches::{MatchDetailEntity, ScoreEventEntity};
+use crate::common::pagination::{PagedResult, SortOrder};
+use crate::service::matches::{MatchDetailEntity, MatchEntity, MatchFilters, ScoreEventEntity, SortField};
+use crate::views::components::crud::{empty_state, page_header, pagination, table_actions};
+
+/// Main matches page with table and filters
+pub fn matches_page(
+    result: &PagedResult<MatchEntity>,
+    filters: &MatchFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+    seasons: &[(i64, String)],
+    teams: &[(i64, String)],
+) -> Markup {
+    html! {
+        div class="card" {
+            // Header with title and create button
+            (page_header(
+                "Matches",
+                "Manage and view all matches in the system.",
+                "/matches/new",
+                "+ New Match"
+            ))
+
+            // Filters
+            div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--gray-50); border-radius: 8px;" {
+                form hx-get="/matches/list" hx-target="#matches-table" hx-swap="outerHTML" hx-trigger="submit, change delay:300ms" {
+                    div style="display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 1rem; align-items: end;" {
+                        // Season filter
+                        div {
+                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                                "Season"
+                            }
+                            select
+                                name="season_id"
+                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                            {
+                                option value="" { "All seasons" }
+                                @for (id, name) in seasons {
+                                    option
+                                        value=(id)
+                                        selected[filters.season_id == Some(*id)]
+                                    {
+                                        (name)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Team filter
+                        div {
+                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                                "Team"
+                            }
+                            select
+                                name="team_id"
+                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                            {
+                                option value="" { "All teams" }
+                                @for (id, name) in teams {
+                                    option
+                                        value=(id)
+                                        selected[filters.team_id == Some(*id)]
+                                    {
+                                        (name)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Status filter
+                        div {
+                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                                "Status"
+                            }
+                            select
+                                name="status"
+                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                            {
+                                option value="" { "All statuses" }
+                                option
+                                    value="scheduled"
+                                    selected[filters.status.as_deref() == Some("scheduled")]
+                                {
+                                    "Scheduled"
+                                }
+                                option
+                                    value="in_progress"
+                                    selected[filters.status.as_deref() == Some("in_progress")]
+                                {
+                                    "In Progress"
+                                }
+                                option
+                                    value="finished"
+                                    selected[filters.status.as_deref() == Some("finished")]
+                                {
+                                    "Finished"
+                                }
+                                option
+                                    value="cancelled"
+                                    selected[filters.status.as_deref() == Some("cancelled")]
+                                {
+                                    "Cancelled"
+                                }
+                            }
+                        }
+
+                        // Clear button
+                        div {
+                            button
+                                type="button"
+                                class="btn"
+                                style="background: white; border: 1px solid var(--gray-300);"
+                                hx-get="/matches/list"
+                                hx-target="#matches-table"
+                                hx-swap="outerHTML"
+                            {
+                                "Clear"
+                            }
+                        }
+                    }
+
+                    // Date range filters (second row)
+                    div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;" {
+                        div {
+                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                                "From Date"
+                            }
+                            input
+                                type="date"
+                                name="date_from"
+                                value=[filters.date_from.as_ref()]
+                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                        }
+
+                        div {
+                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                                "To Date"
+                            }
+                            input
+                                type="date"
+                                name="date_to"
+                                value=[filters.date_to.as_ref()]
+                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                        }
+                    }
+                }
+            }
+
+            // Table
+            (match_list_content(result, filters, sort_field, sort_order))
+
+            // Modal container
+            div id="modal-container" {}
+        }
+    }
+}
+
+/// Matches table content (for HTMX updates)
+pub fn match_list_content(
+    result: &PagedResult<MatchEntity>,
+    filters: &MatchFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+) -> Markup {
+    html! {
+        div id="matches-table" {
+            @if result.items.is_empty() {
+                (empty_state(
+                    "matches",
+                    filters.season_id.is_some() || filters.team_id.is_some() || filters.status.is_some() || filters.date_from.is_some() || filters.date_to.is_some()
+                ))
+            } @else {
+                table class="table" {
+                    thead {
+                        tr {
+                            th {
+                                (sortable_header(
+                                    "Date",
+                                    &SortField::Date,
+                                    sort_field,
+                                    sort_order,
+                                    filters,
+                                ))
+                            }
+                            th {
+                                (sortable_header(
+                                    "Event",
+                                    &SortField::Event,
+                                    sort_field,
+                                    sort_order,
+                                    filters,
+                                ))
+                            }
+                            th { "Match" }
+                            th { "Score" }
+                            th {
+                                (sortable_header(
+                                    "Status",
+                                    &SortField::Status,
+                                    sort_field,
+                                    sort_order,
+                                    filters,
+                                ))
+                            }
+                            th style="text-align: right;" { "Actions" }
+                        }
+                    }
+                    tbody {
+                        @for match_item in &result.items {
+                            tr {
+                                // Date
+                                td {
+                                    @if let Some(date) = &match_item.match_date {
+                                        (format_date(date))
+                                    } @else {
+                                        span style="color: var(--gray-400); font-style: italic;" { "TBD" }
+                                    }
+                                }
+
+                                // Event
+                                td {
+                                    @if let Some(event_name) = &match_item.event_name {
+                                        (event_name)
+                                    } @else {
+                                        span style="color: var(--gray-400); font-style: italic;" { "-" }
+                                    }
+                                }
+
+                                // Match (teams)
+                                td {
+                                    div style="display: flex; flex-direction: column; gap: 0.25rem;" {
+                                        div style="display: flex; align-items: center; gap: 0.5rem;" {
+                                            @if let Some(iso2) = &match_item.home_team_country_iso2 {
+                                                img
+                                                    src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
+                                                    alt=(match_item.home_team_name)
+                                                    style="width: 20px; height: 15px; object-fit: cover; border: 1px solid var(--gray-300);"
+                                                    onerror="this.style.display='none'";
+                                            }
+                                            span { (match_item.home_team_name) }
+                                        }
+                                        div style="display: flex; align-items: center; gap: 0.5rem;" {
+                                            @if let Some(iso2) = &match_item.away_team_country_iso2 {
+                                                img
+                                                    src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
+                                                    alt=(match_item.away_team_name)
+                                                    style="width: 20px; height: 15px; object-fit: cover; border: 1px solid var(--gray-300);"
+                                                    onerror="this.style.display='none'";
+                                            }
+                                            span { (match_item.away_team_name) }
+                                        }
+                                    }
+                                }
+
+                                // Score
+                                td {
+                                    div style="font-weight: 600; font-size: 1.1rem;" {
+                                        (match_item.home_score_unidentified)
+                                        " : "
+                                        (match_item.away_score_unidentified)
+                                    }
+                                }
+
+                                // Status
+                                td {
+                                    (status_badge(&match_item.status))
+                                }
+
+                                // Actions
+                                (table_actions(
+                                    &format!("/matches/{}", match_item.id),
+                                    &build_delete_url(match_item.id, filters, sort_field, sort_order),
+                                    "matches-table",
+                                    "match"
+                                ))
+                            }
+                        }
+                    }
+                }
+
+                // Pagination
+                (pagination(
+                    result,
+                    "matches",
+                    |page| build_pagination_url(page, result.page_size, filters, sort_field, sort_order),
+                    "matches-table"
+                ))
+            }
+        }
+    }
+}
+
+/// Sortable table header
+fn sortable_header(
+    label: &str,
+    field: &SortField,
+    current_sort: &SortField,
+    current_order: &SortOrder,
+    filters: &MatchFilters,
+) -> Markup {
+    // Determine if this column is currently sorted
+    let is_active = matches!(
+        (field, current_sort),
+        (SortField::Date, SortField::Date)
+            | (SortField::Status, SortField::Status)
+            | (SortField::Event, SortField::Event)
+    );
+
+    // If this column is active, toggle the order; otherwise default to DESC for date, ASC for others
+    let next_order = if is_active {
+        current_order.toggle()
+    } else {
+        match field {
+            SortField::Date => SortOrder::Desc,
+            _ => SortOrder::Asc,
+        }
+    };
+
+    // Build the URL
+    let url = build_sort_url(field, &next_order, filters);
+
+    // Choose the indicator
+    let indicator = if is_active {
+        match current_order {
+            SortOrder::Asc => "↑",
+            SortOrder::Desc => "↓",
+        }
+    } else {
+        "↕"
+    };
+
+    html! {
+        button
+            class="sort-button"
+            hx-get=(url)
+            hx-target="#matches-table"
+            hx-swap="outerHTML"
+            style="background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;"
+        {
+            (label)
+            span style=(if is_active { "font-size: 0.75rem; color: var(--primary-color);" } else { "font-size: 0.75rem;" }) {
+                (indicator)
+            }
+        }
+    }
+}
+
+/// Helper to build sort URLs
+fn build_sort_url(field: &SortField, order: &SortOrder, filters: &MatchFilters) -> String {
+    let mut url = format!("/matches/list?sort={}&order={}", field.as_str(), order.as_str());
+
+    if let Some(season_id) = filters.season_id {
+        url.push_str(&format!("&season_id={}", season_id));
+    }
+
+    if let Some(team_id) = filters.team_id {
+        url.push_str(&format!("&team_id={}", team_id));
+    }
+
+    if let Some(status) = &filters.status {
+        url.push_str(&format!("&status={}", urlencoding::encode(status)));
+    }
+
+    if let Some(date_from) = &filters.date_from {
+        url.push_str(&format!("&date_from={}", urlencoding::encode(date_from)));
+    }
+
+    if let Some(date_to) = &filters.date_to {
+        url.push_str(&format!("&date_to={}", urlencoding::encode(date_to)));
+    }
+
+    url
+}
+
+/// Helper to build pagination URLs
+fn build_pagination_url(
+    page: usize,
+    page_size: usize,
+    filters: &MatchFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+) -> String {
+    let mut url = format!(
+        "/matches/list?page={}&page_size={}&sort={}&order={}",
+        page,
+        page_size,
+        sort_field.as_str(),
+        sort_order.as_str()
+    );
+
+    if let Some(season_id) = filters.season_id {
+        url.push_str(&format!("&season_id={}", season_id));
+    }
+
+    if let Some(team_id) = filters.team_id {
+        url.push_str(&format!("&team_id={}", team_id));
+    }
+
+    if let Some(status) = &filters.status {
+        url.push_str(&format!("&status={}", urlencoding::encode(status)));
+    }
+
+    if let Some(date_from) = &filters.date_from {
+        url.push_str(&format!("&date_from={}", urlencoding::encode(date_from)));
+    }
+
+    if let Some(date_to) = &filters.date_to {
+        url.push_str(&format!("&date_to={}", urlencoding::encode(date_to)));
+    }
+
+    url
+}
+
+/// Helper to build delete URLs with current filters
+fn build_delete_url(
+    id: i64,
+    filters: &MatchFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+) -> String {
+    let mut url = format!(
+        "/matches/{}/delete?sort={}&order={}",
+        id,
+        sort_field.as_str(),
+        sort_order.as_str()
+    );
+
+    if let Some(season_id) = filters.season_id {
+        url.push_str(&format!("&season_id={}", season_id));
+    }
+
+    if let Some(team_id) = filters.team_id {
+        url.push_str(&format!("&team_id={}", team_id));
+    }
+
+    if let Some(status) = &filters.status {
+        url.push_str(&format!("&status={}", urlencoding::encode(status)));
+    }
+
+    if let Some(date_from) = &filters.date_from {
+        url.push_str(&format!("&date_from={}", urlencoding::encode(date_from)));
+    }
+
+    if let Some(date_to) = &filters.date_to {
+        url.push_str(&format!("&date_to={}", urlencoding::encode(date_to)));
+    }
+
+    url
+}
 
 /// Match detail page with score tracking
 pub fn match_detail_page(detail: &MatchDetailEntity) -> Markup {

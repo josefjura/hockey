@@ -112,6 +112,8 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/seasons/:id/edit", get(routes::seasons::season_edit_form))
         .route("/seasons/:id", post(routes::seasons::season_update))
         .route("/seasons/:id/delete", post(routes::seasons::season_delete))
+        .route("/matches", get(routes::matches::matches_get))
+        .route("/matches/list", get(routes::matches::matches_list_partial))
         .route("/matches/:id", get(routes::matches::match_detail))
         .route("/matches/:id/delete", post(routes::matches::match_delete))
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));

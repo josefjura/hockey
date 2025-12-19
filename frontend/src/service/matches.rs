@@ -1,4 +1,5 @@
-use sqlx::{Row, SqlitePool};
+use sqlx::{Row, SqlitePool, QueryBuilder};
+use crate::common::pagination::{PagedResult, SortOrder};
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -47,6 +48,48 @@ pub struct MatchDetailEntity {
     pub away_score_identified: i32,
     pub home_score_total: i32,
     pub away_score_total: i32,
+}
+
+#[derive(Debug, Clone)]
+pub struct MatchFilters {
+    pub season_id: Option<i64>,
+    pub team_id: Option<i64>, // matches either home or away team
+    pub status: Option<String>,
+    pub date_from: Option<String>,
+    pub date_to: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub enum SortField {
+    Date,
+    Status,
+    Event,
+}
+
+impl SortField {
+    pub fn from_str(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "status" => Self::Status,
+            "event" => Self::Event,
+            _ => Self::Date, // default
+        }
+    }
+
+    pub fn to_sql(&self) -> &'static str {
+        match self {
+            Self::Date => "m.match_date",
+            Self::Status => "m.status",
+            Self::Event => "e.name",
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Date => "date",
+            Self::Status => "status",
+            Self::Event => "event",
+        }
+    }
 }
 
 /// Get a single match by ID with all related details
@@ -192,6 +235,135 @@ pub async fn get_match_detail(
         home_score_total,
         away_score_total,
     }))
+}
+
+/// Get matches with filtering, sorting, and pagination
+pub async fn get_matches(
+    db: &SqlitePool,
+    filters: &MatchFilters,
+    sort_field: &SortField,
+    sort_order: &SortOrder,
+    page: usize,
+    page_size: usize,
+) -> Result<PagedResult<MatchEntity>, sqlx::Error> {
+    // Build the base query
+    let mut count_query = QueryBuilder::new(
+        "SELECT COUNT(*) as total FROM match m \
+         LEFT JOIN season s ON m.season_id = s.id \
+         LEFT JOIN event e ON s.event_id = e.id WHERE 1=1"
+    );
+
+    let mut data_query = QueryBuilder::new(
+        "SELECT \
+            m.id, m.season_id, s.name as season_name, e.name as event_name, \
+            m.home_team_id, ht.name as home_team_name, hc.iso2Code as home_team_country_iso2, \
+            m.away_team_id, at.name as away_team_name, ac.iso2Code as away_team_country_iso2, \
+            m.home_score_unidentified, m.away_score_unidentified, \
+            m.match_date, m.status, m.venue \
+         FROM match m \
+         INNER JOIN team ht ON m.home_team_id = ht.id \
+         INNER JOIN team at ON m.away_team_id = at.id \
+         LEFT JOIN country hc ON ht.country_id = hc.id \
+         LEFT JOIN country ac ON at.country_id = ac.id \
+         LEFT JOIN season s ON m.season_id = s.id \
+         LEFT JOIN event e ON s.event_id = e.id \
+         WHERE 1=1"
+    );
+
+    // Apply filters
+    if let Some(season_id) = filters.season_id {
+        count_query.push(" AND m.season_id = ").push_bind(season_id);
+        data_query.push(" AND m.season_id = ").push_bind(season_id);
+    }
+
+    if let Some(team_id) = filters.team_id {
+        count_query.push(" AND (m.home_team_id = ").push_bind(team_id)
+            .push(" OR m.away_team_id = ").push_bind(team_id).push(")");
+        data_query.push(" AND (m.home_team_id = ").push_bind(team_id)
+            .push(" OR m.away_team_id = ").push_bind(team_id).push(")");
+    }
+
+    if let Some(status) = &filters.status {
+        count_query.push(" AND m.status = ").push_bind(status);
+        data_query.push(" AND m.status = ").push_bind(status);
+    }
+
+    if let Some(date_from) = &filters.date_from {
+        count_query.push(" AND m.match_date >= ").push_bind(date_from);
+        data_query.push(" AND m.match_date >= ").push_bind(date_from);
+    }
+
+    if let Some(date_to) = &filters.date_to {
+        count_query.push(" AND m.match_date <= ").push_bind(date_to);
+        data_query.push(" AND m.match_date <= ").push_bind(date_to);
+    }
+
+    // Get total count
+    let count_row = count_query.build().fetch_one(db).await?;
+    let total: i64 = count_row.get("total");
+
+    // Add sorting
+    data_query.push(" ORDER BY ")
+        .push(sort_field.to_sql())
+        .push(" ")
+        .push(sort_order.to_sql());
+
+    // Add pagination
+    let offset = (page - 1) * page_size;
+    data_query.push(" LIMIT ").push_bind(page_size as i64)
+        .push(" OFFSET ").push_bind(offset as i64);
+
+    // Execute data query
+    let rows = data_query.build().fetch_all(db).await?;
+
+    let items: Vec<MatchEntity> = rows
+        .into_iter()
+        .map(|row| MatchEntity {
+            id: row.get("id"),
+            season_id: row.get("season_id"),
+            season_name: row.get("season_name"),
+            event_name: row.get("event_name"),
+            home_team_id: row.get("home_team_id"),
+            home_team_name: row.get("home_team_name"),
+            home_team_country_iso2: row.get("home_team_country_iso2"),
+            away_team_id: row.get("away_team_id"),
+            away_team_name: row.get("away_team_name"),
+            away_team_country_iso2: row.get("away_team_country_iso2"),
+            home_score_unidentified: row.get("home_score_unidentified"),
+            away_score_unidentified: row.get("away_score_unidentified"),
+            match_date: row.get("match_date"),
+            status: row.get("status"),
+            venue: row.get("venue"),
+        })
+        .collect();
+
+    Ok(PagedResult::new(items, total as usize, page, page_size))
+}
+
+/// Get all seasons for filter dropdown
+pub async fn get_seasons(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT s.id, s.name \
+         FROM season s \
+         ORDER BY s.name DESC"
+    )
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows.into_iter().map(|row| (row.get("id"), row.get("name"))).collect())
+}
+
+/// Get all teams for filter dropdown
+pub async fn get_teams(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT t.id, t.name \
+         FROM team t \
+         ORDER BY t.name ASC"
+    )
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows.into_iter().map(|row| (row.get("id"), row.get("name"))).collect())
 }
 
 /// Delete a match (cascades to score events)
