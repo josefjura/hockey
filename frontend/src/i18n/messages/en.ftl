@@ -6,6 +6,7 @@ nav-events = Events
 nav-seasons = Seasons
 nav-matches = Matches
 nav-management = Management
+nav-countries = Countries
 
 # User menu
 user-logout = Logout
@@ -14,19 +15,35 @@ user-signed-in-as = Signed in as
 
 # Dashboard
 dashboard-title = Dashboard
-dashboard-subtitle = Welcome to your hockey management system overview
+dashboard-subtitle = Welcome to the Hockey Management Application. This is the main dashboard where you can see an overview of your hockey management data.
 dashboard-stats-total-teams = Total Teams
 dashboard-stats-active-players = Active Players
 dashboard-stats-ongoing-seasons = Ongoing Seasons
 dashboard-stats-total-events = Total Events
 dashboard-recent-activity = Recent Activity
 dashboard-quick-actions = Quick Actions
+dashboard-no-activity = No recent activity to display.
+dashboard-getting-started = Getting Started:
+dashboard-getting-started-text = Use the sidebar navigation to manage teams, players, events, seasons, and matches.
+dashboard-add-team = Add Team
+dashboard-add-player = Add Player
+dashboard-add-event = Add Event
+dashboard-add-season = Add Season
+dashboard-add-match = Add Match
+
+# Entity names (for stats cards and activity)
+entity-teams = Teams
+entity-players = Players
+entity-events = Events
+entity-seasons = Seasons
+entity-matches = Matches
 
 # Teams
 teams-title = Teams
 teams-description = Manage and view all teams in the system.
 teams-search-placeholder = Search teams...
 teams-add = Add Team
+teams-new = + New Team
 teams-edit = Edit Team
 teams-delete = Delete Team
 teams-empty-title = No teams found
@@ -34,35 +51,143 @@ teams-empty-message = No teams match your search criteria.
 teams-create = Create Team
 teams-name = Team Name
 teams-country = Country
+teams-search-by-name = Search by name
+teams-filter-by-country = Filter by country
+teams-all-countries = All countries
+teams-enter-name = Enter team name...
+teams-created = Team created successfully
+teams-updated = Team updated successfully
+teams-deleted = Team deleted successfully
+teams-confirm-delete = Are you sure you want to delete this team?
 
 # Players
 players-title = Players
 players-description = Manage and view all players in the system.
 players-search-placeholder = Search players...
+players-add = Add Player
+players-new = + New Player
+players-edit = Edit Player
+players-delete = Delete Player
+players-empty-title = No players found
+players-empty-message = No players match your search criteria.
+players-create = Create Player
+players-name = Player Name
+players-first-name = First Name
+players-last-name = Last Name
+players-country = Country
+players-birth-date = Date of Birth
+players-photo = Photo
+players-photo-current = Current photo
+players-photo-upload = Upload photo
+players-photo-change = Change photo
+players-search-by-name = Search by name
+players-filter-by-country = Filter by country
+players-all-countries = All countries
+players-enter-name = Enter player name...
+players-created = Player created successfully
+players-updated = Player updated successfully
+players-deleted = Player deleted successfully
+players-confirm-delete = Are you sure you want to delete this player?
+players-no-country = No country
 
 # Events
 events-title = Events
 events-description = Manage and view all hockey events and tournaments.
 events-search-placeholder = Search events...
+events-add = Add Event
+events-new = + New Event
+events-edit = Edit Event
+events-delete = Delete Event
+events-empty-title = No events found
+events-empty-message = No events match your search criteria.
+events-create = Create Event
+events-name = Event Name
+events-country = Country
+events-search-by-name = Search by name
+events-filter-by-country = Filter by country
+events-all-countries = All countries
+events-enter-name = Enter event name...
+events-created = Event created successfully
+events-updated = Event updated successfully
+events-deleted = Event deleted successfully
+events-confirm-delete = Are you sure you want to delete this event?
 
 # Seasons
 seasons-title = Seasons
 seasons-description = Manage and view all seasons in the system.
 seasons-search-placeholder = Search seasons...
+seasons-add = Add Season
+seasons-new = + New Season
+seasons-edit = Edit Season
+seasons-delete = Delete Season
+seasons-empty-title = No seasons found
+seasons-empty-message = No seasons match your search criteria.
+seasons-create = Create Season
+seasons-year = Year
+seasons-display-name = Display Name
+seasons-event = Event
+seasons-filter-by-event = Filter by event
+seasons-filter-by-year = Filter by year
+seasons-all-events = All events
+seasons-all-years = All years
+seasons-select-event = Select event
+seasons-created = Season created successfully
+seasons-updated = Season updated successfully
+seasons-deleted = Season deleted successfully
+seasons-confirm-delete = Are you sure you want to delete this season?
 
 # Matches
 matches-title = Matches
 matches-description = Manage and view all hockey matches and games.
 matches-search-placeholder = Search matches...
+matches-add = Add Match
+matches-new = + New Match
+matches-edit = Edit Match
+matches-delete = Delete Match
+matches-empty-title = No matches found
+matches-empty-message = No matches match your search criteria.
+matches-create = Create Match
 matches-filter-all-seasons = All Seasons
 matches-filter-all-teams = All Teams
 matches-filter-all-statuses = All Statuses
+matches-filter-by-season = Filter by season
+matches-filter-by-team = Filter by team
+matches-filter-by-status = Filter by status
+matches-filter-date-from = Date from
+matches-filter-date-to = Date to
 matches-status-scheduled = Scheduled
 matches-status-in-progress = In Progress
 matches-status-finished = Finished
 matches-status-cancelled = Cancelled
+matches-home-team = Home Team
+matches-away-team = Away Team
+matches-date = Date
+matches-time = Time
+matches-location = Location
+matches-status = Status
+matches-score = Score
+matches-season = Season
+matches-select-team = Select team
+matches-select-season = Select season
+matches-select-status = Select status
+matches-created = Match created successfully
+matches-updated = Match updated successfully
+matches-deleted = Match deleted successfully
+matches-confirm-delete = Are you sure you want to delete this match?
+matches-score-events = Score Events
+matches-add-score-event = Add Score Event
+matches-edit-score-event = Edit Score Event
+matches-delete-score-event = Delete Score Event
+matches-goal-type = Goal Type
+matches-goal-time = Time
+matches-goal-scorer = Scorer
+matches-goal-assist1 = First Assist
+matches-goal-assist2 = Second Assist
+matches-period = Period
+matches-minutes = Minutes
+matches-seconds = Seconds
 
-# Management
+# Management / Countries
 management-title = Management
 management-description = Configure and manage system settings, countries, and administrative options.
 management-countries-title = Countries
@@ -108,6 +233,20 @@ common-previous = Previous
 common-name = Name
 common-description = Description
 common-actions = Actions
+common-clear = Clear
+common-filter = Filter
+common-showing = Showing
+common-of = of
+common-results = results
+common-no-results = No results found
+common-try-different = Try different search criteria
+
+# Table headers
+table-name = Name
+table-country = Country
+table-actions = Actions
+table-date = Date
+table-status = Status
 
 # Validation
 validation-required = This field is required
@@ -120,3 +259,4 @@ error-not-found = Not found
 error-unauthorized = Unauthorized
 error-server-error = Server error
 error-unknown = An unknown error occurred
+error-loading = Error loading data
