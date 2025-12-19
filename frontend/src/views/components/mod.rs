@@ -1,4 +1,5 @@
 pub mod crud;
+pub mod empty_state;
 pub mod error;
 pub mod loading;
 pub mod sidebar;
