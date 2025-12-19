@@ -95,24 +95,8 @@ pub async fn players_get(
     // Get countries for filter
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
-    let content = players_page(
-        &t,
-        &result,
-        &filters,
-        &sort_field,
-        &sort_order,
-        &countries,
-    );
-    Html(
-        admin_layout(
-            "Players",
-            &session,
-            "/players",
-            &t,
-            content,
-        )
-        .into_string(),
-    )
+    let content = players_page(&t, &result, &filters, &sort_field, &sort_order, &countries);
+    Html(admin_layout("Players", &session, "/players", &t, content).into_string())
 }
 
 /// GET /players/list - HTMX endpoint for table updates
@@ -150,16 +134,7 @@ pub async fn players_list_partial(
         }
     };
 
-    Html(
-        player_list_content(
-            &t,
-            &result,
-            &filters,
-            &sort_field,
-            &sort_order,
-        )
-        .into_string(),
-    )
+    Html(player_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
 }
 
 /// GET /players/new - Show create modal
@@ -229,12 +204,7 @@ pub async fn player_create(
     let name = name.trim();
     if name.is_empty() {
         return Html(
-            player_create_modal(
-                &t,
-                Some("Player name cannot be empty"),
-                &countries,
-            )
-            .into_string(),
+            player_create_modal(&t, Some("Player name cannot be empty"), &countries).into_string(),
         );
     }
 
@@ -253,12 +223,7 @@ pub async fn player_create(
         Some(id) => id,
         None => {
             return Html(
-                player_create_modal(
-                    &t,
-                    Some("Please select a country"),
-                    &countries,
-                )
-                .into_string(),
+                player_create_modal(&t, Some("Please select a country"), &countries).into_string(),
             );
         }
     };
@@ -293,14 +258,7 @@ pub async fn player_create(
         }
         Err(e) => {
             tracing::error!("Failed to create player: {}", e);
-            Html(
-                player_create_modal(
-                    &t,
-                    Some("Failed to create player"),
-                    &countries,
-                )
-                .into_string(),
-            )
+            Html(player_create_modal(&t, Some("Failed to create player"), &countries).into_string())
         }
     }
 }
@@ -503,13 +461,8 @@ pub async fn player_update(
             Html("<div hx-get=\"/players/list\" hx-target=\"#players-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
         }
         Ok(false) => Html(
-            player_edit_modal(
-                &t,
-                &current_player,
-                Some("Player not found"),
-                &countries,
-            )
-            .into_string(),
+            player_edit_modal(&t, &current_player, Some("Player not found"), &countries)
+                .into_string(),
         ),
         Err(e) => {
             tracing::error!("Failed to update player: {}", e);
@@ -564,16 +517,7 @@ pub async fn player_delete(
                 }
             };
 
-            Html(
-                player_list_content(
-                    &t,
-                    &result,
-                    &filters,
-                    &sort_field,
-                    &sort_order,
-                )
-                .into_string(),
-            )
+            Html(player_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
         }
         Ok(false) => {
             Html(crate::views::components::error::error_message("Player not found").into_string())

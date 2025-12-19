@@ -107,14 +107,7 @@ pub async fn teams_get(
     // Get countries for filter
     let countries = teams::get_countries(&state.db).await.unwrap_or_default();
 
-    let content = teams_page(
-        &t,
-        &result,
-        &filters,
-        &sort_field,
-        &sort_order,
-        &countries,
-    );
+    let content = teams_page(&t, &result, &filters, &sort_field, &sort_order, &countries);
     Html(admin_layout("Teams", &session, "/teams", &t, content).into_string())
 }
 
@@ -153,22 +146,11 @@ pub async fn teams_list_partial(
         }
     };
 
-    Html(
-        team_list_content(
-            &t,
-            &result,
-            &filters,
-            &sort_field,
-            &sort_order,
-        )
-        .into_string(),
-    )
+    Html(team_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
 }
 
 /// GET /teams/new - Show create modal
-pub async fn team_create_form(
-    Extension(t): Extension<TranslationContext>,
-) -> impl IntoResponse {
+pub async fn team_create_form(Extension(t): Extension<TranslationContext>) -> impl IntoResponse {
     Html(team_create_modal(&t, None).into_string())
 }
 
@@ -181,18 +163,12 @@ pub async fn team_create(
     // Validation
     let name = form.name.trim();
     if name.is_empty() {
-        return Html(
-            team_create_modal(&t, Some("Team name cannot be empty")).into_string(),
-        );
+        return Html(team_create_modal(&t, Some("Team name cannot be empty")).into_string());
     }
 
     if name.len() > 255 {
         return Html(
-            team_create_modal(
-                &t,
-                Some("Team name cannot exceed 255 characters"),
-            )
-            .into_string(),
+            team_create_modal(&t, Some("Team name cannot exceed 255 characters")).into_string(),
         );
     }
 
@@ -212,9 +188,7 @@ pub async fn team_create(
         }
         Err(e) => {
             tracing::error!("Failed to create team: {}", e);
-            Html(
-                team_create_modal(&t, Some("Failed to create team")).into_string(),
-            )
+            Html(team_create_modal(&t, Some("Failed to create team")).into_string())
         }
     }
 }
@@ -255,12 +229,7 @@ pub async fn team_update(
     if name.is_empty() {
         let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
         return Html(
-            team_edit_modal(
-                &t,
-                &team.unwrap(),
-                Some("Team name cannot be empty"),
-            )
-            .into_string(),
+            team_edit_modal(&t, &team.unwrap(), Some("Team name cannot be empty")).into_string(),
         );
     }
 
@@ -293,22 +262,12 @@ pub async fn team_update(
         }
         Ok(false) => {
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-            Html(
-                team_edit_modal(&t, &team.unwrap(), Some("Team not found"))
-                    .into_string(),
-            )
+            Html(team_edit_modal(&t, &team.unwrap(), Some("Team not found")).into_string())
         }
         Err(e) => {
             tracing::error!("Failed to update team: {}", e);
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-            Html(
-                team_edit_modal(
-                    &t,
-                    &team.unwrap(),
-                    Some("Failed to update team"),
-                )
-                .into_string(),
-            )
+            Html(team_edit_modal(&t, &team.unwrap(), Some("Failed to update team")).into_string())
         }
     }
 }

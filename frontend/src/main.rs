@@ -153,7 +153,9 @@ async fn main() -> Result<(), anyhow::Error> {
         .merge(health_routes)
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state)
-        .layer(middleware::from_fn(i18n::middleware::translation_context_middleware))
+        .layer(middleware::from_fn(
+            i18n::middleware::translation_context_middleware,
+        ))
         .layer(TraceLayer::new_for_http());
 
     // Start the server

@@ -188,16 +188,7 @@ pub async fn matches_get(
         &seasons,
         &teams,
     );
-    Html(
-        admin_layout(
-            "Matches",
-            &session,
-            "/matches",
-            &t,
-            content,
-        )
-        .into_string(),
-    )
+    Html(admin_layout("Matches", &session, "/matches", &t, content).into_string())
 }
 
 /// GET /matches/list - HTMX endpoint for table updates
@@ -238,16 +229,7 @@ pub async fn matches_list_partial(
         }
     };
 
-    Html(
-        match_list_content(
-            &t,
-            &result,
-            &filters,
-            &sort_field,
-            &sort_order,
-        )
-        .into_string(),
-    )
+    Html(match_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
 }
 
 /// GET /matches/new - Show create modal
@@ -287,13 +269,8 @@ pub async fn match_create(
 
     if form.home_score_unidentified < 0 || form.away_score_unidentified < 0 {
         return Html(
-            match_create_modal(
-                &t,
-                Some("Scores cannot be negative"),
-                &seasons,
-                &teams,
-            )
-            .into_string(),
+            match_create_modal(&t, Some("Scores cannot be negative"), &seasons, &teams)
+                .into_string(),
         );
     }
 
@@ -320,13 +297,8 @@ pub async fn match_create(
         Err(e) => {
             tracing::error!("Failed to create match: {}", e);
             Html(
-                match_create_modal(
-                    &t,
-                    Some("Failed to create match"),
-                    &seasons,
-                    &teams,
-                )
-                .into_string(),
+                match_create_modal(&t, Some("Failed to create match"), &seasons, &teams)
+                    .into_string(),
             )
         }
     }
@@ -494,16 +466,7 @@ pub async fn match_detail(
     };
 
     let content = match_detail_page(&t, &match_detail);
-    Html(
-        admin_layout(
-            "Match Detail",
-            &session,
-            "/matches",
-            &t,
-            content,
-        )
-        .into_string(),
-    )
+    Html(admin_layout("Match Detail", &session, "/matches", &t, content).into_string())
 }
 
 /// POST /matches/{id}/delete - Delete match
@@ -560,14 +523,7 @@ pub async fn score_event_create_form(
         .unwrap_or_default();
 
     Html(
-        score_event_create_modal(
-            &t,
-            None,
-            &match_info,
-            &home_players,
-            &away_players,
-        )
-        .into_string(),
+        score_event_create_modal(&t, None, &match_info, &home_players, &away_players).into_string(),
     )
 }
 

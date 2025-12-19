@@ -129,12 +129,7 @@ pub async fn event_create(
     if name.is_empty() {
         let countries = events::get_countries(&state.db).await.unwrap_or_default();
         return Html(
-            event_create_modal(
-                &t,
-                &countries,
-                Some("Event name cannot be empty"),
-            )
-            .into_string(),
+            event_create_modal(&t, &countries, Some("Event name cannot be empty")).into_string(),
         );
     }
 
@@ -167,14 +162,7 @@ pub async fn event_create(
         Err(e) => {
             tracing::error!("Failed to create event: {}", e);
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
-            Html(
-                event_create_modal(
-                    &t,
-                    &countries,
-                    Some("Failed to create event"),
-                )
-                .into_string(),
-            )
+            Html(event_create_modal(&t, &countries, Some("Failed to create event")).into_string())
         }
     }
 }
@@ -261,13 +249,8 @@ pub async fn event_update(
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
             Html(
-                event_edit_modal(
-                    &t,
-                    &event.unwrap(),
-                    &countries,
-                    Some("Event not found"),
-                )
-                .into_string(),
+                event_edit_modal(&t, &event.unwrap(), &countries, Some("Event not found"))
+                    .into_string(),
             )
         }
         Err(e) => {

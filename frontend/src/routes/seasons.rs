@@ -109,24 +109,8 @@ pub async fn seasons_get(
     // Get events for filter
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
 
-    let content = seasons_page(
-        &t,
-        &result,
-        &filters,
-        &sort_field,
-        &sort_order,
-        &events,
-    );
-    Html(
-        admin_layout(
-            "Seasons",
-            &session,
-            "/seasons",
-            &t,
-            content,
-        )
-        .into_string(),
-    )
+    let content = seasons_page(&t, &result, &filters, &sort_field, &sort_order, &events);
+    Html(admin_layout("Seasons", &session, "/seasons", &t, content).into_string())
 }
 
 /// GET /seasons/list - HTMX endpoint for table updates
@@ -164,16 +148,7 @@ pub async fn seasons_list_partial(
         }
     };
 
-    Html(
-        season_list_content(
-            &t,
-            &result,
-            &filters,
-            &sort_field,
-            &sort_order,
-        )
-        .into_string(),
-    )
+    Html(season_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
 }
 
 /// GET /seasons/new - Show create modal
@@ -197,12 +172,8 @@ pub async fn season_create(
     // Validation
     if form.year < 1900 || form.year > 2100 {
         return Html(
-            season_create_modal(
-                &t,
-                Some("Year must be between 1900 and 2100"),
-                &events,
-            )
-            .into_string(),
+            season_create_modal(&t, Some("Year must be between 1900 and 2100"), &events)
+                .into_string(),
         );
     }
 
@@ -244,14 +215,7 @@ pub async fn season_create(
         }
         Err(e) => {
             tracing::error!("Failed to create season: {}", e);
-            Html(
-                season_create_modal(
-                    &t,
-                    Some("Failed to create season"),
-                    &events,
-                )
-                .into_string(),
-            )
+            Html(season_create_modal(&t, Some("Failed to create season"), &events).into_string())
         }
     }
 }
@@ -357,13 +321,8 @@ pub async fn season_update(
                 .ok()
                 .flatten();
             Html(
-                season_edit_modal(
-                    &t,
-                    &season.unwrap(),
-                    Some("Season not found"),
-                    &events,
-                )
-                .into_string(),
+                season_edit_modal(&t, &season.unwrap(), Some("Season not found"), &events)
+                    .into_string(),
             )
         }
         Err(e) => {
@@ -423,16 +382,7 @@ pub async fn season_delete(
                 }
             };
 
-            Html(
-                season_list_content(
-                    &t,
-                    &result,
-                    &filters,
-                    &sort_field,
-                    &sort_order,
-                )
-                .into_string(),
-            )
+            Html(season_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
         }
         Ok(false) => {
             Html(crate::views::components::error::error_message("Season not found").into_string())

@@ -27,14 +27,7 @@ pub async fn countries_get(
     Extension(t): Extension<TranslationContext>,
 ) -> impl IntoResponse {
     let content = countries_page();
-    Html(admin_layout(
-        "Countries",
-        &session,
-        "/countries",
-        &t,
-        content,
-    )
-    .into_string())
+    Html(admin_layout("Countries", &session, "/countries", &t, content).into_string())
 }
 
 /// GET /api/countries - JSON API endpoint for country selector
@@ -71,11 +64,7 @@ pub async fn country_toggle_enabled(
             "enabled": new_status
         }))
         .into_response(),
-        Ok(None) => (
-            axum::http::StatusCode::NOT_FOUND,
-            "Country not found",
-        )
-            .into_response(),
+        Ok(None) => (axum::http::StatusCode::NOT_FOUND, "Country not found").into_response(),
         Err(e) => {
             tracing::error!("Failed to toggle country enabled status: {}", e);
             (
