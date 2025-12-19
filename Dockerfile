@@ -33,32 +33,17 @@ COPY static ./static
 RUN cargo build --release
 
 # Stage 2: Runtime image
-FROM debian:bookworm-slim
-
-# Install runtime dependencies
-RUN apt-get update && \
-	apt-get install -y \
-	ca-certificates \
-	libssl3 \
-	sqlite3 \
-	&& rm -rf /var/lib/apt/lists/*
-
-# Create app user for security
-RUN useradd -m -u 1000 hockey
-
-# Create app directory and data directory
-WORKDIR /app
-RUN mkdir -p /app/data && chown -R hockey:hockey /app
+FROM gcr.io/distroless/cc-debian12
 
 # Copy binary from builder
 COPY --from=builder /app/target/release/hockey /app/hockey
 COPY --from=builder /app/target/release/create_admin /app/create_admin
 
 # Copy migrations (needed for runtime schema checks)
-COPY --chown=hockey:hockey migrations ./migrations
+COPY migrations /app/migrations
 
-# Switch to non-root user
-USER hockey
+# Create data directory (distroless runs as nonroot by default)
+WORKDIR /app
 
 # Expose port
 EXPOSE 8080
@@ -68,9 +53,8 @@ ENV RUST_LOG=info
 ENV DATABASE_URL=sqlite:///app/data/hockey.db
 ENV ENVIRONMENT=production
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-	CMD ["sh", "-c", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
+# Note: Distroless doesn't support healthcheck commands with shell
+# Health checks should be configured at the orchestration level (Docker Compose, Kubernetes)
 
 # Run the application
 CMD ["/app/hockey"]

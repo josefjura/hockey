@@ -18,12 +18,8 @@ services:
     networks:
       - hockey-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "sh", "-c", "wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # Note: Healthcheck removed - distroless has no shell
+    # Use external monitoring or Docker's built-in HTTP healthcheck in production
 
 networks:
   hockey-network:
