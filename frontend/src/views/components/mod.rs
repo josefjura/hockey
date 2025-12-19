@@ -1,3 +1,4 @@
+pub mod confirm;
 pub mod crud;
 pub mod empty_state;
 pub mod error;
