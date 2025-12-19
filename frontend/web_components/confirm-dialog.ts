@@ -4,13 +4,13 @@ import { customElement, property, state } from 'lit/decorators.js';
 export type ConfirmVariant = 'danger' | 'warning' | 'info';
 
 interface ConfirmOptions {
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  variant?: ConfirmVariant;
-  onConfirm?: () => void | Promise<void>;
-  onCancel?: () => void;
+	title: string;
+	message: string;
+	confirmText?: string;
+	cancelText?: string;
+	variant?: ConfirmVariant;
+	onConfirm?: () => void | Promise<void>;
+	onCancel?: () => void;
 }
 
 /**
@@ -45,7 +45,7 @@ interface ConfirmOptions {
  */
 @customElement('hockey-confirm-dialog')
 export class ConfirmDialog extends LitElement {
-  static styles = css`
+	static styles = css`
     :host {
       display: contents;
     }
@@ -198,26 +198,26 @@ export class ConfirmDialog extends LitElement {
     }
   `;
 
-  @state()
-  private isOpen = false;
+	@state()
+	private isOpen = false;
 
-  @state()
-  private options: ConfirmOptions = {
-    title: '',
-    message: '',
-    confirmText: 'Confirm',
-    cancelText: 'Cancel',
-    variant: 'danger',
-  };
+	@state()
+	private options: ConfirmOptions = {
+		title: '',
+		message: '',
+		confirmText: 'Confirm',
+		cancelText: 'Cancel',
+		variant: 'danger',
+	};
 
-  private resolvePromise?: (value: boolean) => void;
+	private resolvePromise?: (value: boolean) => void;
 
-  render() {
-    if (!this.isOpen) {
-      return html``;
-    }
+	render() {
+		if (!this.isOpen) {
+			return html``;
+		}
 
-    return html`
+		return html`
       <div class="backdrop" @click=${this.handleBackdropClick} @keydown=${this.handleKeydown}>
         <div class="dialog" @click=${(e: Event) => e.stopPropagation()}>
           <div class="icon-container ${this.options.variant}">${this.getIcon()}</div>
@@ -234,12 +234,12 @@ export class ConfirmDialog extends LitElement {
         </div>
       </div>
     `;
-  }
+	}
 
-  private getIcon() {
-    switch (this.options.variant) {
-      case 'danger':
-        return html`
+	private getIcon() {
+		switch (this.options.variant) {
+			case 'danger':
+				return html`
           <svg viewBox="0 0 20 20" fill="currentColor">
             <path
               fill-rule="evenodd"
@@ -248,8 +248,8 @@ export class ConfirmDialog extends LitElement {
             />
           </svg>
         `;
-      case 'warning':
-        return html`
+			case 'warning':
+				return html`
           <svg viewBox="0 0 20 20" fill="currentColor">
             <path
               fill-rule="evenodd"
@@ -258,9 +258,9 @@ export class ConfirmDialog extends LitElement {
             />
           </svg>
         `;
-      case 'info':
-      default:
-        return html`
+			case 'info':
+			default:
+				return html`
           <svg viewBox="0 0 20 20" fill="currentColor">
             <path
               fill-rule="evenodd"
@@ -269,73 +269,73 @@ export class ConfirmDialog extends LitElement {
             />
           </svg>
         `;
-    }
-  }
+		}
+	}
 
-  /**
-   * Show the confirmation dialog
-   * @returns Promise that resolves to true if confirmed, false if cancelled
-   */
-  show(options: ConfirmOptions): Promise<boolean> {
-    this.options = {
-      confirmText: 'Confirm',
-      cancelText: 'Cancel',
-      variant: 'danger',
-      ...options,
-    };
-    this.isOpen = true;
+	/**
+	 * Show the confirmation dialog
+	 * @returns Promise that resolves to true if confirmed, false if cancelled
+	 */
+	show(options: ConfirmOptions): Promise<boolean> {
+		this.options = {
+			confirmText: 'Confirm',
+			cancelText: 'Cancel',
+			variant: 'danger',
+			...options,
+		};
+		this.isOpen = true;
 
-    // Focus trap - focus the cancel button by default
-    this.updateComplete.then(() => {
-      const cancelBtn = this.shadowRoot?.querySelector('.btn-cancel') as HTMLButtonElement;
-      cancelBtn?.focus();
-    });
+		// Focus trap - focus the cancel button by default
+		this.updateComplete.then(() => {
+			const cancelBtn = this.shadowRoot?.querySelector('.btn-cancel') as HTMLButtonElement;
+			cancelBtn?.focus();
+		});
 
-    return new Promise(resolve => {
-      this.resolvePromise = resolve;
-    });
-  }
+		return new Promise(resolve => {
+			this.resolvePromise = resolve;
+		});
+	}
 
-  private handleConfirm = async () => {
-    if (this.options.onConfirm) {
-      await this.options.onConfirm();
-    }
-    this.close(true);
-  };
+	private handleConfirm = async () => {
+		if (this.options.onConfirm) {
+			await this.options.onConfirm();
+		}
+		this.close(true);
+	};
 
-  private handleCancel = () => {
-    if (this.options.onCancel) {
-      this.options.onCancel();
-    }
-    this.close(false);
-  };
+	private handleCancel = () => {
+		if (this.options.onCancel) {
+			this.options.onCancel();
+		}
+		this.close(false);
+	};
 
-  private handleBackdropClick = () => {
-    this.handleCancel();
-  };
+	private handleBackdropClick = () => {
+		this.handleCancel();
+	};
 
-  private handleKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      this.handleCancel();
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      this.handleConfirm();
-    }
-  };
+	private handleKeydown = (e: KeyboardEvent) => {
+		if (e.key === 'Escape') {
+			this.handleCancel();
+		} else if (e.key === 'Enter') {
+			e.preventDefault();
+			this.handleConfirm();
+		}
+	};
 
-  private close(result: boolean) {
-    this.isOpen = false;
-    if (this.resolvePromise) {
-      this.resolvePromise(result);
-      this.resolvePromise = undefined;
-    }
-  }
+	private close(result: boolean) {
+		this.isOpen = false;
+		if (this.resolvePromise) {
+			this.resolvePromise(result);
+			this.resolvePromise = undefined;
+		}
+	}
 }
 
 declare global {
-  interface HTMLElementTagNameMap {
-    'hockey-confirm-dialog': ConfirmDialog;
-  }
+	interface HTMLElementTagNameMap {
+		'hockey-confirm-dialog': ConfirmDialog;
+	}
 }
 
 /**
@@ -353,50 +353,50 @@ declare global {
  * ```
  */
 export function setupHtmxConfirmation() {
-  document.body.addEventListener('htmx:confirm', (e: Event) => {
-    const evt = e as CustomEvent;
-    const elt = evt.detail.elt as HTMLElement;
-    const confirmCustom = elt.getAttribute('hx-confirm-custom');
+	document.body.addEventListener('htmx:confirm', (e: Event) => {
+		const evt = e as CustomEvent;
+		const elt = evt.detail.elt as HTMLElement;
+		const confirmCustom = elt.getAttribute('hx-confirm-custom');
 
-    if (!confirmCustom) {
-      return; // Use default hx-confirm behavior
-    }
+		if (!confirmCustom) {
+			return; // Use default hx-confirm behavior
+		}
 
-    // Prevent the default confirmation
-    evt.preventDefault();
+		// Prevent the default confirmation
+		evt.preventDefault();
 
-    try {
-      const options = JSON.parse(confirmCustom) as ConfirmOptions;
-      const dialog = document.querySelector('hockey-confirm-dialog') as ConfirmDialog;
+		try {
+			const options = JSON.parse(confirmCustom) as ConfirmOptions;
+			const dialog = document.querySelector('hockey-confirm-dialog') as ConfirmDialog;
 
-      if (dialog) {
-        dialog.show(options).then(confirmed => {
-          if (confirmed) {
-            evt.detail.issueRequest();
-          }
-        });
-      } else {
-        console.warn('hockey-confirm-dialog not found in document');
-        // Fallback to native confirm
-        if (confirm(options.message)) {
-          evt.detail.issueRequest();
-        }
-      }
-    } catch (error) {
-      console.error('Error parsing hx-confirm-custom:', error);
-      // Fallback to native confirm
-      if (confirm(confirmCustom)) {
-        evt.detail.issueRequest();
-      }
-    }
-  });
+			if (dialog) {
+				dialog.show(options).then(confirmed => {
+					if (confirmed) {
+						evt.detail.issueRequest();
+					}
+				});
+			} else {
+				console.warn('hockey-confirm-dialog not found in document');
+				// Fallback to native confirm
+				if (confirm(options.message)) {
+					evt.detail.issueRequest();
+				}
+			}
+		} catch (error) {
+			console.error('Error parsing hx-confirm-custom:', error);
+			// Fallback to native confirm
+			if (confirm(confirmCustom)) {
+				evt.detail.issueRequest();
+			}
+		}
+	});
 }
 
 // Auto-setup when the module loads
 if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupHtmxConfirmation);
-  } else {
-    setupHtmxConfirmation();
-  }
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', setupHtmxConfirmation);
+	} else {
+		setupHtmxConfirmation();
+	}
 }

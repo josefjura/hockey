@@ -1,5 +1,5 @@
-use sqlx::{Row, SqlitePool, QueryBuilder};
 use crate::common::pagination::{PagedResult, SortOrder};
+use sqlx::{QueryBuilder, Row, SqlitePool};
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -250,7 +250,7 @@ pub async fn get_matches(
     let mut count_query = QueryBuilder::new(
         "SELECT COUNT(*) as total FROM match m \
          LEFT JOIN season s ON m.season_id = s.id \
-         LEFT JOIN event e ON s.event_id = e.id WHERE 1=1"
+         LEFT JOIN event e ON s.event_id = e.id WHERE 1=1",
     );
 
     let mut data_query = QueryBuilder::new(
@@ -277,10 +277,18 @@ pub async fn get_matches(
     }
 
     if let Some(team_id) = filters.team_id {
-        count_query.push(" AND (m.home_team_id = ").push_bind(team_id)
-            .push(" OR m.away_team_id = ").push_bind(team_id).push(")");
-        data_query.push(" AND (m.home_team_id = ").push_bind(team_id)
-            .push(" OR m.away_team_id = ").push_bind(team_id).push(")");
+        count_query
+            .push(" AND (m.home_team_id = ")
+            .push_bind(team_id)
+            .push(" OR m.away_team_id = ")
+            .push_bind(team_id)
+            .push(")");
+        data_query
+            .push(" AND (m.home_team_id = ")
+            .push_bind(team_id)
+            .push(" OR m.away_team_id = ")
+            .push_bind(team_id)
+            .push(")");
     }
 
     if let Some(status) = &filters.status {
@@ -289,8 +297,12 @@ pub async fn get_matches(
     }
 
     if let Some(date_from) = &filters.date_from {
-        count_query.push(" AND m.match_date >= ").push_bind(date_from);
-        data_query.push(" AND m.match_date >= ").push_bind(date_from);
+        count_query
+            .push(" AND m.match_date >= ")
+            .push_bind(date_from);
+        data_query
+            .push(" AND m.match_date >= ")
+            .push_bind(date_from);
     }
 
     if let Some(date_to) = &filters.date_to {
@@ -303,15 +315,19 @@ pub async fn get_matches(
     let total: i64 = count_row.get("total");
 
     // Add sorting
-    data_query.push(" ORDER BY ")
+    data_query
+        .push(" ORDER BY ")
         .push(sort_field.to_sql())
         .push(" ")
         .push(sort_order.to_sql());
 
     // Add pagination
     let offset = (page - 1) * page_size;
-    data_query.push(" LIMIT ").push_bind(page_size as i64)
-        .push(" OFFSET ").push_bind(offset as i64);
+    data_query
+        .push(" LIMIT ")
+        .push_bind(page_size as i64)
+        .push(" OFFSET ")
+        .push_bind(offset as i64);
 
     // Execute data query
     let rows = data_query.build().fetch_all(db).await?;
@@ -345,12 +361,15 @@ pub async fn get_seasons(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Er
     let rows = sqlx::query(
         "SELECT s.id, COALESCE(s.display_name, CAST(s.year AS TEXT)) as name \
          FROM season s \
-         ORDER BY s.year DESC"
+         ORDER BY s.year DESC",
     )
     .fetch_all(db)
     .await?;
 
-    Ok(rows.into_iter().map(|row| (row.get("id"), row.get("name"))).collect())
+    Ok(rows
+        .into_iter()
+        .map(|row| (row.get("id"), row.get("name")))
+        .collect())
 }
 
 /// Get all teams for filter dropdown
@@ -358,12 +377,15 @@ pub async fn get_teams(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Erro
     let rows = sqlx::query(
         "SELECT t.id, t.name \
          FROM team t \
-         ORDER BY t.name ASC"
+         ORDER BY t.name ASC",
     )
     .fetch_all(db)
     .await?;
 
-    Ok(rows.into_iter().map(|row| (row.get("id"), row.get("name"))).collect())
+    Ok(rows
+        .into_iter()
+        .map(|row| (row.get("id"), row.get("name")))
+        .collect())
 }
 
 #[derive(Debug, Clone)]
@@ -411,14 +433,18 @@ pub async fn create_match(db: &SqlitePool, entity: CreateMatchEntity) -> Result<
 }
 
 /// Update an existing match
-pub async fn update_match(db: &SqlitePool, id: i64, entity: UpdateMatchEntity) -> Result<bool, sqlx::Error> {
+pub async fn update_match(
+    db: &SqlitePool,
+    id: i64,
+    entity: UpdateMatchEntity,
+) -> Result<bool, sqlx::Error> {
     let result = sqlx::query(
         "UPDATE match \
          SET season_id = ?, home_team_id = ?, away_team_id = ?, \
              home_score_unidentified = ?, away_score_unidentified = ?, \
              match_date = ?, status = ?, venue = ?, \
              updated_at = CURRENT_TIMESTAMP \
-         WHERE id = ?"
+         WHERE id = ?",
     )
     .bind(entity.season_id)
     .bind(entity.home_team_id)
@@ -553,15 +579,19 @@ pub async fn create_score_event(
 
     // Decrement the appropriate unidentified score if it's greater than 0
     if entity.team_id == home_team_id && home_score_unidentified > 0 {
-        sqlx::query("UPDATE match SET home_score_unidentified = home_score_unidentified - 1 WHERE id = ?")
-            .bind(entity.match_id)
-            .execute(&mut *tx)
-            .await?;
+        sqlx::query(
+            "UPDATE match SET home_score_unidentified = home_score_unidentified - 1 WHERE id = ?",
+        )
+        .bind(entity.match_id)
+        .execute(&mut *tx)
+        .await?;
     } else if entity.team_id != home_team_id && away_score_unidentified > 0 {
-        sqlx::query("UPDATE match SET away_score_unidentified = away_score_unidentified - 1 WHERE id = ?")
-            .bind(entity.match_id)
-            .execute(&mut *tx)
-            .await?;
+        sqlx::query(
+            "UPDATE match SET away_score_unidentified = away_score_unidentified - 1 WHERE id = ?",
+        )
+        .bind(entity.match_id)
+        .execute(&mut *tx)
+        .await?;
     }
 
     // Commit the transaction
@@ -580,7 +610,7 @@ pub async fn update_score_event(
         "UPDATE score_event \
          SET team_id = ?, scorer_id = ?, assist1_id = ?, assist2_id = ?, \
              period = ?, time_minutes = ?, time_seconds = ?, goal_type = ? \
-         WHERE id = ?"
+         WHERE id = ?",
     )
     .bind(entity.team_id)
     .bind(entity.scorer_id)
@@ -633,15 +663,19 @@ pub async fn delete_score_event(db: &SqlitePool, id: i64) -> Result<bool, sqlx::
 
     // Increment the appropriate unidentified score
     if team_id == home_team_id {
-        sqlx::query("UPDATE match SET home_score_unidentified = home_score_unidentified + 1 WHERE id = ?")
-            .bind(match_id)
-            .execute(&mut *tx)
-            .await?;
+        sqlx::query(
+            "UPDATE match SET home_score_unidentified = home_score_unidentified + 1 WHERE id = ?",
+        )
+        .bind(match_id)
+        .execute(&mut *tx)
+        .await?;
     } else {
-        sqlx::query("UPDATE match SET away_score_unidentified = away_score_unidentified + 1 WHERE id = ?")
-            .bind(match_id)
-            .execute(&mut *tx)
-            .await?;
+        sqlx::query(
+            "UPDATE match SET away_score_unidentified = away_score_unidentified + 1 WHERE id = ?",
+        )
+        .bind(match_id)
+        .execute(&mut *tx)
+        .await?;
     }
 
     // Commit the transaction
@@ -661,13 +695,16 @@ pub async fn get_players_for_team(
          INNER JOIN player_contract pc ON p.id = pc.player_id \
          INNER JOIN team_participation tp ON pc.team_participation_id = tp.id \
          WHERE tp.team_id = ? \
-         ORDER BY p.name ASC"
+         ORDER BY p.name ASC",
     )
     .bind(team_id)
     .fetch_all(db)
     .await?;
 
-    Ok(rows.into_iter().map(|row| (row.get("id"), row.get("name"))).collect())
+    Ok(rows
+        .into_iter()
+        .map(|row| (row.get("id"), row.get("name")))
+        .collect())
 }
 
 /// Delete a match (cascades to score events)

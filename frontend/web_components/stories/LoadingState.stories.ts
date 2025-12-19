@@ -3,49 +3,49 @@ import { html } from 'lit';
 import '../loading-state.js';
 
 const meta: Meta = {
-  title: 'Components/LoadingState',
-  component: 'hockey-loading-state',
+	title: 'Components/LoadingState',
+	component: 'hockey-loading-state',
 
-  argTypes: {
-    variant: {
-      control: 'select',
-      options: ['container', 'inline', 'skeleton'],
-      description: 'Display variant of the loading state',
-      table: {
-        defaultValue: { summary: 'container' },
-      },
-    },
-    size: {
-      control: 'select',
-      options: ['sm', 'md', 'lg', 'xl'],
-      description: 'Size of the spinner (for container/inline variants)',
-      table: {
-        defaultValue: { summary: 'lg' },
-      },
-    },
-    label: {
-      control: 'text',
-      description: 'Optional loading label',
-    },
-    skeletonRows: {
-      control: 'number',
-      description: 'Number of skeleton rows (for skeleton variant)',
-      table: {
-        defaultValue: { summary: '5' },
-      },
-    },
-    minimal: {
-      control: 'boolean',
-      description: 'Use minimal padding for container variant',
-      table: {
-        defaultValue: { summary: 'false' },
-      },
-    },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
+	argTypes: {
+		variant: {
+			control: 'select',
+			options: ['container', 'inline', 'skeleton'],
+			description: 'Display variant of the loading state',
+			table: {
+				defaultValue: { summary: 'container' },
+			},
+		},
+		size: {
+			control: 'select',
+			options: ['sm', 'md', 'lg', 'xl'],
+			description: 'Size of the spinner (for container/inline variants)',
+			table: {
+				defaultValue: { summary: 'lg' },
+			},
+		},
+		label: {
+			control: 'text',
+			description: 'Optional loading label',
+		},
+		skeletonRows: {
+			control: 'number',
+			description: 'Number of skeleton rows (for skeleton variant)',
+			table: {
+				defaultValue: { summary: '5' },
+			},
+		},
+		minimal: {
+			control: 'boolean',
+			description: 'Use minimal padding for container variant',
+			table: {
+				defaultValue: { summary: 'false' },
+			},
+		},
+	},
+	parameters: {
+		docs: {
+			description: {
+				component: `
 A loading state component for page sections or full page loading.
 
 ## Usage
@@ -61,9 +61,9 @@ A loading state component for page sections or full page loading.
 - **inline**: Inline spinner for buttons or inline loading
 - **skeleton**: Animated skeleton placeholder for tables
         `,
-      },
-    },
-  },
+			},
+		},
+	},
 };
 
 export default meta;
@@ -71,7 +71,7 @@ type Story = StoryObj;
 
 // Default container loading
 export const Default: Story = {
-  render: () => html`
+	render: () => html`
     <div
       style="border: 1px solid #e5e7eb; border-radius: 8px; min-height: 300px;"
     >
@@ -82,7 +82,7 @@ export const Default: Story = {
 
 // Container variant
 export const Container: Story = {
-  render: () => html`
+	render: () => html`
     <div
       style="border: 1px solid #e5e7eb; border-radius: 8px; min-height: 300px;"
     >
@@ -97,7 +97,7 @@ export const Container: Story = {
 
 // Inline variant
 export const Inline: Story = {
-  render: () => html`
+	render: () => html`
     <div style="display: flex; align-items: center; gap: 1rem;">
       <span>Status:</span>
       <hockey-loading-state
@@ -111,7 +111,7 @@ export const Inline: Story = {
 
 // Skeleton variant
 export const Skeleton: Story = {
-  render: () => html`
+	render: () => html`
     <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem;">
       <hockey-loading-state
         variant="skeleton"
@@ -123,7 +123,7 @@ export const Skeleton: Story = {
 
 // Skeleton with fewer rows
 export const SkeletonCompact: Story = {
-  render: () => html`
+	render: () => html`
     <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem;">
       <hockey-loading-state
         variant="skeleton"
@@ -135,7 +135,7 @@ export const SkeletonCompact: Story = {
 
 // Minimal container
 export const MinimalContainer: Story = {
-  render: () => html`
+	render: () => html`
     <div style="border: 1px solid #e5e7eb; border-radius: 8px;">
       <hockey-loading-state
         variant="container"
@@ -148,14 +148,14 @@ export const MinimalContainer: Story = {
 
 // Interactive playground
 export const Playground: Story = {
-  args: {
-    variant: 'container',
-    size: 'lg',
-    label: 'Loading...',
-    skeletonRows: 5,
-    minimal: false,
-  },
-  render: args => html`
+	args: {
+		variant: 'container',
+		size: 'lg',
+		label: 'Loading...',
+		skeletonRows: 5,
+		minimal: false,
+	},
+	render: args => html`
     <div
       style="border: 1px solid #e5e7eb; border-radius: 8px; min-height: 200px; padding: 1rem;"
     >

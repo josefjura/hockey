@@ -3,43 +3,43 @@ import { html } from 'lit';
 import '../loading-spinner.js';
 
 const meta: Meta = {
-  title: 'Components/LoadingSpinner',
-  component: 'hockey-loading-spinner',
+	title: 'Components/LoadingSpinner',
+	component: 'hockey-loading-spinner',
 
-  argTypes: {
-    size: {
-      control: 'select',
-      options: ['sm', 'md', 'lg', 'xl'],
-      description: 'Size of the spinner',
-      table: {
-        defaultValue: { summary: 'md' },
-      },
-    },
-    variant: {
-      control: 'select',
-      options: ['circle', 'dots'],
-      description: 'Visual style of the spinner',
-      table: {
-        defaultValue: { summary: 'circle' },
-      },
-    },
-    label: {
-      control: 'text',
-      description: 'Optional label text to display with the spinner',
-    },
-    layout: {
-      control: 'select',
-      options: ['vertical', 'horizontal'],
-      description: 'Layout direction for spinner and label',
-      table: {
-        defaultValue: { summary: 'vertical' },
-      },
-    },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component: `
+	argTypes: {
+		size: {
+			control: 'select',
+			options: ['sm', 'md', 'lg', 'xl'],
+			description: 'Size of the spinner',
+			table: {
+				defaultValue: { summary: 'md' },
+			},
+		},
+		variant: {
+			control: 'select',
+			options: ['circle', 'dots'],
+			description: 'Visual style of the spinner',
+			table: {
+				defaultValue: { summary: 'circle' },
+			},
+		},
+		label: {
+			control: 'text',
+			description: 'Optional label text to display with the spinner',
+		},
+		layout: {
+			control: 'select',
+			options: ['vertical', 'horizontal'],
+			description: 'Layout direction for spinner and label',
+			table: {
+				defaultValue: { summary: 'vertical' },
+			},
+		},
+	},
+	parameters: {
+		docs: {
+			description: {
+				component: `
 A loading spinner component with multiple size and style variants.
 
 ## Usage
@@ -60,9 +60,9 @@ A loading spinner component with multiple size and style variants.
 - **circle**: Classic spinning circle
 - **dots**: Bouncing dots animation
         `,
-      },
-    },
-  },
+			},
+		},
+	},
 };
 
 export default meta;
@@ -70,12 +70,12 @@ type Story = StoryObj;
 
 // Basic circle spinner
 export const Default: Story = {
-  render: () => html`<hockey-loading-spinner></hockey-loading-spinner>`,
+	render: () => html`<hockey-loading-spinner></hockey-loading-spinner>`,
 };
 
 // Size variants
 export const Sizes: Story = {
-  render: () => html`
+	render: () => html`
     <div style="display: flex; align-items: center; gap: 2rem;">
       <div style="text-align: center;">
         <hockey-loading-spinner size="sm"></hockey-loading-spinner>
@@ -99,7 +99,7 @@ export const Sizes: Story = {
 
 // Dots variant
 export const DotsVariant: Story = {
-  render: () => html`
+	render: () => html`
     <div style="display: flex; align-items: center; gap: 2rem;">
       <hockey-loading-spinner variant="dots" size="sm"></hockey-loading-spinner>
       <hockey-loading-spinner variant="dots" size="md"></hockey-loading-spinner>
@@ -111,7 +111,7 @@ export const DotsVariant: Story = {
 
 // With label
 export const WithLabel: Story = {
-  render: () => html`
+	render: () => html`
     <div style="display: flex; gap: 3rem;">
       <hockey-loading-spinner size="lg" label="Loading..."></hockey-loading-spinner>
       <hockey-loading-spinner
@@ -125,13 +125,13 @@ export const WithLabel: Story = {
 
 // Interactive playground
 export const Playground: Story = {
-  args: {
-    size: 'md',
-    variant: 'circle',
-    label: 'Loading...',
-    layout: 'vertical',
-  },
-  render: args => html`
+	args: {
+		size: 'md',
+		variant: 'circle',
+		label: 'Loading...',
+		layout: 'vertical',
+	},
+	render: args => html`
     <hockey-loading-spinner
       size=${args.size}
       variant=${args.variant}

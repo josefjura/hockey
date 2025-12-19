@@ -137,7 +137,10 @@ pub async fn get_players(
 }
 
 /// Get a single player by ID
-pub async fn get_player_by_id(db: &SqlitePool, id: i64) -> Result<Option<PlayerEntity>, sqlx::Error> {
+pub async fn get_player_by_id(
+    db: &SqlitePool,
+    id: i64,
+) -> Result<Option<PlayerEntity>, sqlx::Error> {
     let row = sqlx::query(
         "SELECT p.id, p.name, p.country_id, p.photo_path, c.name as country_name, c.iso2Code as country_iso2_code
          FROM player p
@@ -164,13 +167,14 @@ pub async fn update_player(
     id: i64,
     player: UpdatePlayerEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("UPDATE player SET name = ?, country_id = ?, photo_path = ? WHERE id = ?")
-        .bind(player.name)
-        .bind(player.country_id)
-        .bind(player.photo_path)
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result =
+        sqlx::query("UPDATE player SET name = ?, country_id = ?, photo_path = ? WHERE id = ?")
+            .bind(player.name)
+            .bind(player.country_id)
+            .bind(player.photo_path)
+            .bind(id)
+            .execute(db)
+            .await?;
 
     Ok(result.rows_affected() > 0)
 }

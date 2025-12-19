@@ -104,7 +104,7 @@ pub fn team_list_content(
             div class="loading-spinner-overlay" {
                 hockey-loading-spinner size="lg" {}
             }
-            
+
             @if result.items.is_empty() {
                 (empty_state(
                     &t.messages.teams_entity().to_string(),
@@ -350,11 +350,7 @@ pub fn team_create_modal(t: &TranslationContext, error: Option<&str>) -> Markup 
 }
 
 /// Edit team modal
-pub fn team_edit_modal(
-    t: &TranslationContext,
-    team: &TeamEntity,
-    error: Option<&str>,
-) -> Markup {
+pub fn team_edit_modal(t: &TranslationContext, team: &TeamEntity, error: Option<&str>) -> Markup {
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {

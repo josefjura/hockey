@@ -178,7 +178,7 @@ pub fn match_list_content(
             div class="loading-spinner-overlay" {
                 hockey-loading-spinner size="lg" {}
             }
-            
+
             @if result.items.is_empty() {
                 (empty_state_i18n(
                     &t.messages.matches_empty_title().to_string(),

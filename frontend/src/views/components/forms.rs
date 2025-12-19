@@ -186,12 +186,7 @@ pub fn form_select<T: std::fmt::Display>(
 }
 
 /// Checkbox field
-pub fn form_checkbox(
-    name: &str,
-    label: &str,
-    checked: bool,
-    help: Option<&str>,
-) -> Markup {
+pub fn form_checkbox(name: &str, label: &str, checked: bool, help: Option<&str>) -> Markup {
     html! {
         div class="form-group form-checkbox" {
             label class="checkbox-label" {

@@ -107,14 +107,14 @@ pub fn event_list_content(
         "Create your first event to get started.".to_string()
     };
     let create_label = t.messages.events_create().to_string();
-    
+
     html! {
         div id="events-table" class="loading-overlay" {
             // Loading spinner overlay
             div class="loading-spinner-overlay" {
                 hockey-loading-spinner size="lg" {}
             }
-            
+
             @if result.items.is_empty() {
                 (empty_state_enhanced(
                     if has_filters { EmptyStateIcon::Search } else { EmptyStateIcon::Calendar },

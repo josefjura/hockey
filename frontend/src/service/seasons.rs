@@ -135,7 +135,10 @@ pub async fn get_seasons(
 }
 
 /// Get a single season by ID
-pub async fn get_season_by_id(db: &SqlitePool, id: i64) -> Result<Option<SeasonEntity>, sqlx::Error> {
+pub async fn get_season_by_id(
+    db: &SqlitePool,
+    id: i64,
+) -> Result<Option<SeasonEntity>, sqlx::Error> {
     let row = sqlx::query(
         "SELECT s.id, s.year, s.display_name, s.event_id, e.name as event_name
          FROM season s
@@ -161,13 +164,14 @@ pub async fn update_season(
     id: i64,
     season: UpdateSeasonEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("UPDATE season SET year = ?, display_name = ?, event_id = ? WHERE id = ?")
-        .bind(season.year)
-        .bind(season.display_name)
-        .bind(season.event_id)
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result =
+        sqlx::query("UPDATE season SET year = ?, display_name = ?, event_id = ? WHERE id = ?")
+            .bind(season.year)
+            .bind(season.display_name)
+            .bind(season.event_id)
+            .bind(id)
+            .execute(db)
+            .await?;
 
     Ok(result.rows_affected() > 0)
 }
@@ -188,15 +192,11 @@ fn apply_filters<'a>(
     filters: &'a SeasonFilters,
 ) {
     if let Some(event_id) = filters.event_id {
-        query_builder
-            .push(" AND s.event_id = ")
-            .push_bind(event_id);
+        query_builder.push(" AND s.event_id = ").push_bind(event_id);
     }
 
     if let Some(year) = filters.year {
-        query_builder
-            .push(" AND s.year = ")
-            .push_bind(year);
+        query_builder.push(" AND s.year = ").push_bind(year);
     }
 }
 

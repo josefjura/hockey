@@ -235,7 +235,10 @@ pub fn not_found_state(entity: &str) -> Markup {
     error_state(
         ErrorVariant::NotFound,
         &format!("{} Not Found", entity),
-        &format!("The {} you're looking for doesn't exist or has been removed.", entity.to_lowercase()),
+        &format!(
+            "The {} you're looking for doesn't exist or has been removed.",
+            entity.to_lowercase()
+        ),
         None,
         None,
     )

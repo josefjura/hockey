@@ -1,11 +1,7 @@
-use axum::{
-    extract::Request,
-    middleware::Next,
-    response::Response,
-};
+use axum::{extract::Request, middleware::Next, response::Response};
 use axum_extra::extract::CookieJar;
 
-use super::{TranslationContext, Locale};
+use super::{Locale, TranslationContext};
 
 /// Middleware that extracts locale from cookies and adds TranslationContext to request extensions
 ///

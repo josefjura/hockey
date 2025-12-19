@@ -168,7 +168,10 @@ pub fn empty_state_table(
     let description = if has_filters {
         "Try adjusting your filters or search criteria to find what you're looking for.".to_string()
     } else {
-        format!("Get started by creating your first {}.", entity_name.trim_end_matches('s'))
+        format!(
+            "Get started by creating your first {}.",
+            entity_name.trim_end_matches('s')
+        )
     };
 
     let (action_label, action_url) = if !has_filters {

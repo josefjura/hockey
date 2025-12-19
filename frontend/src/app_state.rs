@@ -10,9 +10,6 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(db: SqlitePool, sessions: SessionStore) -> Self {
-        Self {
-            db,
-            sessions,
-        }
+        Self { db, sessions }
     }
 }

@@ -71,15 +71,13 @@ fn escape_json(s: &str) -> String {
 /// Delete confirmation button with standard styling
 ///
 /// Creates a delete button with HTMX attributes and custom confirmation dialog
-pub fn delete_button(
-    url: &str,
-    target: &str,
-    entity_name: &str,
-    label: &str,
-) -> Markup {
+pub fn delete_button(url: &str, target: &str, entity_name: &str, label: &str) -> Markup {
     let confirm = confirm_attrs(
         &format!("Delete {}", entity_name),
-        &format!("Are you sure you want to delete this {}? This action cannot be undone.", entity_name.to_lowercase()),
+        &format!(
+            "Are you sure you want to delete this {}? This action cannot be undone.",
+            entity_name.to_lowercase()
+        ),
         ConfirmVariant::Danger,
         Some("Delete"),
         Some("Cancel"),

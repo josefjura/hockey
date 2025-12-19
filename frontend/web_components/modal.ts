@@ -23,7 +23,7 @@ import { customElement, property, state } from 'lit/decorators.js';
  */
 @customElement('hockey-modal')
 export class Modal extends LitElement {
-  static styles = css`
+	static styles = css`
     :host {
       display: contents;
     }
@@ -140,82 +140,82 @@ export class Modal extends LitElement {
     }
   `;
 
-  /** Unique ID for this modal */
-  @property({ type: String, attribute: 'modal-id' })
-  modalId = '';
+	/** Unique ID for this modal */
+	@property({ type: String, attribute: 'modal-id' })
+	modalId = '';
 
-  /** Modal title */
-  @property({ type: String })
-  title = '';
+	/** Modal title */
+	@property({ type: String })
+	title = '';
 
-  /** Size variant: small, default, large */
-  @property({ type: String })
-  size: 'small' | 'default' | 'large' = 'default';
+	/** Size variant: small, default, large */
+	@property({ type: String })
+	size: 'small' | 'default' | 'large' = 'default';
 
-  /** Show keyboard hints */
-  @property({ type: Boolean, attribute: 'show-hints' })
-  showHints = true;
+	/** Show keyboard hints */
+	@property({ type: Boolean, attribute: 'show-hints' })
+	showHints = true;
 
-  /** Allow closing by clicking outside */
-  @property({ type: Boolean, attribute: 'close-on-outside-click' })
-  closeOnOutsideClick = true;
+	/** Allow closing by clicking outside */
+	@property({ type: Boolean, attribute: 'close-on-outside-click' })
+	closeOnOutsideClick = true;
 
-  /** Allow closing with Escape key */
-  @property({ type: Boolean, attribute: 'close-on-escape' })
-  closeOnEscape = true;
+	/** Allow closing with Escape key */
+	@property({ type: Boolean, attribute: 'close-on-escape' })
+	closeOnEscape = true;
 
-  /** Auto-focus first input */
-  @property({ type: Boolean, attribute: 'auto-focus' })
-  autoFocus = true;
+	/** Auto-focus first input */
+	@property({ type: Boolean, attribute: 'auto-focus' })
+	autoFocus = true;
 
-  private focusableElements: HTMLElement[] = [];
-  private firstFocusable?: HTMLElement;
-  private lastFocusable?: HTMLElement;
-  private previousActiveElement?: HTMLElement;
+	private focusableElements: HTMLElement[] = [];
+	private firstFocusable?: HTMLElement;
+	private lastFocusable?: HTMLElement;
+	private previousActiveElement?: HTMLElement;
 
-  connectedCallback() {
-    super.connectedCallback();
-    // Save currently focused element
-    this.previousActiveElement = document.activeElement as HTMLElement;
+	connectedCallback() {
+		super.connectedCallback();
+		// Save currently focused element
+		this.previousActiveElement = document.activeElement as HTMLElement;
 
-    // Add keyboard listener
-    document.addEventListener('keydown', this.handleKeydown);
+		// Add keyboard listener
+		document.addEventListener('keydown', this.handleKeydown);
 
-    // Prevent body scrolling
-    document.body.style.overflow = 'hidden';
-  }
+		// Prevent body scrolling
+		document.body.style.overflow = 'hidden';
+	}
 
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    document.removeEventListener('keydown', this.handleKeydown);
-    document.body.style.overflow = '';
+	disconnectedCallback() {
+		super.disconnectedCallback();
+		document.removeEventListener('keydown', this.handleKeydown);
+		document.body.style.overflow = '';
 
-    // Restore focus to previous element
-    if (this.previousActiveElement) {
-      this.previousActiveElement.focus();
-    }
-  }
+		// Restore focus to previous element
+		if (this.previousActiveElement) {
+			this.previousActiveElement.focus();
+		}
+	}
 
-  firstUpdated() {
-    this.updateFocusableElements();
+	firstUpdated() {
+		this.updateFocusableElements();
 
-    if (this.autoFocus) {
-      // Focus first input or first focusable element
-      requestAnimationFrame(() => {
-        const slotted = this.querySelector('input, select, textarea') as HTMLElement;
-        if (slotted) {
-          slotted.focus();
-        } else if (this.firstFocusable) {
-          this.firstFocusable.focus();
-        }
-      });
-    }
-  }
+		if (this.autoFocus) {
+			// Focus first input or first focusable element
+			requestAnimationFrame(() => {
+				const slotted = this.querySelector('input, select, textarea') as HTMLElement;
+				if (slotted) {
+					slotted.focus();
+				} else if (this.firstFocusable) {
+					this.firstFocusable.focus();
+				}
+			});
+		}
+	}
 
-  render() {
-    const sizeClass = this.size !== 'default' ? this.size : '';
+	render() {
+		const sizeClass = this.size !== 'default' ? this.size : '';
 
-    return html`
+		return html`
       <div class="backdrop" @click=${this.handleBackdropClick}>
         <div class="modal ${sizeClass}" @click=${(e: Event) => e.stopPropagation()}>
           <div class="header">
@@ -234,112 +234,112 @@ export class Modal extends LitElement {
           <slot name="content"></slot>
 
           ${this.showHints
-            ? html`
+				? html`
                 <div class="keyboard-hint">
                   <kbd>Esc</kbd> to close &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit
                 </div>
               `
-            : ''}
+				: ''}
         </div>
       </div>
     `;
-  }
+	}
 
-  private handleKeydown = (e: KeyboardEvent) => {
-    // Escape to close
-    if (e.key === 'Escape' && this.closeOnEscape) {
-      e.preventDefault();
-      this.close();
-      return;
-    }
+	private handleKeydown = (e: KeyboardEvent) => {
+		// Escape to close
+		if (e.key === 'Escape' && this.closeOnEscape) {
+			e.preventDefault();
+			this.close();
+			return;
+		}
 
-    // Ctrl/Cmd + Enter to submit
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      const form = this.querySelector('form');
-      if (form) {
-        e.preventDefault();
-        const submitBtn = form.querySelector(
-          'button[type="submit"], input[type="submit"]'
-        ) as HTMLElement;
-        if (submitBtn) {
-          submitBtn.click();
-        } else {
-          form.requestSubmit();
-        }
-      }
-      return;
-    }
+		// Ctrl/Cmd + Enter to submit
+		if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+			const form = this.querySelector('form');
+			if (form) {
+				e.preventDefault();
+				const submitBtn = form.querySelector(
+					'button[type="submit"], input[type="submit"]'
+				) as HTMLElement;
+				if (submitBtn) {
+					submitBtn.click();
+				} else {
+					form.requestSubmit();
+				}
+			}
+			return;
+		}
 
-    // Tab key for focus trapping
-    if (e.key === 'Tab') {
-      this.handleTabKey(e);
-    }
-  };
+		// Tab key for focus trapping
+		if (e.key === 'Tab') {
+			this.handleTabKey(e);
+		}
+	};
 
-  private handleTabKey(e: KeyboardEvent) {
-    this.updateFocusableElements();
+	private handleTabKey(e: KeyboardEvent) {
+		this.updateFocusableElements();
 
-    if (this.focusableElements.length === 0) return;
+		if (this.focusableElements.length === 0) return;
 
-    if (e.shiftKey) {
-      // Shift + Tab
-      if (document.activeElement === this.firstFocusable) {
-        e.preventDefault();
-        this.lastFocusable?.focus();
-      }
-    } else {
-      // Tab
-      if (document.activeElement === this.lastFocusable) {
-        e.preventDefault();
-        this.firstFocusable?.focus();
-      }
-    }
-  }
+		if (e.shiftKey) {
+			// Shift + Tab
+			if (document.activeElement === this.firstFocusable) {
+				e.preventDefault();
+				this.lastFocusable?.focus();
+			}
+		} else {
+			// Tab
+			if (document.activeElement === this.lastFocusable) {
+				e.preventDefault();
+				this.firstFocusable?.focus();
+			}
+		}
+	}
 
-  private updateFocusableElements() {
-    // Get all focusable elements in the modal and slotted content
-    const modalElements = Array.from(
-      this.shadowRoot?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      ) || []
-    ) as HTMLElement[];
+	private updateFocusableElements() {
+		// Get all focusable elements in the modal and slotted content
+		const modalElements = Array.from(
+			this.shadowRoot?.querySelectorAll(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			) || []
+		) as HTMLElement[];
 
-    const slottedElements = Array.from(
-      this.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      ) || []
-    ) as HTMLElement[];
+		const slottedElements = Array.from(
+			this.querySelectorAll(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			) || []
+		) as HTMLElement[];
 
-    this.focusableElements = [...modalElements, ...slottedElements].filter(
-      el => !el.hasAttribute('disabled') && el.offsetParent !== null
-    );
+		this.focusableElements = [...modalElements, ...slottedElements].filter(
+			el => !el.hasAttribute('disabled') && el.offsetParent !== null
+		);
 
-    this.firstFocusable = this.focusableElements[0];
-    this.lastFocusable = this.focusableElements[this.focusableElements.length - 1];
-  }
+		this.firstFocusable = this.focusableElements[0];
+		this.lastFocusable = this.focusableElements[this.focusableElements.length - 1];
+	}
 
-  private handleBackdropClick = (e: Event) => {
-    if (this.closeOnOutsideClick && e.target === e.currentTarget) {
-      this.close();
-    }
-  };
+	private handleBackdropClick = (e: Event) => {
+		if (this.closeOnOutsideClick && e.target === e.currentTarget) {
+			this.close();
+		}
+	};
 
-  close() {
-    this.dispatchEvent(
-      new CustomEvent('modal-close', {
-        bubbles: true,
-        composed: true,
-      })
-    );
-    // Remove the element from DOM
-    this.remove();
-  }
+	close() {
+		this.dispatchEvent(
+			new CustomEvent('modal-close', {
+				bubbles: true,
+				composed: true,
+			})
+		);
+		// Remove the element from DOM
+		this.remove();
+	}
 }
 
 declare global {
-  interface HTMLElementTagNameMap {
-    'hockey-modal': Modal;
-  }
+	interface HTMLElementTagNameMap {
+		'hockey-modal': Modal;
+	}
 }
 
 /**
@@ -350,63 +350,63 @@ declare global {
  * it in your layout.
  */
 export function initLegacyModalKeyboardSupport() {
-  document.addEventListener('keydown', (e: KeyboardEvent) => {
-    // Find any open modal
-    const modal = document.querySelector('.modal-backdrop') as HTMLElement;
-    if (!modal) return;
+	document.addEventListener('keydown', (e: KeyboardEvent) => {
+		// Find any open modal
+		const modal = document.querySelector('.modal-backdrop') as HTMLElement;
+		if (!modal) return;
 
-    // Escape to close
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      modal.remove();
-      return;
-    }
+		// Escape to close
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			modal.remove();
+			return;
+		}
 
-    // Ctrl/Cmd + Enter to submit
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      const form = modal.querySelector('form');
-      if (form) {
-        e.preventDefault();
-        const submitBtn = form.querySelector(
-          'button[type="submit"], input[type="submit"]'
-        ) as HTMLElement;
-        if (submitBtn) {
-          submitBtn.click();
-        }
-      }
-    }
-  });
+		// Ctrl/Cmd + Enter to submit
+		if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+			const form = modal.querySelector('form');
+			if (form) {
+				e.preventDefault();
+				const submitBtn = form.querySelector(
+					'button[type="submit"], input[type="submit"]'
+				) as HTMLElement;
+				if (submitBtn) {
+					submitBtn.click();
+				}
+			}
+		}
+	});
 
-  // Auto-focus first input when modal is added
-  const observer = new MutationObserver(mutations => {
-    for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
-        if (node instanceof HTMLElement) {
-          const modal = node.classList?.contains('modal-backdrop')
-            ? node
-            : node.querySelector?.('.modal-backdrop');
-          if (modal) {
-            // Focus first input
-            const firstInput = modal.querySelector(
-              'input:not([type="hidden"]), select, textarea'
-            ) as HTMLElement;
-            if (firstInput) {
-              requestAnimationFrame(() => firstInput.focus());
-            }
-          }
-        }
-      }
-    }
-  });
+	// Auto-focus first input when modal is added
+	const observer = new MutationObserver(mutations => {
+		for (const mutation of mutations) {
+			for (const node of mutation.addedNodes) {
+				if (node instanceof HTMLElement) {
+					const modal = node.classList?.contains('modal-backdrop')
+						? node
+						: node.querySelector?.('.modal-backdrop');
+					if (modal) {
+						// Focus first input
+						const firstInput = modal.querySelector(
+							'input:not([type="hidden"]), select, textarea'
+						) as HTMLElement;
+						if (firstInput) {
+							requestAnimationFrame(() => firstInput.focus());
+						}
+					}
+				}
+			}
+		}
+	});
 
-  observer.observe(document.body, { childList: true, subtree: true });
+	observer.observe(document.body, { childList: true, subtree: true });
 }
 
 // Auto-initialize legacy support
 if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initLegacyModalKeyboardSupport);
-  } else {
-    initLegacyModalKeyboardSupport();
-  }
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initLegacyModalKeyboardSupport);
+	} else {
+		initLegacyModalKeyboardSupport();
+	}
 }

@@ -138,7 +138,11 @@ pub async fn get_teams(
     apply_filters(&mut data_query, filters);
 
     // Apply sorting
-    data_query.push(format!(" ORDER BY {} {}", sort_field.to_sql(), sort_order.to_sql()));
+    data_query.push(format!(
+        " ORDER BY {} {}",
+        sort_field.to_sql(),
+        sort_order.to_sql()
+    ));
 
     // Apply pagination
     let offset = (page - 1) * page_size;
