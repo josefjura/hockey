@@ -16,13 +16,13 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use axum_extra::extract::CookieJar;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::net::SocketAddr;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use auth::{require_auth, SessionStore};
-use i18n::Locale;
 use views::{layout::admin_layout, pages::dashboard::dashboard_page};
 
 #[tokio::main]
@@ -73,7 +73,8 @@ async fn main() -> Result<(), anyhow::Error> {
     let public_routes = Router::new()
         .route("/auth/login", get(routes::auth::login_get))
         .route("/auth/login", post(routes::auth::login_post))
-        .route("/auth/logout", post(routes::auth::logout_post));
+        .route("/auth/logout", post(routes::auth::logout_post))
+        .route("/locale/:code", get(routes::locale::set_locale));
 
     // Protected routes (authentication required)
     let protected_routes = Router::new()
@@ -150,7 +151,11 @@ async fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-async fn root_handler(State(state): State<AppState>, request: Request) -> Html<String> {
+async fn root_handler(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    request: Request,
+) -> Html<String> {
     // Extract session from request extensions (added by require_auth middleware)
     let session = request
         .extensions()
@@ -158,9 +163,8 @@ async fn root_handler(State(state): State<AppState>, request: Request) -> Html<S
         .expect("Session should be available in protected route")
         .clone();
 
-    // For now, default to English locale
-    // TODO: Get locale from user preferences or cookie
-    let locale = Locale::English;
+    // Get locale from cookie
+    let locale = routes::locale::get_locale_from_cookies(&jar);
 
     // Fetch dashboard stats
     let stats = service::dashboard::get_dashboard_stats(&state.db)

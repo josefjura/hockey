@@ -3,11 +3,12 @@ use axum::{
     response::{Html, IntoResponse},
     Extension,
 };
+use axum_extra::extract::CookieJar;
 use serde::Deserialize;
 
 use crate::app_state::AppState;
 use crate::auth::Session;
-use crate::i18n::Locale;
+use crate::routes::locale::get_locale_from_cookies;
 use crate::service::players::{
     self, CreatePlayerEntity, PlayerFilters, SortField, SortOrder, UpdatePlayerEntity,
 };
@@ -52,9 +53,10 @@ fn default_sort_order() -> String {
 pub async fn players_get(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
+    jar: CookieJar,
     Query(query): Query<PlayersQuery>,
 ) -> impl IntoResponse {
-    let locale = Locale::English;
+    let locale = get_locale_from_cookies(&jar);
 
     // Build filters
     let filters = PlayerFilters {

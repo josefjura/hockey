@@ -4,12 +4,13 @@ use axum::{
     http::{HeaderMap, HeaderName},
     Extension, Form,
 };
+use axum_extra::extract::CookieJar;
 use serde::Deserialize;
 
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::common::pagination::SortOrder;
-use crate::i18n::Locale;
+use crate::routes::locale::get_locale_from_cookies;
 use crate::service::matches::{
     self, CreateMatchEntity, CreateScoreEventEntity, MatchFilters, SortField, UpdateMatchEntity,
     UpdateScoreEventEntity,
@@ -132,9 +133,10 @@ pub struct UpdateScoreEventForm {
 pub async fn matches_get(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
+    jar: CookieJar,
     Query(query): Query<MatchesQuery>,
 ) -> impl IntoResponse {
-    let locale = Locale::English;
+    let locale = get_locale_from_cookies(&jar);
 
     // Build filters
     let filters = MatchFilters {
@@ -398,9 +400,10 @@ pub async fn match_update(
 pub async fn match_detail(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
+    jar: CookieJar,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
-    let locale = Locale::English;
+    let locale = get_locale_from_cookies(&jar);
 
     // Get match detail
     let match_detail = match matches::get_match_detail(&state.db, id).await {

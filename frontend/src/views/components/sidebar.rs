@@ -100,7 +100,8 @@ fn locale_switcher(i18n: &I18n, locale: Locale) -> Markup {
     html! {
         div class="locale-switcher" {
             label for="locale-select" class="locale-label" { (i18n.translate(locale, "user-language")) }
-            select id="locale-select" class="locale-select" {
+            select id="locale-select" class="locale-select" 
+                   onchange="window.location.href = '/locale/' + this.value" {
                 option value="en" selected[locale == Locale::English] { "English" }
                 option value="cs" selected[locale == Locale::Czech] { "Čeština" }
             }

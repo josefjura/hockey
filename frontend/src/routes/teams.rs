@@ -3,11 +3,12 @@ use axum::{
     response::{Html, IntoResponse},
     Extension, Form,
 };
+use axum_extra::extract::CookieJar;
 use serde::Deserialize;
 
 use crate::app_state::AppState;
 use crate::auth::Session;
-use crate::i18n::Locale;
+use crate::routes::locale::get_locale_from_cookies;
 use crate::service::teams::{self, CreateTeamEntity, SortField, SortOrder, TeamFilters, UpdateTeamEntity};
 use crate::views::{
     layout::admin_layout,
@@ -62,9 +63,10 @@ pub struct UpdateTeamForm {
 pub async fn teams_get(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
+    jar: CookieJar,
     Query(query): Query<TeamsQuery>,
 ) -> impl IntoResponse {
-    let locale = Locale::English;
+    let locale = get_locale_from_cookies(&jar);
 
     // Build filters
     let filters = TeamFilters {

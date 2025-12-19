@@ -3,11 +3,12 @@ use axum::{
     response::{Html, IntoResponse, Json},
     Extension,
 };
+use axum_extra::extract::CookieJar;
 use serde::Deserialize;
 
 use crate::app_state::AppState;
 use crate::auth::session::Session;
-use crate::i18n::Locale;
+use crate::routes::locale::get_locale_from_cookies;
 use crate::service::countries::{self, CountryFilters};
 use crate::views::{layout::admin_layout, pages::countries::countries_page};
 
@@ -25,8 +26,9 @@ pub struct CountriesQuery {
 pub async fn countries_get(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
+    jar: CookieJar,
 ) -> impl IntoResponse {
-    let locale = Locale::English;
+    let locale = get_locale_from_cookies(&jar);
     let content = countries_page();
     Html(admin_layout(
         "Countries",
