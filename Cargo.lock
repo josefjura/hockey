@@ -791,6 +791,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "fluent-static",
+ "libsqlite3-sys",
  "maud",
  "mime_guess",
  "rust-embed",
