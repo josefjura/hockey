@@ -1,5 +1,6 @@
 use maud::{html, Markup, DOCTYPE};
 
+use super::components::forms::form_styles;
 use super::components::loading::htmx_loading_styles;
 use super::components::sidebar;
 use super::components::toast::htmx_toast_event_handler;
@@ -16,6 +17,7 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 title { (title) " - Hockey Management" }
                 (base_styles())
                 (htmx_loading_styles())
+                (form_styles())
                 // HTMX library for dynamic HTML updates
                 script src="https://unpkg.com/htmx.org@2.0.4" {}
                 // Import map for Lit web components
