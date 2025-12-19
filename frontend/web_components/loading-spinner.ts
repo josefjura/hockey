@@ -13,7 +13,7 @@ import { customElement, property } from 'lit/decorators.js';
  */
 @customElement('hockey-loading-spinner')
 export class LoadingSpinner extends LitElement {
-  static styles = css`
+	static styles = css`
     :host {
       display: inline-flex;
       align-items: center;
@@ -151,48 +151,48 @@ export class LoadingSpinner extends LitElement {
     }
   `;
 
-  /** Size of the spinner: sm, md, lg, xl */
-  @property({ type: String })
-  size: 'sm' | 'md' | 'lg' | 'xl' = 'md';
+	/** Size of the spinner: sm, md, lg, xl */
+	@property({ type: String })
+	size: 'sm' | 'md' | 'lg' | 'xl' = 'md';
 
-  /** Visual variant: circle or dots */
-  @property({ type: String })
-  variant: 'circle' | 'dots' = 'circle';
+	/** Visual variant: circle or dots */
+	@property({ type: String })
+	variant: 'circle' | 'dots' = 'circle';
 
-  /** Optional label text to display */
-  @property({ type: String })
-  label?: string;
+	/** Optional label text to display */
+	@property({ type: String })
+	label?: string;
 
-  /** Layout direction for label */
-  @property({ type: String })
-  layout: 'vertical' | 'horizontal' = 'vertical';
+	/** Layout direction for label */
+	@property({ type: String })
+	layout: 'vertical' | 'horizontal' = 'vertical';
 
-  render() {
-    return html`
+	render() {
+		return html`
       <div class="spinner-container ${this.layout === 'horizontal' ? 'horizontal' : ''}">
         ${this.variant === 'circle' ? this.renderCircle() : this.renderDots()}
         ${this.label ? html`<span class="label ${this.size}">${this.label}</span>` : ''}
       </div>
     `;
-  }
+	}
 
-  private renderCircle() {
-    return html`<div class="spinner-circle ${this.size}"></div>`;
-  }
+	private renderCircle() {
+		return html`<div class="spinner-circle ${this.size}"></div>`;
+	}
 
-  private renderDots() {
-    return html`
+	private renderDots() {
+		return html`
       <div class="spinner-dots ${this.size}">
         <div class="dot"></div>
         <div class="dot"></div>
         <div class="dot"></div>
       </div>
     `;
-  }
+	}
 }
 
 declare global {
-  interface HTMLElementTagNameMap {
-    'hockey-loading-spinner': LoadingSpinner;
-  }
+	interface HTMLElementTagNameMap {
+		'hockey-loading-spinner': LoadingSpinner;
+	}
 }

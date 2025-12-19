@@ -2,6 +2,7 @@ use maud::{html, Markup, DOCTYPE};
 
 use super::components::loading::htmx_loading_styles;
 use super::components::sidebar;
+use super::components::toast::htmx_toast_event_handler;
 use crate::auth::Session;
 use crate::i18n::TranslationContext;
 
@@ -43,9 +44,14 @@ pub fn base_layout(title: &str, content: Markup) -> Markup {
                 script type="module" src="/static/js/components/countries-table.js" {}
                 script type="module" src="/static/js/components/loading-spinner.js" {}
                 script type="module" src="/static/js/components/loading-state.js" {}
+                script type="module" src="/static/js/components/toast.js" {}
             }
             body {
                 (content)
+                // Toast notification container
+                hockey-toast-container position="top-right" {}
+                // HTMX toast event handler
+                (htmx_toast_event_handler())
             }
         }
     }

@@ -13,7 +13,7 @@ import './loading-spinner.js';
  */
 @customElement('hockey-loading-state')
 export class LoadingState extends LitElement {
-  static styles = css`
+	static styles = css`
     :host {
       display: block;
     }
@@ -96,39 +96,39 @@ export class LoadingState extends LitElement {
     }
   `;
 
-  /** Display variant: container (centered), inline, or skeleton */
-  @property({ type: String })
-  variant: 'container' | 'inline' | 'skeleton' = 'container';
+	/** Display variant: container (centered), inline, or skeleton */
+	@property({ type: String })
+	variant: 'container' | 'inline' | 'skeleton' = 'container';
 
-  /** Size passed to spinner */
-  @property({ type: String })
-  size: 'sm' | 'md' | 'lg' | 'xl' = 'lg';
+	/** Size passed to spinner */
+	@property({ type: String })
+	size: 'sm' | 'md' | 'lg' | 'xl' = 'lg';
 
-  /** Optional loading label */
-  @property({ type: String })
-  label?: string;
+	/** Optional loading label */
+	@property({ type: String })
+	label?: string;
 
-  /** Number of skeleton rows to show */
-  @property({ type: Number })
-  skeletonRows = 5;
+	/** Number of skeleton rows to show */
+	@property({ type: Number })
+	skeletonRows = 5;
 
-  /** Use minimal padding for container variant */
-  @property({ type: Boolean })
-  minimal = false;
+	/** Use minimal padding for container variant */
+	@property({ type: Boolean })
+	minimal = false;
 
-  render() {
-    switch (this.variant) {
-      case 'inline':
-        return this.renderInline();
-      case 'skeleton':
-        return this.renderSkeleton();
-      default:
-        return this.renderContainer();
-    }
-  }
+	render() {
+		switch (this.variant) {
+			case 'inline':
+				return this.renderInline();
+			case 'skeleton':
+				return this.renderSkeleton();
+			default:
+				return this.renderContainer();
+		}
+	}
 
-  private renderContainer() {
-    return html`
+	private renderContainer() {
+		return html`
       <div class="loading-container ${this.minimal ? 'minimal' : ''}">
         <hockey-loading-spinner
           size=${this.size}
@@ -136,10 +136,10 @@ export class LoadingState extends LitElement {
         ></hockey-loading-spinner>
       </div>
     `;
-  }
+	}
 
-  private renderInline() {
-    return html`
+	private renderInline() {
+		return html`
       <span class="loading-inline">
         <hockey-loading-spinner
           size=${this.size}
@@ -148,16 +148,16 @@ export class LoadingState extends LitElement {
         ></hockey-loading-spinner>
       </span>
     `;
-  }
+	}
 
-  private renderSkeleton() {
-    return html`
+	private renderSkeleton() {
+		return html`
       <div class="skeleton-table">
         <div class="skeleton skeleton-heading"></div>
         ${Array(this.skeletonRows)
-          .fill(null)
-          .map(
-            () => html`
+				.fill(null)
+				.map(
+					() => html`
               <div class="skeleton-row">
                 <div class="skeleton skeleton-cell"></div>
                 <div class="skeleton skeleton-cell"></div>
@@ -165,14 +165,14 @@ export class LoadingState extends LitElement {
                 <div class="skeleton skeleton-cell" style="flex: 0.5;"></div>
               </div>
             `
-          )}
+				)}
       </div>
     `;
-  }
+	}
 }
 
 declare global {
-  interface HTMLElementTagNameMap {
-    'hockey-loading-state': LoadingState;
-  }
+	interface HTMLElementTagNameMap {
+		'hockey-loading-state': LoadingState;
+	}
 }
