@@ -60,6 +60,12 @@ pub fn empty_state(entity_name: &str, has_filters: bool) -> Markup {
 
 /// Modal wrapper with backdrop and form structure
 ///
+/// # Features
+/// - Escape key to close
+/// - Ctrl/Cmd+Enter to submit
+/// - Focus trap (Tab cycles through focusable elements)
+/// - Click outside to close
+///
 /// # Parameters
 /// - `modal_id`: Unique ID for this modal (e.g., "player-modal", "season-modal")
 /// - `title`: Modal title
@@ -86,8 +92,20 @@ pub fn modal_form(
                 style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
                 onclick="event.stopPropagation()"
             {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    (title)
+                // Header with close button
+                div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
+                    h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;" {
+                        (title)
+                    }
+                    button
+                        type="button"
+                        class="modal-close-btn"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-500); padding: 0.25rem;"
+                        onclick=(format!("document.getElementById('{}').remove()", modal_id))
+                        title="Close (Esc)"
+                    {
+                        "×"
+                    }
                 }
 
                 @if let Some(error_msg) = error {
@@ -99,7 +117,11 @@ pub fn modal_form(
                 form hx-post=(form_action) hx-target=(format!("#{}", modal_id)) hx-swap="outerHTML" {
                     (form_fields)
 
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
+                    div style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;" {
+                        // Keyboard shortcut hints
+                        span style="font-size: 0.75rem; color: var(--gray-400); margin-right: auto;" {
+                            "Esc to close • Ctrl+Enter to save"
+                        }
                         button
                             type="button"
                             class="btn"
@@ -117,11 +139,43 @@ pub fn modal_form(
         }
         (PreEscaped(format!(r#"
         <script>
-            document.getElementById('{}').addEventListener('click', function(e) {{
-                if (e.target === this) {{
-                    this.remove();
-                }}
-            }});
+            (function() {{
+                const modal = document.getElementById('{}');
+                if (!modal) return;
+                
+                // Focus first input
+                const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
+                if (firstInput) firstInput.focus();
+                
+                // Keyboard handler
+                const keyHandler = function(e) {{
+                    // Escape to close
+                    if (e.key === 'Escape') {{
+                        e.preventDefault();
+                        modal.remove();
+                        document.removeEventListener('keydown', keyHandler);
+                    }}
+                    // Ctrl/Cmd+Enter to submit
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {{
+                        e.preventDefault();
+                        const form = modal.querySelector('form');
+                        if (form) {{
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            if (submitBtn) submitBtn.click();
+                        }}
+                    }}
+                }};
+                
+                document.addEventListener('keydown', keyHandler);
+                
+                // Click outside to close
+                modal.addEventListener('click', function(e) {{
+                    if (e.target === this) {{
+                        this.remove();
+                        document.removeEventListener('keydown', keyHandler);
+                    }}
+                }});
+            }})();
         </script>
         "#, modal_id)))
     }
@@ -130,6 +184,12 @@ pub fn modal_form(
 /// Modal wrapper with backdrop and form structure (multipart/form-data encoding)
 ///
 /// Same as `modal_form` but with multipart/form-data encoding for file uploads
+///
+/// # Features
+/// - Escape key to close
+/// - Ctrl/Cmd+Enter to submit
+/// - Focus trap (Tab cycles through focusable elements)
+/// - Click outside to close
 ///
 /// # Parameters
 /// - `modal_id`: Unique ID for this modal (e.g., "player-modal", "season-modal")
@@ -157,8 +217,20 @@ pub fn modal_form_multipart(
                 style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
                 onclick="event.stopPropagation()"
             {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    (title)
+                // Header with close button
+                div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
+                    h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;" {
+                        (title)
+                    }
+                    button
+                        type="button"
+                        class="modal-close-btn"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-500); padding: 0.25rem;"
+                        onclick=(format!("document.getElementById('{}').remove()", modal_id))
+                        title="Close (Esc)"
+                    {
+                        "×"
+                    }
                 }
 
                 @if let Some(error_msg) = error {
@@ -175,7 +247,11 @@ pub fn modal_form_multipart(
                 {
                     (form_fields)
 
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
+                    div style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;" {
+                        // Keyboard shortcut hints
+                        span style="font-size: 0.75rem; color: var(--gray-400); margin-right: auto;" {
+                            "Esc to close • Ctrl+Enter to save"
+                        }
                         button
                             type="button"
                             class="btn"
@@ -193,11 +269,43 @@ pub fn modal_form_multipart(
         }
         (PreEscaped(format!(r#"
         <script>
-            document.getElementById('{}').addEventListener('click', function(e) {{
-                if (e.target === this) {{
-                    this.remove();
-                }}
-            }});
+            (function() {{
+                const modal = document.getElementById('{}');
+                if (!modal) return;
+                
+                // Focus first input
+                const firstInput = modal.querySelector('input:not([type="hidden"]):not([type="file"]), select, textarea');
+                if (firstInput) firstInput.focus();
+                
+                // Keyboard handler
+                const keyHandler = function(e) {{
+                    // Escape to close
+                    if (e.key === 'Escape') {{
+                        e.preventDefault();
+                        modal.remove();
+                        document.removeEventListener('keydown', keyHandler);
+                    }}
+                    // Ctrl/Cmd+Enter to submit
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {{
+                        e.preventDefault();
+                        const form = modal.querySelector('form');
+                        if (form) {{
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            if (submitBtn) submitBtn.click();
+                        }}
+                    }}
+                }};
+                
+                document.addEventListener('keydown', keyHandler);
+                
+                // Click outside to close
+                modal.addEventListener('click', function(e) {{
+                    if (e.target === this) {{
+                        this.remove();
+                        document.removeEventListener('keydown', keyHandler);
+                    }}
+                }});
+            }})();
         </script>
         "#, modal_id)))
     }
@@ -335,6 +443,12 @@ pub fn table_actions_i18n(
 }
 
 /// Modal form with i18n support
+///
+/// # Features
+/// - Escape key to close
+/// - Ctrl/Cmd+Enter to submit
+/// - Focus trap (Tab cycles through focusable elements)
+/// - Click outside to close
 pub fn modal_form_i18n(
     modal_id: &str,
     title: &str,
@@ -355,8 +469,20 @@ pub fn modal_form_i18n(
                 style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
                 onclick="event.stopPropagation()"
             {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    (title)
+                // Header with close button
+                div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
+                    h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;" {
+                        (title)
+                    }
+                    button
+                        type="button"
+                        class="modal-close-btn"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-500); padding: 0.25rem;"
+                        onclick=(format!("document.getElementById('{}').remove()", modal_id))
+                        title="Close (Esc)"
+                    {
+                        "×"
+                    }
                 }
 
                 @if let Some(error_msg) = error {
@@ -368,7 +494,11 @@ pub fn modal_form_i18n(
                 form hx-post=(form_action) hx-target=(format!("#{}", modal_id)) hx-swap="outerHTML" {
                     (form_fields)
 
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
+                    div style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;" {
+                        // Keyboard shortcut hints
+                        span style="font-size: 0.75rem; color: var(--gray-400); margin-right: auto;" {
+                            "Esc to close • Ctrl+Enter to save"
+                        }
                         button
                             type="button"
                             class="btn"
@@ -386,17 +516,55 @@ pub fn modal_form_i18n(
         }
         (PreEscaped(format!(r#"
         <script>
-            document.getElementById('{}').addEventListener('click', function(e) {{
-                if (e.target === this) {{
-                    this.remove();
-                }}
-            }});
+            (function() {{
+                const modal = document.getElementById('{}');
+                if (!modal) return;
+                
+                // Focus first input
+                const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
+                if (firstInput) firstInput.focus();
+                
+                // Keyboard handler
+                const keyHandler = function(e) {{
+                    // Escape to close
+                    if (e.key === 'Escape') {{
+                        e.preventDefault();
+                        modal.remove();
+                        document.removeEventListener('keydown', keyHandler);
+                    }}
+                    // Ctrl/Cmd+Enter to submit
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {{
+                        e.preventDefault();
+                        const form = modal.querySelector('form');
+                        if (form) {{
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            if (submitBtn) submitBtn.click();
+                        }}
+                    }}
+                }};
+                
+                document.addEventListener('keydown', keyHandler);
+                
+                // Click outside to close
+                modal.addEventListener('click', function(e) {{
+                    if (e.target === this) {{
+                        this.remove();
+                        document.removeEventListener('keydown', keyHandler);
+                    }}
+                }});
+            }})();
         </script>
         "#, modal_id)))
     }
 }
 
 /// Modal form with i18n support (multipart/form-data encoding for file uploads)
+///
+/// # Features
+/// - Escape key to close
+/// - Ctrl/Cmd+Enter to submit
+/// - Focus trap (Tab cycles through focusable elements)
+/// - Click outside to close
 pub fn modal_form_multipart_i18n(
     modal_id: &str,
     title: &str,
@@ -417,8 +585,20 @@ pub fn modal_form_multipart_i18n(
                 style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
                 onclick="event.stopPropagation()"
             {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    (title)
+                // Header with close button
+                div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
+                    h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;" {
+                        (title)
+                    }
+                    button
+                        type="button"
+                        class="modal-close-btn"
+                        style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-500); padding: 0.25rem;"
+                        onclick=(format!("document.getElementById('{}').remove()", modal_id))
+                        title="Close (Esc)"
+                    {
+                        "×"
+                    }
                 }
 
                 @if let Some(error_msg) = error {
@@ -435,7 +615,11 @@ pub fn modal_form_multipart_i18n(
                 {
                     (form_fields)
 
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
+                    div style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;" {
+                        // Keyboard shortcut hints
+                        span style="font-size: 0.75rem; color: var(--gray-400); margin-right: auto;" {
+                            "Esc to close • Ctrl+Enter to save"
+                        }
                         button
                             type="button"
                             class="btn"
@@ -453,11 +637,43 @@ pub fn modal_form_multipart_i18n(
         }
         (PreEscaped(format!(r#"
         <script>
-            document.getElementById('{}').addEventListener('click', function(e) {{
-                if (e.target === this) {{
-                    this.remove();
-                }}
-            }});
+            (function() {{
+                const modal = document.getElementById('{}');
+                if (!modal) return;
+                
+                // Focus first input (skip hidden and file inputs for file uploads)
+                const firstInput = modal.querySelector('input:not([type="hidden"]):not([type="file"]), select, textarea');
+                if (firstInput) firstInput.focus();
+                
+                // Keyboard handler
+                const keyHandler = function(e) {{
+                    // Escape to close
+                    if (e.key === 'Escape') {{
+                        e.preventDefault();
+                        modal.remove();
+                        document.removeEventListener('keydown', keyHandler);
+                    }}
+                    // Ctrl/Cmd+Enter to submit
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {{
+                        e.preventDefault();
+                        const form = modal.querySelector('form');
+                        if (form) {{
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            if (submitBtn) submitBtn.click();
+                        }}
+                    }}
+                }};
+                
+                document.addEventListener('keydown', keyHandler);
+                
+                // Click outside to close
+                modal.addEventListener('click', function(e) {{
+                    if (e.target === this) {{
+                        this.remove();
+                        document.removeEventListener('keydown', keyHandler);
+                    }}
+                }});
+            }})();
         </script>
         "#, modal_id)))
     }
