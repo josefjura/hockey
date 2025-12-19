@@ -366,6 +366,75 @@ pub async fn get_teams(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Erro
     Ok(rows.into_iter().map(|row| (row.get("id"), row.get("name"))).collect())
 }
 
+#[derive(Debug, Clone)]
+pub struct CreateMatchEntity {
+    pub season_id: i64,
+    pub home_team_id: i64,
+    pub away_team_id: i64,
+    pub home_score_unidentified: i32,
+    pub away_score_unidentified: i32,
+    pub match_date: Option<String>,
+    pub status: String,
+    pub venue: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct UpdateMatchEntity {
+    pub season_id: i64,
+    pub home_team_id: i64,
+    pub away_team_id: i64,
+    pub home_score_unidentified: i32,
+    pub away_score_unidentified: i32,
+    pub match_date: Option<String>,
+    pub status: String,
+    pub venue: Option<String>,
+}
+
+/// Create a new match
+pub async fn create_match(db: &SqlitePool, entity: CreateMatchEntity) -> Result<i64, sqlx::Error> {
+    let result = sqlx::query(
+        "INSERT INTO match (season_id, home_team_id, away_team_id, home_score_unidentified, away_score_unidentified, match_date, status, venue) \
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+    .bind(entity.season_id)
+    .bind(entity.home_team_id)
+    .bind(entity.away_team_id)
+    .bind(entity.home_score_unidentified)
+    .bind(entity.away_score_unidentified)
+    .bind(entity.match_date)
+    .bind(entity.status)
+    .bind(entity.venue)
+    .execute(db)
+    .await?;
+
+    Ok(result.last_insert_rowid())
+}
+
+/// Update an existing match
+pub async fn update_match(db: &SqlitePool, id: i64, entity: UpdateMatchEntity) -> Result<bool, sqlx::Error> {
+    let result = sqlx::query(
+        "UPDATE match \
+         SET season_id = ?, home_team_id = ?, away_team_id = ?, \
+             home_score_unidentified = ?, away_score_unidentified = ?, \
+             match_date = ?, status = ?, venue = ?, \
+             updated_at = CURRENT_TIMESTAMP \
+         WHERE id = ?"
+    )
+    .bind(entity.season_id)
+    .bind(entity.home_team_id)
+    .bind(entity.away_team_id)
+    .bind(entity.home_score_unidentified)
+    .bind(entity.away_score_unidentified)
+    .bind(entity.match_date)
+    .bind(entity.status)
+    .bind(entity.venue)
+    .bind(id)
+    .execute(db)
+    .await?;
+
+    Ok(result.rows_affected() > 0)
+}
+
 /// Delete a match (cascades to score events)
 pub async fn delete_match(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
     let result = sqlx::query("DELETE FROM match WHERE id = ?")

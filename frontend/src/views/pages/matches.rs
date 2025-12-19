@@ -2,7 +2,7 @@ use maud::{html, Markup};
 
 use crate::common::pagination::{PagedResult, SortOrder};
 use crate::service::matches::{MatchDetailEntity, MatchEntity, MatchFilters, ScoreEventEntity, SortField};
-use crate::views::components::crud::{empty_state, page_header, pagination, table_actions};
+use crate::views::components::crud::{empty_state, modal_form, page_header, pagination, table_actions};
 
 /// Main matches page with table and filters
 pub fn matches_page(
@@ -821,4 +821,293 @@ fn format_date(date: &str) -> String {
     } else {
         date.to_string()
     }
+}
+
+/// Create match modal
+pub fn match_create_modal(
+    error: Option<&str>,
+    seasons: &[(i64, String)],
+    teams: &[(i64, String)],
+) -> Markup {
+    let form_fields = html! {
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Season"
+                    span style="color: red;" { "*" }
+                }
+                select
+                    name="season_id"
+                    required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="" { "Select season" }
+                    @for (id, name) in seasons {
+                        option value=(id) { (name) }
+                    }
+                }
+            }
+
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Status"
+                    span style="color: red;" { "*" }
+                }
+                select
+                    name="status"
+                    required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="scheduled" selected { "Scheduled" }
+                    option value="in_progress" { "In Progress" }
+                    option value="finished" { "Finished" }
+                    option value="cancelled" { "Cancelled" }
+                }
+            }
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Home Team"
+                    span style="color: red;" { "*" }
+                }
+                select
+                    name="home_team_id"
+                    required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="" { "Select home team" }
+                    @for (id, name) in teams {
+                        option value=(id) { (name) }
+                    }
+                }
+            }
+
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Away Team"
+                    span style="color: red;" { "*" }
+                }
+                select
+                    name="away_team_id"
+                    required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="" { "Select away team" }
+                    @for (id, name) in teams {
+                        option value=(id) { (name) }
+                    }
+                }
+            }
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Home Score"
+                }
+                input
+                    type="number"
+                    name="home_score_unidentified"
+                    value="0"
+                    min="0"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Away Score"
+                }
+                input
+                    type="number"
+                    name="away_score_unidentified"
+                    value="0"
+                    min="0"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+        }
+
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Match Date"
+            }
+            input
+                type="datetime-local"
+                name="match_date"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+        }
+
+        div style="margin-bottom: 1.5rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Venue"
+            }
+            input
+                type="text"
+                name="venue"
+                placeholder="Enter venue name..."
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+        }
+    };
+
+    modal_form(
+        "match-modal",
+        "Create Match",
+        error,
+        "/matches",
+        form_fields,
+        "Create Match"
+    )
+}
+
+/// Edit match modal
+pub fn match_edit_modal(
+    match_entity: &MatchEntity,
+    error: Option<&str>,
+    seasons: &[(i64, String)],
+    teams: &[(i64, String)],
+) -> Markup {
+    let form_fields = html! {
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Season"
+                    span style="color: red;" { "*" }
+                }
+                select
+                    name="season_id"
+                    required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    @for (id, name) in seasons {
+                        option
+                            value=(id)
+                            selected[*id == match_entity.season_id]
+                        {
+                            (name)
+                        }
+                    }
+                }
+            }
+
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Status"
+                    span style="color: red;" { "*" }
+                }
+                select
+                    name="status"
+                    required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="scheduled" selected[match_entity.status == "scheduled"] { "Scheduled" }
+                    option value="in_progress" selected[match_entity.status == "in_progress"] { "In Progress" }
+                    option value="finished" selected[match_entity.status == "finished"] { "Finished" }
+                    option value="cancelled" selected[match_entity.status == "cancelled"] { "Cancelled" }
+                }
+            }
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Home Team"
+                    span style="color: red;" { "*" }
+                }
+                select
+                    name="home_team_id"
+                    required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    @for (id, name) in teams {
+                        option
+                            value=(id)
+                            selected[*id == match_entity.home_team_id]
+                        {
+                            (name)
+                        }
+                    }
+                }
+            }
+
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Away Team"
+                    span style="color: red;" { "*" }
+                }
+                select
+                    name="away_team_id"
+                    required
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    @for (id, name) in teams {
+                        option
+                            value=(id)
+                            selected[*id == match_entity.away_team_id]
+                        {
+                            (name)
+                        }
+                    }
+                }
+            }
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Home Score"
+                }
+                input
+                    type="number"
+                    name="home_score_unidentified"
+                    value=(match_entity.home_score_unidentified)
+                    min="0"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Away Score"
+                }
+                input
+                    type="number"
+                    name="away_score_unidentified"
+                    value=(match_entity.away_score_unidentified)
+                    min="0"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+        }
+
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Match Date"
+            }
+            input
+                type="datetime-local"
+                name="match_date"
+                value=[match_entity.match_date.as_ref()]
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+        }
+
+        div style="margin-bottom: 1.5rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Venue"
+            }
+            input
+                type="text"
+                name="venue"
+                value=[match_entity.venue.as_ref()]
+                placeholder="Enter venue name..."
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+        }
+    };
+
+    modal_form(
+        "match-modal",
+        "Edit Match",
+        error,
+        &format!("/matches/{}", match_entity.id),
+        form_fields,
+        "Save Changes"
+    )
 }
