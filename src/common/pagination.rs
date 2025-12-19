@@ -29,6 +29,7 @@ impl<T> PagedResult<T> {
 }
 
 /// Base trait for sortable fields
+#[allow(dead_code)]
 pub trait SortableField {
     fn from_str(s: &str) -> Self;
     fn to_sql(&self) -> &'static str;

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use maud::{html, Markup, PreEscaped};
 
 /// Toast notification variants
@@ -51,16 +53,19 @@ pub fn toast_success(message: &str) -> Markup {
 }
 
 /// Show an error toast
+#[allow(dead_code)]
 pub fn toast_error(message: &str) -> Markup {
     show_toast(message, ToastVariant::Error)
 }
 
 /// Show a warning toast
+#[allow(dead_code)]
 pub fn toast_warning(message: &str) -> Markup {
     show_toast(message, ToastVariant::Warning)
 }
 
 /// Show an info toast
+#[allow(dead_code)]
 pub fn toast_info(message: &str) -> Markup {
     show_toast(message, ToastVariant::Info)
 }

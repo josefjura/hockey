@@ -1,6 +1,7 @@
 use maud::{html, Markup};
 
 /// Confirmation dialog variants
+#[allow(dead_code)]
 pub enum ConfirmVariant {
     Danger,
     Warning,
@@ -71,6 +72,7 @@ fn escape_json(s: &str) -> String {
 /// Delete confirmation button with standard styling
 ///
 /// Creates a delete button with HTMX attributes and custom confirmation dialog
+#[allow(dead_code)]
 pub fn delete_button(url: &str, target: &str, entity_name: &str, label: &str) -> Markup {
     let confirm = confirm_attrs(
         &format!("Delete {}", entity_name),
@@ -97,6 +99,7 @@ pub fn delete_button(url: &str, target: &str, entity_name: &str, label: &str) ->
 }
 
 /// Danger action button with confirmation
+#[allow(dead_code)]
 pub fn danger_action_button(
     url: &str,
     target: &str,
@@ -126,6 +129,7 @@ pub fn danger_action_button(
 }
 
 /// Warning action button with confirmation
+#[allow(dead_code)]
 pub fn warning_action_button(
     url: &str,
     target: &str,

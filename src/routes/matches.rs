@@ -568,7 +568,7 @@ pub async fn score_event_create(
     }
 
     if let Some(minutes) = form.time_minutes {
-        if minutes < 0 || minutes > 60 {
+        if !(0..=60).contains(&minutes) {
             return Html(
                 score_event_create_modal(
                     &t,
@@ -584,7 +584,7 @@ pub async fn score_event_create(
     }
 
     if let Some(seconds) = form.time_seconds {
-        if seconds < 0 || seconds > 59 {
+        if !(0..=59).contains(&seconds) {
             return Html(
                 score_event_create_modal(
                     &t,
@@ -750,7 +750,7 @@ pub async fn score_event_update(
     }
 
     if let Some(minutes) = form.time_minutes {
-        if minutes < 0 || minutes > 60 {
+        if !(0..=60).contains(&minutes) {
             return Html(
                 score_event_edit_modal(
                     &t,
@@ -767,7 +767,7 @@ pub async fn score_event_update(
     }
 
     if let Some(seconds) = form.time_seconds {
-        if seconds < 0 || seconds > 59 {
+        if !(0..=59).contains(&seconds) {
             return Html(
                 score_event_edit_modal(
                     &t,

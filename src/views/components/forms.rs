@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use maud::{html, Markup, PreEscaped};
 
 /// Form input types
@@ -38,6 +40,7 @@ impl InputType {
 /// - `required`: Whether field is required
 /// - `error`: Optional validation error message
 /// - `help`: Optional help text
+#[allow(clippy::too_many_arguments)]
 pub fn form_field(
     name: &str,
     label: &str,
@@ -85,6 +88,7 @@ pub fn form_field(
 }
 
 /// Textarea field with label and optional error/help
+#[allow(clippy::too_many_arguments)]
 pub fn form_textarea(
     name: &str,
     label: &str,

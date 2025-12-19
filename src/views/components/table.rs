@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use maud::{html, Markup};
 
 use crate::common::pagination::{PagedResult, SortOrder};

@@ -68,6 +68,7 @@ pub async fn get_countries(
 }
 
 /// Get a single country by ID
+#[allow(dead_code)]
 pub async fn get_country_by_id(
     db: &SqlitePool,
     id: i64,
@@ -94,6 +95,7 @@ pub async fn get_country_by_id(
 }
 
 /// Get simple list of countries for dropdowns (id, name)
+#[allow(dead_code)]
 pub async fn get_countries_simple(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query("SELECT id, name FROM country ORDER BY name")
         .fetch_all(db)

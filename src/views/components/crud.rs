@@ -399,6 +399,7 @@ pub fn empty_state_i18n(title: &str, message: &str, _has_filters: bool) -> Marku
 }
 
 /// Table actions with i18n support and custom confirmation dialog
+#[allow(dead_code)]
 pub fn table_actions_i18n(
     edit_url: &str,
     delete_url: &str,
@@ -562,6 +563,7 @@ pub fn modal_form_i18n(
 /// - Ctrl/Cmd+Enter to submit
 /// - Focus trap (Tab cycles through focusable elements)
 /// - Click outside to close
+#[allow(dead_code)]
 pub fn modal_form_multipart_i18n(
     modal_id: &str,
     title: &str,

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use maud::{html, Markup, PreEscaped};
 
 /// Empty state icons for different contexts

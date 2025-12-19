@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 pub mod middleware;
 
 use fluent_static::message_bundle;
@@ -34,6 +36,7 @@ impl Locale {
         }
     }
 
+    #[allow(dead_code)]
     pub fn name(&self) -> &'static str {
         match self {
             Locale::English => "English",

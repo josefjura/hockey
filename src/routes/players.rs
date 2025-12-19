@@ -231,14 +231,8 @@ pub async fn player_create(
     // Prefer uploaded file over URL
     let final_photo_path = if photo_path.is_some() {
         photo_path
-    } else if let Some(url) = photo_url {
-        if url.trim().is_empty() {
-            None
-        } else {
-            Some(url)
-        }
     } else {
-        None
+        photo_url.filter(|url| !url.trim().is_empty())
     };
 
     // Create player

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use maud::{html, Markup};
 
 /// Loading spinner for inline use

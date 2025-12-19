@@ -31,6 +31,7 @@ pub async fn set_locale(jar: CookieJar, Path(code): Path<String>) -> impl IntoRe
 }
 
 /// Helper function to get locale from cookie jar
+#[allow(dead_code)]
 pub fn get_locale_from_cookies(jar: &CookieJar) -> Locale {
     jar.get(LOCALE_COOKIE_NAME)
         .map(|cookie| Locale::from_code(cookie.value()))
