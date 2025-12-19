@@ -1,7 +1,7 @@
 use maud::{html, Markup};
 
 use crate::service::players::{PagedResult, PlayerEntity, PlayerFilters, SortField, SortOrder};
-use crate::views::components::crud::{empty_state, modal_form, page_header, pagination, table_actions};
+use crate::views::components::crud::{empty_state, modal_form_multipart, page_header, pagination, table_actions};
 
 /// Main players page with table and filters
 pub fn players_page(
@@ -341,22 +341,36 @@ pub fn player_create_modal(error: Option<&str>, countries: &[(i64, String)]) -> 
             }
         }
 
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Upload Photo"
+            }
+            input
+                type="file"
+                name="photo_file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
+                "Optional: Upload player photo (JPG, PNG, GIF, or WebP)"
+            }
+        }
+
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Photo URL"
+                "Or Photo URL"
             }
             input
                 type="url"
-                name="photo_path"
+                name="photo_url"
                 placeholder="https://example.com/photo.jpg"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                "Optional: URL to player photo"
+                "Optional: URL to player photo (used if no file uploaded)"
             }
         }
     };
 
-    modal_form(
+    modal_form_multipart(
         "player-modal",
         "Create Player",
         error,
@@ -406,23 +420,50 @@ pub fn player_edit_modal(
             }
         }
 
+        @if let Some(current_photo) = &player.photo_path {
+            div style="margin-bottom: 1rem;" {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Current Photo"
+                }
+                img
+                    src=(current_photo)
+                    alt="Current player photo"
+                    style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid var(--gray-300);"
+                    onerror="this.style.display='none'";
+            }
+        }
+
+        div style="margin-bottom: 1rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Upload New Photo"
+            }
+            input
+                type="file"
+                name="photo_file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
+                "Optional: Upload new player photo (JPG, PNG, GIF, or WebP)"
+            }
+        }
+
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Photo URL"
+                "Or Photo URL"
             }
             input
                 type="url"
-                name="photo_path"
+                name="photo_url"
                 value=[player.photo_path.as_ref()]
                 placeholder="https://example.com/photo.jpg"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                "Optional: URL to player photo"
+                "Optional: URL to player photo (used if no file uploaded)"
             }
         }
     };
 
-    modal_form(
+    modal_form_multipart(
         "player-modal",
         "Edit Player",
         error,

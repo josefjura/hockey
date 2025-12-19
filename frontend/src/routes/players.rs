@@ -1,7 +1,7 @@
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Multipart, Path, Query, State},
     response::{Html, IntoResponse},
-    Extension, Form,
+    Extension,
 };
 use serde::Deserialize;
 
@@ -46,20 +46,6 @@ fn default_sort() -> String {
 
 fn default_sort_order() -> String {
     "asc".to_string()
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CreatePlayerForm {
-    name: String,
-    country_id: i64,
-    photo_path: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct UpdatePlayerForm {
-    name: String,
-    country_id: i64,
-    photo_path: Option<String>,
 }
 
 /// GET /players - Players list page
@@ -112,7 +98,17 @@ pub async fn players_get(
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
     let content = players_page(&result, &filters, &sort_field, &sort_order, &countries);
-    Html(admin_layout("Players", &session, "/players", &state.i18n, locale, content).into_string())
+    Html(
+        admin_layout(
+            "Players",
+            &session,
+            "/players",
+            &state.i18n,
+            locale,
+            content,
+        )
+        .into_string(),
+    )
 }
 
 /// GET /players/list - HTMX endpoint for table updates
@@ -161,34 +157,100 @@ pub async fn player_create_form(State(state): State<AppState>) -> impl IntoRespo
 /// POST /players - Create new player
 pub async fn player_create(
     State(state): State<AppState>,
-    Form(form): Form<CreatePlayerForm>,
+    mut multipart: Multipart,
 ) -> impl IntoResponse {
     // Get countries for form re-render on error
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
+    // Parse multipart form data
+    let mut name = String::new();
+    let mut country_id: Option<i64> = None;
+    let mut photo_path: Option<String> = None;
+    let mut photo_url: Option<String> = None;
+
+    while let Ok(Some(field)) = multipart.next_field().await {
+        let field_name = field.name().unwrap_or("").to_string();
+
+        match field_name.as_str() {
+            "name" => {
+                name = field.text().await.unwrap_or_default();
+            }
+            "country_id" => {
+                let text = field.text().await.unwrap_or_default();
+                country_id = text.parse().ok();
+            }
+            "photo_url" => {
+                photo_url = Some(field.text().await.unwrap_or_default());
+            }
+            "photo_file" => {
+                // Handle file upload
+                let filename = field.file_name().unwrap_or("photo.jpg").to_string();
+                let data = field.bytes().await.unwrap_or_default();
+
+                if !data.is_empty() {
+                    match crate::utils::save_uploaded_file(
+                        &data,
+                        &filename,
+                        "static/uploads/players",
+                    )
+                    .await
+                    {
+                        Ok(path) => photo_path = Some(path),
+                        Err(e) => {
+                            tracing::error!("Failed to save uploaded file: {}", e);
+                            return Html(player_create_modal(Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string());
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
     // Validation
-    let name = form.name.trim();
+    let name = name.trim();
     if name.is_empty() {
-        return Html(player_create_modal(Some("Player name cannot be empty"), &countries).into_string());
+        return Html(
+            player_create_modal(Some("Player name cannot be empty"), &countries).into_string(),
+        );
     }
 
     if name.len() > 255 {
         return Html(
-            player_create_modal(
-                Some("Player name cannot exceed 255 characters"),
-                &countries,
-            )
-            .into_string(),
+            player_create_modal(Some("Player name cannot exceed 255 characters"), &countries)
+                .into_string(),
         );
     }
+
+    let country_id = match country_id {
+        Some(id) => id,
+        None => {
+            return Html(
+                player_create_modal(Some("Please select a country"), &countries).into_string(),
+            );
+        }
+    };
+
+    // Prefer uploaded file over URL
+    let final_photo_path = if photo_path.is_some() {
+        photo_path
+    } else if let Some(url) = photo_url {
+        if url.trim().is_empty() {
+            None
+        } else {
+            Some(url)
+        }
+    } else {
+        None
+    };
 
     // Create player
     match players::create_player(
         &state.db,
         CreatePlayerEntity {
             name: name.to_string(),
-            country_id: form.country_id,
-            photo_path: form.photo_path,
+            country_id,
+            photo_path: final_photo_path,
         },
     )
     .await
@@ -234,17 +296,105 @@ pub async fn player_edit_form(
 pub async fn player_update(
     State(state): State<AppState>,
     Path(id): Path<i64>,
-    Form(form): Form<UpdatePlayerForm>,
+    mut multipart: Multipart,
 ) -> impl IntoResponse {
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
+    // Get current player for fallback
+    let current_player = match players::get_player_by_id(&state.db, id).await {
+        Ok(Some(player)) => player,
+        Ok(None) => {
+            return Html(
+                player_edit_modal(
+                    &players::get_player_by_id(&state.db, id)
+                        .await
+                        .ok()
+                        .flatten()
+                        .unwrap(),
+                    Some("Player not found"),
+                    &countries,
+                )
+                .into_string(),
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to fetch player: {}", e);
+            return Html(
+                player_edit_modal(
+                    &players::get_player_by_id(&state.db, id)
+                        .await
+                        .ok()
+                        .flatten()
+                        .unwrap(),
+                    Some("Failed to load player"),
+                    &countries,
+                )
+                .into_string(),
+            );
+        }
+    };
+
+    // Parse multipart form data
+    let mut name = String::new();
+    let mut country_id: Option<i64> = None;
+    let mut photo_path: Option<String> = current_player.photo_path.clone();
+    let mut photo_url: Option<String> = None;
+    let mut new_photo_uploaded = false;
+
+    while let Ok(Some(field)) = multipart.next_field().await {
+        let field_name = field.name().unwrap_or("").to_string();
+
+        match field_name.as_str() {
+            "name" => {
+                name = field.text().await.unwrap_or_default();
+            }
+            "country_id" => {
+                let text = field.text().await.unwrap_or_default();
+                country_id = text.parse().ok();
+            }
+            "photo_url" => {
+                photo_url = Some(field.text().await.unwrap_or_default());
+            }
+            "photo_file" => {
+                // Handle file upload
+                let filename = field.file_name().unwrap_or("photo.jpg").to_string();
+                let data = field.bytes().await.unwrap_or_default();
+
+                if !data.is_empty() {
+                    match crate::utils::save_uploaded_file(
+                        &data,
+                        &filename,
+                        "static/uploads/players",
+                    )
+                    .await
+                    {
+                        Ok(path) => {
+                            // Delete old photo if it exists and is an uploaded file
+                            if let Some(old_path) = &current_player.photo_path {
+                                if old_path.starts_with("/static/uploads/") {
+                                    let _ = crate::utils::delete_uploaded_file(old_path).await;
+                                }
+                            }
+                            photo_path = Some(path);
+                            new_photo_uploaded = true;
+                        }
+                        Err(e) => {
+                            tracing::error!("Failed to save uploaded file: {}", e);
+                            return Html(player_edit_modal(&current_player, Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string());
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
     // Validation
-    let name = form.name.trim();
+    let name = name.trim();
     if name.is_empty() {
-        let player = players::get_player_by_id(&state.db, id).await.ok().flatten();
         return Html(
             player_edit_modal(
-                &player.unwrap(),
+                &current_player,
                 Some("Player name cannot be empty"),
                 &countries,
             )
@@ -253,10 +403,9 @@ pub async fn player_update(
     }
 
     if name.len() > 255 {
-        let player = players::get_player_by_id(&state.db, id).await.ok().flatten();
         return Html(
             player_edit_modal(
-                &player.unwrap(),
+                &current_player,
                 Some("Player name cannot exceed 255 characters"),
                 &countries,
             )
@@ -264,14 +413,37 @@ pub async fn player_update(
         );
     }
 
+    let country_id = match country_id {
+        Some(id) => id,
+        None => {
+            return Html(
+                player_edit_modal(&current_player, Some("Please select a country"), &countries)
+                    .into_string(),
+            );
+        }
+    };
+
+    // If no new photo was uploaded, use the URL if provided
+    let final_photo_path = if new_photo_uploaded {
+        photo_path
+    } else if let Some(url) = photo_url {
+        if url.trim().is_empty() {
+            None
+        } else {
+            Some(url)
+        }
+    } else {
+        photo_path
+    };
+
     // Update player
     match players::update_player(
         &state.db,
         id,
         UpdatePlayerEntity {
             name: name.to_string(),
-            country_id: form.country_id,
-            photo_path: form.photo_path,
+            country_id,
+            photo_path: final_photo_path,
         },
     )
     .await
@@ -280,15 +452,13 @@ pub async fn player_update(
             // Return HTMX response to close modal and reload table
             Html("<div hx-get=\"/players/list\" hx-target=\"#players-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
         }
-        Ok(false) => {
-            let player = players::get_player_by_id(&state.db, id).await.ok().flatten();
-            Html(player_edit_modal(&player.unwrap(), Some("Player not found"), &countries).into_string())
-        }
+        Ok(false) => Html(
+            player_edit_modal(&current_player, Some("Player not found"), &countries).into_string(),
+        ),
         Err(e) => {
             tracing::error!("Failed to update player: {}", e);
-            let player = players::get_player_by_id(&state.db, id).await.ok().flatten();
             Html(
-                player_edit_modal(&player.unwrap(), Some("Failed to update player"), &countries)
+                player_edit_modal(&current_player, Some("Failed to update player"), &countries)
                     .into_string(),
             )
         }
@@ -334,9 +504,9 @@ pub async fn player_delete(
 
             Html(player_list_content(&result, &filters, &sort_field, &sort_order).into_string())
         }
-        Ok(false) => Html(
-            crate::views::components::error::error_message("Player not found").into_string(),
-        ),
+        Ok(false) => {
+            Html(crate::views::components::error::error_message("Player not found").into_string())
+        }
         Err(e) => {
             tracing::error!("Failed to delete player: {}", e);
             Html(

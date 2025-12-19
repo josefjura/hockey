@@ -76,6 +76,9 @@ next-env.d.ts
 frontend/hockey.db
 frontend/*.db
 
+# Uploaded files (local development)
+frontend/static/uploads/
+
 # Temporary files
 **/tmp/
 **/temp/
