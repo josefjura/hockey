@@ -5,6 +5,7 @@ use crate::i18n::TranslationContext;
 use crate::service::matches::{
     MatchDetailEntity, MatchEntity, MatchFilters, ScoreEventEntity, SortField,
 };
+use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
 use crate::views::components::crud::{
     empty_state_i18n, modal_form_i18n, page_header_i18n, pagination,
 };
@@ -299,7 +300,13 @@ pub fn match_list_content(
                                         hx-post=(build_delete_url(match_item.id, filters, sort_field, sort_order))
                                         hx-target="#matches-table"
                                         hx-swap="outerHTML"
-                                        hx-confirm=(t.messages.matches_confirm_delete())
+                                        hx-confirm-custom=(confirm_attrs(
+                                            &t.messages.matches_delete().to_string(),
+                                            &t.messages.matches_confirm_delete().to_string(),
+                                            ConfirmVariant::Danger,
+                                            Some(&t.messages.common_delete().to_string()),
+                                            Some(&t.messages.common_cancel().to_string())
+                                        ))
                                     {
                                         (t.messages.common_delete())
                                     }
@@ -515,7 +522,13 @@ pub fn match_detail_page(t: &TranslationContext, detail: &MatchDetailEntity) -> 
                     button
                         class="btn btn-danger"
                         hx-post=(format!("/matches/{}/delete", match_info.id))
-                        hx-confirm=(t.messages.matches_confirm_delete())
+                        hx-confirm-custom=(confirm_attrs(
+                            &t.messages.matches_delete().to_string(),
+                            &t.messages.matches_confirm_delete().to_string(),
+                            ConfirmVariant::Danger,
+                            Some(&t.messages.common_delete().to_string()),
+                            Some(&t.messages.common_cancel().to_string())
+                        ))
                     {
                         (t.messages.matches_delete())
                     }
@@ -783,7 +796,13 @@ fn score_events_list(events: &[ScoreEventEntity], home_team_id: i64, _away_team_
                         button
                             class="btn btn-sm btn-danger"
                             hx-post=(format!("/matches/score-events/{}/delete", event.id))
-                            hx-confirm="Are you sure you want to delete this goal?"
+                            hx-confirm-custom=(confirm_attrs(
+                                "Delete Goal",
+                                "Are you sure you want to delete this goal? This action cannot be undone.",
+                                ConfirmVariant::Danger,
+                                Some("Delete"),
+                                Some("Cancel")
+                            ))
                         {
                             "Delete"
                         }

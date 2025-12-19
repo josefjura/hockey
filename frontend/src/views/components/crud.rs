@@ -3,6 +3,10 @@ use maud::{html, Markup, PreEscaped};
 // Re-export table components for convenience
 pub use crate::views::components::table::pagination;
 
+// Import confirm component for enhanced delete dialogs
+use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
+use crate::views::components::empty_state::{empty_state_enhanced, EmptyStateIcon};
+
 /// Page header with title, description, and create button
 pub fn page_header(title: &str, description: &str, create_url: &str, create_label: &str) -> Markup {
     html! {
@@ -27,22 +31,31 @@ pub fn page_header(title: &str, description: &str, create_url: &str, create_labe
     }
 }
 
-/// Empty state when no items are found
+/// Empty state when no items are found (enhanced with icon)
 pub fn empty_state(entity_name: &str, has_filters: bool) -> Markup {
-    html! {
-        div style="padding: 3rem; text-align: center; color: var(--gray-500);" {
-            h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;" {
-                "No " (entity_name) " found"
-            }
-            p {
-                @if has_filters {
-                    "No " (entity_name) " match your search criteria. Try adjusting your filters."
-                } @else {
-                    "No " (entity_name) " have been added yet."
-                }
-            }
-        }
-    }
+    let (icon, description) = if has_filters {
+        (
+            EmptyStateIcon::Search,
+            format!(
+                "No {} match your search criteria. Try adjusting your filters.",
+                entity_name.to_lowercase()
+            ),
+        )
+    } else {
+        (
+            EmptyStateIcon::Box,
+            format!("No {} have been added yet.", entity_name.to_lowercase()),
+        )
+    };
+
+    empty_state_enhanced(
+        icon,
+        &format!("No {} found", entity_name),
+        &description,
+        None,
+        None,
+        None,
+    )
 }
 
 /// Modal wrapper with backdrop and form structure
@@ -190,13 +203,24 @@ pub fn modal_form_multipart(
     }
 }
 
-/// Table actions (Edit/Delete buttons)
+/// Table actions (Edit/Delete buttons) with custom confirmation dialog
 pub fn table_actions(
     edit_url: &str,
     delete_url: &str,
     table_id: &str,
     entity_label: &str,
 ) -> Markup {
+    let confirm = confirm_attrs(
+        &format!("Delete {}", entity_label),
+        &format!(
+            "Are you sure you want to delete this {}? This action cannot be undone.",
+            entity_label.to_lowercase()
+        ),
+        ConfirmVariant::Danger,
+        Some("Delete"),
+        Some("Cancel"),
+    );
+
     html! {
         td style="text-align: right;" {
             button
@@ -213,7 +237,7 @@ pub fn table_actions(
                 hx-post=(delete_url)
                 hx-target=(format!("#{}", table_id))
                 hx-swap="outerHTML"
-                hx-confirm=(format!("Are you sure you want to delete this {}?", entity_label))
+                hx-confirm-custom=(confirm)
             {
                 "Delete"
             }
@@ -268,14 +292,24 @@ pub fn empty_state_i18n(title: &str, message: &str, _has_filters: bool) -> Marku
     }
 }
 
-/// Table actions with i18n support
+/// Table actions with i18n support and custom confirmation dialog
 pub fn table_actions_i18n(
     edit_url: &str,
     delete_url: &str,
     table_id: &str,
     edit_label: &str,
     delete_label: &str,
+    confirm_title: &str,
+    confirm_message: &str,
 ) -> Markup {
+    let confirm = confirm_attrs(
+        confirm_title,
+        confirm_message,
+        ConfirmVariant::Danger,
+        Some(delete_label),
+        None,
+    );
+
     html! {
         td style="text-align: right;" {
             button
@@ -292,6 +326,7 @@ pub fn table_actions_i18n(
                 hx-post=(delete_url)
                 hx-target=(format!("#{}", table_id))
                 hx-swap="outerHTML"
+                hx-confirm-custom=(confirm)
             {
                 (delete_label)
             }

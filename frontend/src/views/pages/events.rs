@@ -2,6 +2,7 @@ use maud::{html, Markup, PreEscaped};
 
 use crate::i18n::TranslationContext;
 use crate::service::events::{EventEntity, EventFilters, PagedResult};
+use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
 
 /// Main events page with table and filters
 pub fn events_page(
@@ -156,7 +157,13 @@ pub fn event_list_content(
                                         hx-post=(format!("/events/{}/delete", event.id))
                                         hx-target="#events-table"
                                         hx-swap="outerHTML"
-                                        hx-confirm=(t.messages.events_confirm_delete())
+                                        hx-confirm-custom=(confirm_attrs(
+                                            &t.messages.events_delete().to_string(),
+                                            &t.messages.events_confirm_delete().to_string(),
+                                            ConfirmVariant::Danger,
+                                            Some(&t.messages.common_delete().to_string()),
+                                            Some(&t.messages.common_cancel().to_string())
+                                        ))
                                     {
                                         (t.messages.common_delete())
                                     }
