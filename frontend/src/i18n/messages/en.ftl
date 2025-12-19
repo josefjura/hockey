@@ -311,6 +311,13 @@ common-try-different = Try different search criteria
 common-search-by-name = Search by name...
 common-filter-by-country = Filter by country
 common-all-countries = All countries
+common-no-country = No country
+common-id = ID
+
+# Form labels
+form-name = Name
+form-country = Country
+form-photo = Photo
 
 # Table headers
 table-name = Name

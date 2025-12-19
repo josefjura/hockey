@@ -1,8 +1,16 @@
-use fluent::{FluentArgs, FluentBundle, FluentResource};
-use unic_langid::{langid, LanguageIdentifier};
+pub mod middleware;
 
-const EN_MESSAGES: &str = include_str!("messages/en.ftl");
-const CS_MESSAGES: &str = include_str!("messages/cs.ftl");
+use fluent_static::message_bundle;
+
+// Define the message bundle with both languages
+#[message_bundle(
+    resources = [
+        ("src/i18n/messages/en.ftl", "en"),
+        ("src/i18n/messages/cs.ftl", "cs"),
+    ],
+    default_language = "en"
+)]
+pub struct Messages;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum Locale {
@@ -12,7 +20,6 @@ pub enum Locale {
 }
 
 impl Locale {
-    #[allow(dead_code)]
     pub fn from_code(code: &str) -> Self {
         match code {
             "cs" | "cz" => Locale::Czech,
@@ -27,84 +34,26 @@ impl Locale {
         }
     }
 
-    #[allow(dead_code)]
     pub fn name(&self) -> &'static str {
         match self {
             Locale::English => "English",
             Locale::Czech => "Čeština",
         }
     }
-
-    fn lang_id(&self) -> LanguageIdentifier {
-        match self {
-            Locale::English => langid!("en"),
-            Locale::Czech => langid!("cs"),
-        }
-    }
-
-    fn messages(&self) -> &'static str {
-        match self {
-            Locale::English => EN_MESSAGES,
-            Locale::Czech => CS_MESSAGES,
-        }
-    }
 }
 
-// FluentBundle with IntlLangMemoizer is not Send because it uses RefCell internally
-// We create bundles on-demand per translation instead of caching them
-pub struct I18n;
-
-impl I18n {
-    pub fn new() -> Self {
-        Self
-    }
-
-    fn create_bundle(locale: Locale) -> FluentBundle<FluentResource> {
-        let resource = FluentResource::try_new(locale.messages().to_string())
-            .expect("Failed to parse Fluent resource");
-
-        let mut bundle = FluentBundle::new(vec![locale.lang_id()]);
-        bundle
-            .add_resource(resource)
-            .expect("Failed to add resource to bundle");
-
-        bundle
-    }
-
-    pub fn translate(&self, locale: Locale, key: &str) -> String {
-        self.translate_with_args(locale, key, None)
-    }
-
-    pub fn translate_with_args(
-        &self,
-        locale: Locale,
-        key: &str,
-        args: Option<&FluentArgs>,
-    ) -> String {
-        let bundle = Self::create_bundle(locale);
-
-        let message = bundle
-            .get_message(key)
-            .unwrap_or_else(|| panic!("Message '{}' not found in {} locale", key, locale.code()));
-
-        let pattern = message.value().unwrap_or_else(|| {
-            panic!("Message '{}' has no value in {} locale", key, locale.code())
-        });
-
-        let mut errors = vec![];
-        let value = bundle.format_pattern(pattern, args, &mut errors);
-
-        if !errors.is_empty() {
-            eprintln!("Translation errors for key '{}': {:?}", key, errors);
-        }
-
-        value.to_string()
-    }
+/// Translation context - provides direct access to type-safe translations
+#[derive(Debug, Clone)]
+pub struct TranslationContext {
+    pub locale: Locale,
+    pub messages: Messages,
 }
 
-impl Default for I18n {
-    fn default() -> Self {
-        Self::new()
+impl TranslationContext {
+    pub fn new(locale: Locale) -> Self {
+        use fluent_static::MessageBundle;
+        let messages = Messages::get(locale.code()).unwrap_or_default();
+        Self { locale, messages }
     }
 }
 
@@ -127,19 +76,16 @@ mod tests {
     }
 
     #[test]
-    fn test_i18n_translate_english() {
-        let i18n = I18n::new();
-        assert_eq!(
-            i18n.translate(Locale::English, "nav-dashboard"),
-            "Dashboard"
-        );
-        assert_eq!(i18n.translate(Locale::English, "nav-teams"), "Teams");
+    fn test_translation_context() {
+        let ctx = TranslationContext::new(Locale::English);
+        assert_eq!(ctx.messages.nav_dashboard().to_string(), "Dashboard");
+        assert_eq!(ctx.messages.nav_teams().to_string(), "Teams");
     }
 
     #[test]
-    fn test_i18n_translate_czech() {
-        let i18n = I18n::new();
-        assert_eq!(i18n.translate(Locale::Czech, "nav-dashboard"), "Přehled");
-        assert_eq!(i18n.translate(Locale::Czech, "nav-teams"), "Týmy");
+    fn test_translation_context_czech() {
+        let ctx = TranslationContext::new(Locale::Czech);
+        assert_eq!(ctx.messages.nav_dashboard().to_string(), "Přehled");
+        assert_eq!(ctx.messages.nav_teams().to_string(), "Týmy");
     }
 }

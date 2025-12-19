@@ -4,13 +4,12 @@ use axum::{
     response::{Html, IntoResponse},
     Extension, Form,
 };
-use axum_extra::extract::CookieJar;
 use serde::Deserialize;
 
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::common::pagination::SortOrder;
-use crate::routes::locale::get_locale_from_cookies;
+use crate::i18n::TranslationContext;
 use crate::service::matches::{
     self, CreateMatchEntity, CreateScoreEventEntity, MatchFilters, SortField, UpdateMatchEntity,
     UpdateScoreEventEntity,
@@ -132,12 +131,10 @@ pub struct UpdateScoreEventForm {
 /// GET /matches - Matches list page
 pub async fn matches_get(
     Extension(session): Extension<Session>,
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Query(query): Query<MatchesQuery>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     // Build filters
     let filters = MatchFilters {
         season_id: query.season_id,
@@ -170,8 +167,7 @@ pub async fn matches_get(
                     "Matches",
                     &session,
                     "/matches",
-                    &state.i18n,
-                    locale,
+                    &t,
                     crate::views::components::error::error_message("Failed to load matches"),
                 )
                 .into_string(),
@@ -184,8 +180,7 @@ pub async fn matches_get(
     let teams = matches::get_teams(&state.db).await.unwrap_or_default();
 
     let content = matches_page(
-        &state.i18n,
-        locale,
+        &t,
         &result,
         &filters,
         &sort_field,
@@ -198,8 +193,7 @@ pub async fn matches_get(
             "Matches",
             &session,
             "/matches",
-            &state.i18n,
-            locale,
+            &t,
             content,
         )
         .into_string(),
@@ -208,12 +202,10 @@ pub async fn matches_get(
 
 /// GET /matches/list - HTMX endpoint for table updates
 pub async fn matches_list_partial(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Query(query): Query<MatchesQuery>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     let filters = MatchFilters {
         season_id: query.season_id,
         team_id: query.team_id,
@@ -248,8 +240,7 @@ pub async fn matches_list_partial(
 
     Html(
         match_list_content(
-            &state.i18n,
-            locale,
+            &t,
             &result,
             &filters,
             &sort_field,
@@ -260,24 +251,23 @@ pub async fn matches_list_partial(
 }
 
 /// GET /matches/new - Show create modal
-pub async fn match_create_form(State(state): State<AppState>, jar: CookieJar) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
+pub async fn match_create_form(
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
     // Get seasons and teams for dropdowns
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
     let teams = matches::get_teams(&state.db).await.unwrap_or_default();
 
-    Html(match_create_modal(&state.i18n, locale, None, &seasons, &teams).into_string())
+    Html(match_create_modal(&t, None, &seasons, &teams).into_string())
 }
 
 /// POST /matches - Create new match
 pub async fn match_create(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Form(form): Form<CreateMatchForm>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     // Get seasons and teams for dropdowns (in case we need to show the form again with error)
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
     let teams = matches::get_teams(&state.db).await.unwrap_or_default();
@@ -286,8 +276,7 @@ pub async fn match_create(
     if form.home_team_id == form.away_team_id {
         return Html(
             match_create_modal(
-                &state.i18n,
-                locale,
+                &t,
                 Some("Home and away teams must be different"),
                 &seasons,
                 &teams,
@@ -299,8 +288,7 @@ pub async fn match_create(
     if form.home_score_unidentified < 0 || form.away_score_unidentified < 0 {
         return Html(
             match_create_modal(
-                &state.i18n,
-                locale,
+                &t,
                 Some("Scores cannot be negative"),
                 &seasons,
                 &teams,
@@ -333,8 +321,7 @@ pub async fn match_create(
             tracing::error!("Failed to create match: {}", e);
             Html(
                 match_create_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     Some("Failed to create match"),
                     &seasons,
                     &teams,
@@ -347,12 +334,10 @@ pub async fn match_create(
 
 /// GET /matches/{id}/edit - Show edit modal
 pub async fn match_edit_form(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     let match_entity = match matches::get_match_by_id(&state.db, id).await {
         Ok(Some(m)) => m,
         Ok(None) => {
@@ -373,13 +358,13 @@ pub async fn match_edit_form(
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
     let teams = matches::get_teams(&state.db).await.unwrap_or_default();
 
-    Html(match_edit_modal(&state.i18n, locale, &match_entity, None, &seasons, &teams).into_string())
+    Html(match_edit_modal(&t, &match_entity, None, &seasons, &teams).into_string())
 }
 
 /// POST /matches/{id} - Update match
 pub async fn match_update(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(id): Path<i64>,
     Form(form): Form<UpdateMatchForm>,
 ) -> impl IntoResponse {
@@ -388,14 +373,11 @@ pub async fn match_update(
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
     let teams = matches::get_teams(&state.db).await.unwrap_or_default();
 
-    let locale = get_locale_from_cookies(&jar);
-
     // Validation
     if form.home_team_id == form.away_team_id {
         return Html(
             match_edit_modal(
-                &state.i18n,
-                locale,
+                &t,
                 &match_entity.unwrap(),
                 Some("Home and away teams must be different"),
                 &seasons,
@@ -409,8 +391,7 @@ pub async fn match_update(
     if form.home_score_unidentified < 0 || form.away_score_unidentified < 0 {
         return Html(
             match_edit_modal(
-                &state.i18n,
-                locale,
+                &t,
                 &match_entity.unwrap(),
                 Some("Scores cannot be negative"),
                 &seasons,
@@ -449,8 +430,7 @@ pub async fn match_update(
         }
         Ok(false) => Html(
             match_edit_modal(
-                &state.i18n,
-                locale,
+                &t,
                 &match_entity.unwrap(),
                 Some("Match not found"),
                 &seasons,
@@ -463,8 +443,7 @@ pub async fn match_update(
             tracing::error!("Failed to update match: {}", e);
             Html(
                 match_edit_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     &match_entity.unwrap(),
                     Some("Failed to update match"),
                     &seasons,
@@ -480,12 +459,10 @@ pub async fn match_update(
 /// GET /matches/{id} - Match detail page
 pub async fn match_detail(
     Extension(session): Extension<Session>,
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     // Get match detail
     let match_detail = match matches::get_match_detail(&state.db, id).await {
         Ok(Some(detail)) => detail,
@@ -495,8 +472,7 @@ pub async fn match_detail(
                     "Match Not Found",
                     &session,
                     "/matches",
-                    &state.i18n,
-                    locale,
+                    &t,
                     crate::views::components::error::error_message("Match not found"),
                 )
                 .into_string(),
@@ -509,8 +485,7 @@ pub async fn match_detail(
                     "Error",
                     &session,
                     "/matches",
-                    &state.i18n,
-                    locale,
+                    &t,
                     crate::views::components::error::error_message("Failed to load match detail"),
                 )
                 .into_string(),
@@ -518,14 +493,13 @@ pub async fn match_detail(
         }
     };
 
-    let content = match_detail_page(&state.i18n, locale, &match_detail);
+    let content = match_detail_page(&t, &match_detail);
     Html(
         admin_layout(
             "Match Detail",
             &session,
             "/matches",
-            &state.i18n,
-            locale,
+            &t,
             content,
         )
         .into_string(),
@@ -556,12 +530,10 @@ pub async fn match_delete(State(state): State<AppState>, Path(id): Path<i64>) ->
 
 /// GET /matches/{match_id}/score-events/new - Show create score event modal
 pub async fn score_event_create_form(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(match_id): Path<i64>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     // Get match to get home and away teams
     let match_info = match matches::get_match_by_id(&state.db, match_id).await {
         Ok(Some(m)) => m,
@@ -589,8 +561,7 @@ pub async fn score_event_create_form(
 
     Html(
         score_event_create_modal(
-            &state.i18n,
-            locale,
+            &t,
             None,
             &match_info,
             &home_players,
@@ -602,13 +573,11 @@ pub async fn score_event_create_form(
 
 /// POST /matches/{match_id}/score-events - Create new score event
 pub async fn score_event_create(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(match_id): Path<i64>,
     Form(form): Form<CreateScoreEventForm>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     // Get match info for re-showing form on error
     let match_info = matches::get_match_by_id(&state.db, match_id)
         .await
@@ -631,8 +600,7 @@ pub async fn score_event_create(
     if form.period < 1 || form.period > 5 {
         return Html(
             score_event_create_modal(
-                &state.i18n,
-                locale,
+                &t,
                 Some("Period must be between 1 and 5"),
                 &match_info.unwrap(),
                 &home_players,
@@ -647,8 +615,7 @@ pub async fn score_event_create(
         if minutes < 0 || minutes > 60 {
             return Html(
                 score_event_create_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     Some("Minutes must be between 0 and 60"),
                     &match_info.unwrap(),
                     &home_players,
@@ -664,8 +631,7 @@ pub async fn score_event_create(
         if seconds < 0 || seconds > 59 {
             return Html(
                 score_event_create_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     Some("Seconds must be between 0 and 59"),
                     &match_info.unwrap(),
                     &home_players,
@@ -707,8 +673,7 @@ pub async fn score_event_create(
             tracing::error!("Failed to create score event: {}", e);
             Html(
                 score_event_create_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     Some("Failed to create goal"),
                     &match_info.unwrap(),
                     &home_players,
@@ -723,12 +688,10 @@ pub async fn score_event_create(
 
 /// GET /matches/score-events/{id}/edit - Show edit score event modal
 pub async fn score_event_edit_form(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     let score_event = match matches::get_score_event_by_id(&state.db, id).await {
         Ok(Some(se)) => se,
         Ok(None) => {
@@ -773,8 +736,7 @@ pub async fn score_event_edit_form(
 
     Html(
         score_event_edit_modal(
-            &state.i18n,
-            locale,
+            &t,
             None,
             &score_event,
             &match_info,
@@ -787,13 +749,11 @@ pub async fn score_event_edit_form(
 
 /// POST /matches/score-events/{id} - Update score event
 pub async fn score_event_update(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(id): Path<i64>,
     Form(form): Form<UpdateScoreEventForm>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     // Get score event and match for re-showing form on error
     let score_event = matches::get_score_event_by_id(&state.db, id)
         .await
@@ -821,8 +781,7 @@ pub async fn score_event_update(
     if form.period < 1 || form.period > 5 {
         return Html(
             score_event_edit_modal(
-                &state.i18n,
-                locale,
+                &t,
                 Some("Period must be between 1 and 5"),
                 &score_event.unwrap(),
                 &match_info.unwrap(),
@@ -838,8 +797,7 @@ pub async fn score_event_update(
         if minutes < 0 || minutes > 60 {
             return Html(
                 score_event_edit_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     Some("Minutes must be between 0 and 60"),
                     &score_event.unwrap(),
                     &match_info.unwrap(),
@@ -856,8 +814,7 @@ pub async fn score_event_update(
         if seconds < 0 || seconds > 59 {
             return Html(
                 score_event_edit_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     Some("Seconds must be between 0 and 59"),
                     &score_event.unwrap(),
                     &match_info.unwrap(),
@@ -898,8 +855,7 @@ pub async fn score_event_update(
         }
         Ok(false) => Html(
             score_event_edit_modal(
-                &state.i18n,
-                locale,
+                &t,
                 Some("Score event not found"),
                 &score_event.unwrap(),
                 &match_info.unwrap(),
@@ -913,8 +869,7 @@ pub async fn score_event_update(
             tracing::error!("Failed to update score event: {}", e);
             Html(
                 score_event_edit_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     Some("Failed to update goal"),
                     &score_event.unwrap(),
                     &match_info.unwrap(),

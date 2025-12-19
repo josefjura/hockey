@@ -3,12 +3,11 @@ use axum::{
     response::{Html, IntoResponse},
     Extension, Form,
 };
-use axum_extra::extract::CookieJar;
 use serde::Deserialize;
 
 use crate::app_state::AppState;
 use crate::auth::Session;
-use crate::routes::locale::get_locale_from_cookies;
+use crate::i18n::TranslationContext;
 use crate::service::teams::{
     self, CreateTeamEntity, SortField, SortOrder, TeamFilters, UpdateTeamEntity,
 };
@@ -64,12 +63,10 @@ pub struct UpdateTeamForm {
 /// GET /teams - Teams list page
 pub async fn teams_get(
     Extension(session): Extension<Session>,
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Query(query): Query<TeamsQuery>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-
     // Build filters
     let filters = TeamFilters {
         name: query.name.clone(),
@@ -99,8 +96,7 @@ pub async fn teams_get(
                     "Teams",
                     &session,
                     "/teams",
-                    &state.i18n,
-                    locale,
+                    &t,
                     crate::views::components::error::error_message("Failed to load teams"),
                 )
                 .into_string(),
@@ -112,24 +108,22 @@ pub async fn teams_get(
     let countries = teams::get_countries(&state.db).await.unwrap_or_default();
 
     let content = teams_page(
-        &state.i18n,
-        locale,
+        &t,
         &result,
         &filters,
         &sort_field,
         &sort_order,
         &countries,
     );
-    Html(admin_layout("Teams", &session, "/teams", &state.i18n, locale, content).into_string())
+    Html(admin_layout("Teams", &session, "/teams", &t, content).into_string())
 }
 
 /// GET /teams/list - HTMX endpoint for table updates
 pub async fn teams_list_partial(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Query(query): Query<TeamsQuery>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
     let filters = TeamFilters {
         name: query.name.clone(),
         country_id: query.country_id,
@@ -161,8 +155,7 @@ pub async fn teams_list_partial(
 
     Html(
         team_list_content(
-            &state.i18n,
-            locale,
+            &t,
             &result,
             &filters,
             &sort_field,
@@ -173,31 +166,30 @@ pub async fn teams_list_partial(
 }
 
 /// GET /teams/new - Show create modal
-pub async fn team_create_form(State(state): State<AppState>, jar: CookieJar) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
-    Html(team_create_modal(&state.i18n, locale, None).into_string())
+pub async fn team_create_form(
+    Extension(t): Extension<TranslationContext>,
+) -> impl IntoResponse {
+    Html(team_create_modal(&t, None).into_string())
 }
 
 /// POST /teams - Create new team
 pub async fn team_create(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Form(form): Form<CreateTeamForm>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
     // Validation
     let name = form.name.trim();
     if name.is_empty() {
         return Html(
-            team_create_modal(&state.i18n, locale, Some("Team name cannot be empty")).into_string(),
+            team_create_modal(&t, Some("Team name cannot be empty")).into_string(),
         );
     }
 
     if name.len() > 255 {
         return Html(
             team_create_modal(
-                &state.i18n,
-                locale,
+                &t,
                 Some("Team name cannot exceed 255 characters"),
             )
             .into_string(),
@@ -221,7 +213,7 @@ pub async fn team_create(
         Err(e) => {
             tracing::error!("Failed to create team: {}", e);
             Html(
-                team_create_modal(&state.i18n, locale, Some("Failed to create team")).into_string(),
+                team_create_modal(&t, Some("Failed to create team")).into_string(),
             )
         }
     }
@@ -229,11 +221,10 @@ pub async fn team_create(
 
 /// GET /teams/{id}/edit - Show edit modal
 pub async fn team_edit_form(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
     let team = match teams::get_team_by_id(&state.db, id).await {
         Ok(Some(team)) => team,
         Ok(None) => {
@@ -249,25 +240,23 @@ pub async fn team_edit_form(
         }
     };
 
-    Html(team_edit_modal(&state.i18n, locale, &team, None).into_string())
+    Html(team_edit_modal(&t, &team, None).into_string())
 }
 
 /// POST /teams/{id} - Update team
 pub async fn team_update(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     Path(id): Path<i64>,
     Form(form): Form<UpdateTeamForm>,
 ) -> impl IntoResponse {
-    let locale = get_locale_from_cookies(&jar);
     // Validation
     let name = form.name.trim();
     if name.is_empty() {
         let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
         return Html(
             team_edit_modal(
-                &state.i18n,
-                locale,
+                &t,
                 &team.unwrap(),
                 Some("Team name cannot be empty"),
             )
@@ -279,8 +268,7 @@ pub async fn team_update(
         let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
         return Html(
             team_edit_modal(
-                &state.i18n,
-                locale,
+                &t,
                 &team.unwrap(),
                 Some("Team name cannot exceed 255 characters"),
             )
@@ -306,7 +294,7 @@ pub async fn team_update(
         Ok(false) => {
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
             Html(
-                team_edit_modal(&state.i18n, locale, &team.unwrap(), Some("Team not found"))
+                team_edit_modal(&t, &team.unwrap(), Some("Team not found"))
                     .into_string(),
             )
         }
@@ -315,8 +303,7 @@ pub async fn team_update(
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
             Html(
                 team_edit_modal(
-                    &state.i18n,
-                    locale,
+                    &t,
                     &team.unwrap(),
                     Some("Failed to update team"),
                 )

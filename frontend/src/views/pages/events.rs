@@ -1,23 +1,21 @@
 use maud::{html, Markup, PreEscaped};
 
-use crate::i18n::{I18n, Locale};
+use crate::i18n::TranslationContext;
 use crate::service::events::{EventEntity, EventFilters, PagedResult};
 
 /// Main events page with table and filters
 pub fn events_page(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     result: &PagedResult<EventEntity>,
     filters: &EventFilters,
     countries: &[(i64, String)],
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div class="card" {
             // Header with title and create button
             div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
                 h1 style="font-size: 2rem; font-weight: 700;" {
-                    (t("events-title"))
+                    (t.messages.events_title())
                 }
                 button
                     class="btn btn-primary"
@@ -25,7 +23,7 @@ pub fn events_page(
                     hx-target="#modal-container"
                     hx-swap="innerHTML"
                 {
-                    (t("events-create"))
+                    (t.messages.events_create())
                 }
             }
 
@@ -36,26 +34,26 @@ pub fn events_page(
                         // Name filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("common-search-by-name"))
+                                (t.messages.common_search_by_name())
                             }
                             input
                                 type="text"
                                 name="name"
                                 value=[filters.name.as_ref()]
-                                placeholder=(t("events-name-placeholder"))
+                                placeholder=(t.messages.events_name_placeholder())
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
                         }
 
                         // Country filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("common-filter-by-country"))
+                                (t.messages.common_filter_by_country())
                             }
                             select
                                 name="country_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { (t("common-all-countries")) }
+                                option value="" { (t.messages.common_all_countries()) }
                                 @for (id, name) in countries {
                                     option
                                         value=(id)
@@ -77,7 +75,7 @@ pub fn events_page(
                                 hx-target="#events-table"
                                 hx-swap="outerHTML"
                             {
-                                (t("common-clear"))
+                                (t.messages.common_clear())
                             }
                         }
                     }
@@ -85,7 +83,7 @@ pub fn events_page(
             }
 
             // Table
-            (event_list_content(i18n, locale, result, filters))
+            (event_list_content(t, result, filters))
 
             // Modal container
             div id="modal-container" {}
@@ -95,20 +93,18 @@ pub fn events_page(
 
 /// Events table content (for HTMX updates)
 pub fn event_list_content(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     result: &PagedResult<EventEntity>,
     filters: &EventFilters,
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div id="events-table" {
             @if result.items.is_empty() {
                 div style="padding: 3rem; text-align: center; color: var(--gray-500);" {
-                    p { (t("events-empty-title")) }
+                    p { (t.messages.events_empty_title()) }
                     @if filters.name.is_some() || filters.country_id.is_some() {
                         p style="margin-top: 0.5rem; font-size: 0.875rem;" {
-                            (t("events-empty-message"))
+                            (t.messages.events_empty_message())
                         }
                     }
                 }
@@ -116,10 +112,10 @@ pub fn event_list_content(
                 table class="table" {
                     thead {
                         tr {
-                            th { (t("common-id")) }
-                            th { (t("form-name")) }
-                            th { (t("form-country")) }
-                            th style="text-align: right;" { (t("common-actions")) }
+                            th { (t.messages.common_id()) }
+                            th { (t.messages.form_name()) }
+                            th { (t.messages.form_country()) }
+                            th style="text-align: right;" { (t.messages.common_actions()) }
                         }
                     }
                     tbody {
@@ -142,7 +138,7 @@ pub fn event_list_content(
                                             (country_name)
                                         }
                                     } @else {
-                                        span style="color: var(--gray-400); font-style: italic;" { (t("common-no-country")) }
+                                        span style="color: var(--gray-400); font-style: italic;" { (t.messages.common_no_country()) }
                                     }
                                 }
                                 td style="text-align: right;" {
@@ -153,16 +149,16 @@ pub fn event_list_content(
                                         hx-swap="innerHTML"
                                         style="margin-right: 0.5rem;"
                                     {
-                                        (t("common-edit"))
+                                        (t.messages.common_edit())
                                     }
                                     button
                                         class="btn btn-sm btn-danger"
                                         hx-post=(format!("/events/{}/delete", event.id))
                                         hx-target="#events-table"
                                         hx-swap="outerHTML"
-                                        hx-confirm=(t("events-confirm-delete"))
+                                        hx-confirm=(t.messages.events_confirm_delete())
                                     {
-                                        (t("common-delete"))
+                                        (t.messages.common_delete())
                                     }
                                 }
                             }
@@ -299,12 +295,10 @@ fn pagination_pages(current_page: usize, total_pages: usize) -> Vec<usize> {
 
 /// Create event modal
 pub fn event_create_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     countries: &[(i64, String)],
     error: Option<&str>,
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div
             class="modal-backdrop"
@@ -317,7 +311,7 @@ pub fn event_create_modal(
                 onclick="event.stopPropagation()"
             {
                 h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    (t("events-create-title"))
+                    (t.messages.events_create_title())
                 }
 
                 @if let Some(error_msg) = error {
@@ -329,7 +323,7 @@ pub fn event_create_modal(
                 form hx-post="/events" hx-target="#event-modal" hx-swap="outerHTML" {
                     div style="margin-bottom: 1rem;" {
                         label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            (t("events-name-label"))
+                            (t.messages.events_name_label())
                             span style="color: red;" { "*" }
                         }
                         input
@@ -342,13 +336,13 @@ pub fn event_create_modal(
 
                     div style="margin-bottom: 1.5rem;" {
                         label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            (t("events-host-country"))
+                            (t.messages.events_host_country())
                         }
                         select
                             name="country_id"
                             style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                         {
-                            option value="" { (t("common-no-country")) }
+                            option value="" { (t.messages.common_no_country()) }
                             @for (id, name) in countries {
                                 option value=(id) { (name) }
                             }
@@ -362,10 +356,10 @@ pub fn event_create_modal(
                             style="background: white; border: 1px solid var(--gray-300);"
                             onclick="document.getElementById('event-modal').remove()"
                         {
-                            (t("common-cancel"))
+                            (t.messages.common_cancel())
                         }
                         button type="submit" class="btn btn-primary" {
-                            (t("events-create-submit"))
+                            (t.messages.events_create_submit())
                         }
                     }
                 }
@@ -385,13 +379,11 @@ pub fn event_create_modal(
 
 /// Edit event modal
 pub fn event_edit_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     event: &EventEntity,
     countries: &[(i64, String)],
     error: Option<&str>,
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div
             class="modal-backdrop"
@@ -404,7 +396,7 @@ pub fn event_edit_modal(
                 onclick="event.stopPropagation()"
             {
                 h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
-                    (t("events-edit-title"))
+                    (t.messages.events_edit_title())
                 }
 
                 @if let Some(error_msg) = error {
@@ -416,7 +408,7 @@ pub fn event_edit_modal(
                 form hx-post=(format!("/events/{}", event.id)) hx-target="#event-modal" hx-swap="outerHTML" {
                     div style="margin-bottom: 1rem;" {
                         label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            (t("events-name-label"))
+                            (t.messages.events_name_label())
                             span style="color: red;" { "*" }
                         }
                         input
@@ -430,13 +422,13 @@ pub fn event_edit_modal(
 
                     div style="margin-bottom: 1.5rem;" {
                         label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                            (t("events-host-country"))
+                            (t.messages.events_host_country())
                         }
                         select
                             name="country_id"
                             style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                         {
-                            option value="" selected[event.country_id.is_none()] { (t("common-no-country")) }
+                            option value="" selected[event.country_id.is_none()] { (t.messages.common_no_country()) }
                             @for (id, name) in countries {
                                 option
                                     value=(id)
@@ -455,10 +447,10 @@ pub fn event_edit_modal(
                             style="background: white; border: 1px solid var(--gray-300);"
                             onclick="document.getElementById('event-modal').remove()"
                         {
-                            (t("common-cancel"))
+                            (t.messages.common_cancel())
                         }
                         button type="submit" class="btn btn-primary" {
-                            (t("common-save"))
+                            (t.messages.common_save())
                         }
                     }
                 }

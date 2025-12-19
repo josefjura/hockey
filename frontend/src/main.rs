@@ -14,9 +14,9 @@ use axum::{
     middleware,
     response::Html,
     routing::{get, post},
-    Router,
+    Extension, Router,
 };
-use axum_extra::extract::CookieJar;
+use i18n::TranslationContext;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::net::SocketAddr;
 use tower_http::{services::ServeDir, trace::TraceLayer};
@@ -153,6 +153,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .merge(health_routes)
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state)
+        .layer(middleware::from_fn(i18n::middleware::translation_context_middleware))
         .layer(TraceLayer::new_for_http());
 
     // Start the server
@@ -167,8 +168,8 @@ async fn main() -> Result<(), anyhow::Error> {
 }
 
 async fn root_handler(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
-    jar: CookieJar,
     request: Request,
 ) -> Html<String> {
     // Extract session from request extensions (added by require_auth middleware)
@@ -177,9 +178,6 @@ async fn root_handler(
         .get::<auth::Session>()
         .expect("Session should be available in protected route")
         .clone();
-
-    // Get locale from cookie
-    let locale = routes::locale::get_locale_from_cookies(&jar);
 
     // Fetch dashboard stats
     let stats = service::dashboard::get_dashboard_stats(&state.db)
@@ -190,8 +188,8 @@ async fn root_handler(
         .await
         .unwrap_or_default();
 
-    let content = dashboard_page(&state.i18n, locale, &stats, &recent_activity);
-    let html = admin_layout("Dashboard", &session, "/", &state.i18n, locale, content);
+    let content = dashboard_page(&t, &stats, &recent_activity);
+    let html = admin_layout("Dashboard", &session, "/", &t, content);
 
     Html(html.into_string())
 }

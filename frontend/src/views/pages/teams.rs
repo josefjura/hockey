@@ -1,7 +1,7 @@
 use maud::{html, Markup};
 
 use crate::common::pagination::PagedResult;
-use crate::i18n::{I18n, Locale};
+use crate::i18n::TranslationContext;
 use crate::service::teams::{SortField, SortOrder, TeamEntity, TeamFilters};
 use crate::views::components::crud::{
     empty_state, modal_form, page_header, pagination, table_actions,
@@ -9,23 +9,21 @@ use crate::views::components::crud::{
 
 /// Main teams page with table and filters
 pub fn teams_page(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     result: &PagedResult<TeamEntity>,
     filters: &TeamFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
     countries: &[(i64, String)],
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div class="card" {
             // Header with title and create button
             (page_header(
-                &t("teams-title"),
-                &t("teams-description"),
+                &t.messages.teams_title().to_string(),
+                &t.messages.teams_description().to_string(),
                 "/teams/new",
-                &t("teams-create")
+                &t.messages.teams_create().to_string()
             ))
 
             // Filters
@@ -35,26 +33,26 @@ pub fn teams_page(
                         // Name filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("common-search-by-name"))
+                                (t.messages.common_search_by_name())
                             }
                             input
                                 type="text"
                                 name="name"
                                 value=[filters.name.as_ref()]
-                                placeholder=(t("teams-name-placeholder"))
+                                placeholder=(t.messages.teams_name_placeholder())
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
                         }
 
                         // Country filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("common-filter-by-country"))
+                                (t.messages.common_filter_by_country())
                             }
                             select
                                 name="country_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { (t("common-all-countries")) }
+                                option value="" { (t.messages.common_all_countries()) }
                                 @for (id, name) in countries {
                                     option
                                         value=(id)
@@ -76,7 +74,7 @@ pub fn teams_page(
                                 hx-target="#teams-table"
                                 hx-swap="outerHTML"
                             {
-                                (t("common-clear"))
+                                (t.messages.common_clear())
                             }
                         }
                     }
@@ -84,7 +82,7 @@ pub fn teams_page(
             }
 
             // Table
-            (team_list_content(i18n, locale, result, filters, sort_field, sort_order))
+            (team_list_content(t, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -94,19 +92,17 @@ pub fn teams_page(
 
 /// Teams table content (for HTMX updates)
 pub fn team_list_content(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     result: &PagedResult<TeamEntity>,
     filters: &TeamFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div id="teams-table" {
             @if result.items.is_empty() {
                 (empty_state(
-                    &t("teams-entity"),
+                    &t.messages.teams_entity().to_string(),
                     filters.name.is_some() || filters.country_id.is_some()
                 ))
             } @else {
@@ -115,7 +111,7 @@ pub fn team_list_content(
                         tr {
                             th {
                                 (sortable_header(
-                                    &t("common-id"),
+                                    &t.messages.common_id().to_string(),
                                     &SortField::Id,
                                     sort_field,
                                     sort_order,
@@ -124,7 +120,7 @@ pub fn team_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    &t("form-name"),
+                                    &t.messages.form_name().to_string(),
                                     &SortField::Name,
                                     sort_field,
                                     sort_order,
@@ -133,14 +129,14 @@ pub fn team_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    &t("form-country"),
+                                    &t.messages.form_country().to_string(),
                                     &SortField::Country,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th style="text-align: right;" { (t("common-actions")) }
+                            th style="text-align: right;" { (t.messages.common_actions()) }
                         }
                     }
                     tbody {
@@ -163,14 +159,14 @@ pub fn team_list_content(
                                             (country_name)
                                         }
                                     } @else {
-                                        span style="color: var(--gray-400); font-style: italic;" { (t("common-no-country")) }
+                                        span style="color: var(--gray-400); font-style: italic;" { (t.messages.common_no_country()) }
                                     }
                                 }
                                 (table_actions(
                                     &format!("/teams/{}/edit", team.id),
                                     &build_delete_url(team.id, filters, sort_field, sort_order),
                                     "teams-table",
-                                    &t("teams-entity")
+                                    &t.messages.teams_entity().to_string()
                                 ))
                             }
                         }
@@ -313,12 +309,11 @@ fn build_delete_url(
 }
 
 /// Create team modal
-pub fn team_create_modal(i18n: &I18n, locale: Locale, error: Option<&str>) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
+pub fn team_create_modal(t: &TranslationContext, error: Option<&str>) -> Markup {
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("teams-name-label"))
+                (t.messages.teams_name_label())
                 span style="color: red;" { "*" }
             }
             input
@@ -331,36 +326,34 @@ pub fn team_create_modal(i18n: &I18n, locale: Locale, error: Option<&str>) -> Ma
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("form-country"))
+                (t.messages.form_country())
             }
             country-selector
                 name="country_id"
-                placeholder=(t("teams-select-country")) {}
+                placeholder=(t.messages.teams_select_country()) {}
         }
     };
 
     modal_form(
         "team-modal",
-        &t("teams-create-title"),
+        &t.messages.teams_create_title().to_string(),
         error,
         "/teams",
         form_fields,
-        &t("teams-create-submit"),
+        &t.messages.teams_create_submit().to_string(),
     )
 }
 
 /// Edit team modal
 pub fn team_edit_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     team: &TeamEntity,
     error: Option<&str>,
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("teams-name-label"))
+                (t.messages.teams_name_label())
                 span style="color: red;" { "*" }
             }
             input
@@ -374,27 +367,27 @@ pub fn team_edit_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("form-country"))
+                (t.messages.form_country())
             }
             @if let Some(country_id) = team.country_id {
                 country-selector
                     name="country_id"
-                    placeholder=(t("teams-select-country"))
+                    placeholder=(t.messages.teams_select_country())
                     value=(country_id) {}
             } @else {
                 country-selector
                     name="country_id"
-                    placeholder=(t("teams-select-country")) {}
+                    placeholder=(t.messages.teams_select_country()) {}
             }
         }
     };
 
     modal_form(
         "team-modal",
-        &t("teams-edit-title"),
+        &t.messages.teams_edit_title().to_string(),
         error,
         &format!("/teams/{}", team.id),
         form_fields,
-        &t("common-save"),
+        &t.messages.common_save().to_string(),
     )
 }

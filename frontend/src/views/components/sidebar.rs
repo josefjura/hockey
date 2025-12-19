@@ -1,7 +1,7 @@
 use maud::{html, Markup};
 
 use crate::auth::Session;
-use crate::i18n::{I18n, Locale};
+use crate::i18n::{Locale, TranslationContext};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NavItem {
@@ -28,19 +28,15 @@ impl NavItem {
     }
 }
 
-pub fn sidebar(session: &Session, current_path: &str, i18n: &I18n, locale: Locale) -> Markup {
+pub fn sidebar(session: &Session, current_path: &str, t: &TranslationContext) -> Markup {
     let nav_items = vec![
-        NavItem::new("/", i18n.translate(locale, "nav-dashboard"), "📊"),
-        NavItem::new("/teams", i18n.translate(locale, "nav-teams"), "🏒"),
-        NavItem::new("/players", i18n.translate(locale, "nav-players"), "👤"),
-        NavItem::new("/events", i18n.translate(locale, "nav-events"), "🏆"),
-        NavItem::new("/seasons", i18n.translate(locale, "nav-seasons"), "📅"),
-        NavItem::new("/matches", i18n.translate(locale, "nav-matches"), "🎯"),
-        NavItem::new(
-            "/management",
-            i18n.translate(locale, "nav-management"),
-            "⚙️",
-        ),
+        NavItem::new("/", t.messages.nav_dashboard().to_string(), "📊"),
+        NavItem::new("/teams", t.messages.nav_teams().to_string(), "🏒"),
+        NavItem::new("/players", t.messages.nav_players().to_string(), "👤"),
+        NavItem::new("/events", t.messages.nav_events().to_string(), "🏆"),
+        NavItem::new("/seasons", t.messages.nav_seasons().to_string(), "📅"),
+        NavItem::new("/matches", t.messages.nav_matches().to_string(), "🎯"),
+        NavItem::new("/management", t.messages.nav_management().to_string(), "⚙️"),
     ];
 
     html! {
@@ -60,8 +56,8 @@ pub fn sidebar(session: &Session, current_path: &str, i18n: &I18n, locale: Local
             // User info and controls at bottom
             div class="sidebar-footer" {
                 (user_info(session))
-                (locale_switcher(i18n, locale))
-                (logout_button(i18n, locale))
+                (locale_switcher(t))
+                (logout_button(t))
             }
         }
     }
@@ -96,25 +92,25 @@ fn user_info(session: &Session) -> Markup {
     }
 }
 
-fn locale_switcher(i18n: &I18n, locale: Locale) -> Markup {
+fn locale_switcher(t: &TranslationContext) -> Markup {
     html! {
         div class="locale-switcher" {
-            label for="locale-select" class="locale-label" { (i18n.translate(locale, "user-language")) }
-            select id="locale-select" class="locale-select" 
+            label for="locale-select" class="locale-label" { (t.messages.user_language()) }
+            select id="locale-select" class="locale-select"
                    onchange="window.location.href = '/locale/' + this.value" {
-                option value="en" selected[locale == Locale::English] { "English" }
-                option value="cs" selected[locale == Locale::Czech] { "Čeština" }
+                option value="en" selected[t.locale == Locale::English] { "English" }
+                option value="cs" selected[t.locale == Locale::Czech] { "Čeština" }
             }
         }
     }
 }
 
-fn logout_button(i18n: &I18n, locale: Locale) -> Markup {
+fn logout_button(t: &TranslationContext) -> Markup {
     html! {
         form method="POST" action="/auth/logout" class="logout-form" {
             button type="submit" class="logout-button" {
                 span class="nav-icon" { "🚪" }
-                span { (i18n.translate(locale, "user-logout")) }
+                span { (t.messages.user_logout()) }
             }
         }
     }

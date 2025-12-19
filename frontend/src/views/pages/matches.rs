@@ -1,18 +1,17 @@
 use maud::{html, Markup};
 
 use crate::common::pagination::{PagedResult, SortOrder};
-use crate::i18n::{I18n, Locale};
+use crate::i18n::TranslationContext;
 use crate::service::matches::{
     MatchDetailEntity, MatchEntity, MatchFilters, ScoreEventEntity, SortField,
 };
 use crate::views::components::crud::{
-    empty_state_i18n, modal_form_i18n, page_header_i18n, pagination, table_actions_i18n,
+    empty_state_i18n, modal_form_i18n, page_header_i18n, pagination,
 };
 
 /// Main matches page with table and filters
 pub fn matches_page(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     result: &PagedResult<MatchEntity>,
     filters: &MatchFilters,
     sort_field: &SortField,
@@ -20,16 +19,14 @@ pub fn matches_page(
     seasons: &[(i64, String)],
     teams: &[(i64, String)],
 ) -> Markup {
-    let t = |key| i18n.translate(locale, key);
-
     html! {
         div class="card" {
             // Header with title and create button
             (page_header_i18n(
-                &t("matches-title"),
-                &t("matches-description"),
+                &t.messages.matches_title().to_string(),
+                &t.messages.matches_description().to_string(),
                 "/matches/new",
-                &t("matches-new")
+                &t.messages.matches_new().to_string()
             ))
 
             // Filters
@@ -39,13 +36,13 @@ pub fn matches_page(
                         // Season filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("matches-filter-season"))
+                                (t.messages.matches_filter_season())
                             }
                             select
                                 name="season_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { (t("matches-all-seasons")) }
+                                option value="" { (t.messages.matches_all_seasons()) }
                                 @for (id, name) in seasons {
                                     option
                                         value=(id)
@@ -60,13 +57,13 @@ pub fn matches_page(
                         // Team filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("matches-filter-team"))
+                                (t.messages.matches_filter_team())
                             }
                             select
                                 name="team_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { (t("matches-all-teams")) }
+                                option value="" { (t.messages.matches_all_teams()) }
                                 @for (id, name) in teams {
                                     option
                                         value=(id)
@@ -81,36 +78,36 @@ pub fn matches_page(
                         // Status filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("matches-filter-status"))
+                                (t.messages.matches_filter_status())
                             }
                             select
                                 name="status"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { (t("matches-all-statuses")) }
+                                option value="" { (t.messages.matches_all_statuses()) }
                                 option
                                     value="scheduled"
                                     selected[filters.status.as_deref() == Some("scheduled")]
                                 {
-                                    (t("matches-status-scheduled"))
+                                    (t.messages.matches_status_scheduled())
                                 }
                                 option
                                     value="in_progress"
                                     selected[filters.status.as_deref() == Some("in_progress")]
                                 {
-                                    (t("matches-status-in-progress"))
+                                    (t.messages.matches_status_in_progress())
                                 }
                                 option
                                     value="finished"
                                     selected[filters.status.as_deref() == Some("finished")]
                                 {
-                                    (t("matches-status-finished"))
+                                    (t.messages.matches_status_finished())
                                 }
                                 option
                                     value="cancelled"
                                     selected[filters.status.as_deref() == Some("cancelled")]
                                 {
-                                    (t("matches-status-cancelled"))
+                                    (t.messages.matches_status_cancelled())
                                 }
                             }
                         }
@@ -125,7 +122,7 @@ pub fn matches_page(
                                 hx-target="#matches-table"
                                 hx-swap="outerHTML"
                             {
-                                (t("common-clear"))
+                                (t.messages.common_clear())
                             }
                         }
                     }
@@ -134,7 +131,7 @@ pub fn matches_page(
                     div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem;" {
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("matches-filter-date-from"))
+                                (t.messages.matches_filter_date_from())
                             }
                             input
                                 type="date"
@@ -145,7 +142,7 @@ pub fn matches_page(
 
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("matches-filter-date-to"))
+                                (t.messages.matches_filter_date_to())
                             }
                             input
                                 type="date"
@@ -158,7 +155,7 @@ pub fn matches_page(
             }
 
             // Table
-            (match_list_content(i18n, locale, result, filters, sort_field, sort_order))
+            (match_list_content(t, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -168,21 +165,18 @@ pub fn matches_page(
 
 /// Matches table content (for HTMX updates)
 pub fn match_list_content(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     result: &PagedResult<MatchEntity>,
     filters: &MatchFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
 ) -> Markup {
-    let t = |key| i18n.translate(locale, key);
-
     html! {
         div id="matches-table" {
             @if result.items.is_empty() {
                 (empty_state_i18n(
-                    &t("matches-empty-title"),
-                    &t("matches-empty-message"),
+                    &t.messages.matches_empty_title().to_string(),
+                    &t.messages.matches_empty_message().to_string(),
                     filters.season_id.is_some() || filters.team_id.is_some() || filters.status.is_some() || filters.date_from.is_some() || filters.date_to.is_some()
                 ))
             } @else {
@@ -191,7 +185,7 @@ pub fn match_list_content(
                         tr {
                             th {
                                 (sortable_header(
-                                    &t("matches-date"),
+                                    &t.messages.matches_date().to_string(),
                                     &SortField::Date,
                                     sort_field,
                                     sort_order,
@@ -200,25 +194,25 @@ pub fn match_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    &t("events-title"),
+                                    &t.messages.events_title().to_string(),
                                     &SortField::Event,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th { (t("nav-matches")) }
-                            th { (t("matches-score")) }
+                            th { (t.messages.nav_matches()) }
+                            th { (t.messages.matches_score()) }
                             th {
                                 (sortable_header(
-                                    &t("matches-status"),
+                                    &t.messages.matches_status().to_string(),
                                     &SortField::Status,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th style="text-align: right;" { (t("common-actions")) }
+                            th style="text-align: right;" { (t.messages.common_actions()) }
                         }
                     }
                     tbody {
@@ -289,7 +283,7 @@ pub fn match_list_content(
                                         class="btn btn-sm"
                                         style="margin-right: 0.5rem;"
                                     {
-                                        (t("matches-view"))
+                                        (t.messages.matches_view())
                                     }
                                     button
                                         class="btn btn-sm"
@@ -298,16 +292,16 @@ pub fn match_list_content(
                                         hx-swap="innerHTML"
                                         style="margin-right: 0.5rem;"
                                     {
-                                        (t("common-edit"))
+                                        (t.messages.common_edit())
                                     }
                                     button
                                         class="btn btn-sm btn-danger"
                                         hx-post=(build_delete_url(match_item.id, filters, sort_field, sort_order))
                                         hx-target="#matches-table"
                                         hx-swap="outerHTML"
-                                        hx-confirm=(t("matches-confirm-delete"))
+                                        hx-confirm=(t.messages.matches_confirm_delete())
                                     {
-                                        (t("common-delete"))
+                                        (t.messages.common_delete())
                                     }
                                 }
                             }
@@ -490,8 +484,7 @@ fn build_delete_url(
 }
 
 /// Match detail page with score tracking
-pub fn match_detail_page(i18n: &I18n, locale: Locale, detail: &MatchDetailEntity) -> Markup {
-    let t = |key| i18n.translate(locale, key);
+pub fn match_detail_page(t: &TranslationContext, detail: &MatchDetailEntity) -> Markup {
     let match_info = &detail.match_info;
 
     html! {
@@ -504,10 +497,10 @@ pub fn match_detail_page(i18n: &I18n, locale: Locale, detail: &MatchDetailEntity
                         class="btn"
                         style="background: white; border: 1px solid var(--gray-300);"
                     {
-                        (format!("← {}", t("matches-back-to-list")))
+                        (format!("← {}", t.messages.matches_back_to_list()))
                     }
                     h1 style="font-size: 2rem; font-weight: 700; margin: 0;" {
-                        (t("matches-match-info"))
+                        (t.messages.matches_match_info())
                     }
                 }
                 div style="display: flex; gap: 0.5rem;" {
@@ -517,14 +510,14 @@ pub fn match_detail_page(i18n: &I18n, locale: Locale, detail: &MatchDetailEntity
                         hx-target="#modal-container"
                         hx-swap="innerHTML"
                     {
-                        (t("matches-edit"))
+                        (t.messages.matches_edit())
                     }
                     button
                         class="btn btn-danger"
                         hx-post=(format!("/matches/{}/delete", match_info.id))
-                        hx-confirm=(t("matches-confirm-delete"))
+                        hx-confirm=(t.messages.matches_confirm_delete())
                     {
-                        (t("matches-delete"))
+                        (t.messages.matches_delete())
                     }
                 }
             }
@@ -865,19 +858,16 @@ fn format_date(date: &str) -> String {
 
 /// Create match modal
 pub fn match_create_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     error: Option<&str>,
     seasons: &[(i64, String)],
     teams: &[(i64, String)],
 ) -> Markup {
-    let t = |key| i18n.translate(locale, key);
-
     let form_fields = html! {
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-season"))
+                    (t.messages.matches_season())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -885,7 +875,7 @@ pub fn match_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="" { (t("matches-select-season")) }
+                    option value="" { (t.messages.matches_select_season()) }
                     @for (id, name) in seasons {
                         option value=(id) { (name) }
                     }
@@ -894,7 +884,7 @@ pub fn match_create_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-status"))
+                    (t.messages.matches_status())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -902,10 +892,10 @@ pub fn match_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="scheduled" selected { (t("matches-status-scheduled")) }
-                    option value="in_progress" { (t("matches-status-in-progress")) }
-                    option value="finished" { (t("matches-status-finished")) }
-                    option value="cancelled" { (t("matches-status-cancelled")) }
+                    option value="scheduled" selected { (t.messages.matches_status_scheduled()) }
+                    option value="in_progress" { (t.messages.matches_status_in_progress()) }
+                    option value="finished" { (t.messages.matches_status_finished()) }
+                    option value="cancelled" { (t.messages.matches_status_cancelled()) }
                 }
             }
         }
@@ -913,7 +903,7 @@ pub fn match_create_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-home-team"))
+                    (t.messages.matches_home_team())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -921,7 +911,7 @@ pub fn match_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="" { (t("matches-select-team")) }
+                    option value="" { (t.messages.matches_select_team()) }
                     @for (id, name) in teams {
                         option value=(id) { (name) }
                     }
@@ -930,7 +920,7 @@ pub fn match_create_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-away-team"))
+                    (t.messages.matches_away_team())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -938,7 +928,7 @@ pub fn match_create_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="" { (t("matches-select-team")) }
+                    option value="" { (t.messages.matches_select_team()) }
                     @for (id, name) in teams {
                         option value=(id) { (name) }
                     }
@@ -949,7 +939,7 @@ pub fn match_create_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-score")) " (Home)"
+                    (t.messages.matches_score()) " (Home)"
                 }
                 input
                     type="number"
@@ -961,7 +951,7 @@ pub fn match_create_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-score")) " (Away)"
+                    (t.messages.matches_score()) " (Away)"
                 }
                 input
                     type="number"
@@ -974,7 +964,7 @@ pub fn match_create_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-date"))
+                (t.messages.matches_date())
             }
             input
                 type="datetime-local"
@@ -984,43 +974,40 @@ pub fn match_create_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-location"))
+                (t.messages.matches_location())
             }
             input
                 type="text"
                 name="venue"
-                placeholder=(t("matches-location-placeholder"))
+                placeholder=(t.messages.matches_location_placeholder())
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
     };
 
     modal_form_i18n(
         "match-modal",
-        &t("matches-create-title"),
+        &t.messages.matches_create_title().to_string(),
         error,
         "/matches",
         form_fields,
-        &t("matches-create-submit"),
-        &t("common-cancel"),
+        &t.messages.matches_create_submit().to_string(),
+        &t.messages.common_cancel().to_string(),
     )
 }
 
 /// Edit match modal
 pub fn match_edit_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     match_entity: &MatchEntity,
     error: Option<&str>,
     seasons: &[(i64, String)],
     teams: &[(i64, String)],
 ) -> Markup {
-    let t = |key| i18n.translate(locale, key);
-
     let form_fields = html! {
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-season"))
+                    (t.messages.matches_season())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1041,7 +1028,7 @@ pub fn match_edit_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-status"))
+                    (t.messages.matches_status())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1049,10 +1036,10 @@ pub fn match_edit_modal(
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
-                    option value="scheduled" selected[match_entity.status == "scheduled"] { (t("matches-status-scheduled")) }
-                    option value="in_progress" selected[match_entity.status == "in_progress"] { (t("matches-status-in-progress")) }
-                    option value="finished" selected[match_entity.status == "finished"] { (t("matches-status-finished")) }
-                    option value="cancelled" selected[match_entity.status == "cancelled"] { (t("matches-status-cancelled")) }
+                    option value="scheduled" selected[match_entity.status == "scheduled"] { (t.messages.matches_status_scheduled()) }
+                    option value="in_progress" selected[match_entity.status == "in_progress"] { (t.messages.matches_status_in_progress()) }
+                    option value="finished" selected[match_entity.status == "finished"] { (t.messages.matches_status_finished()) }
+                    option value="cancelled" selected[match_entity.status == "cancelled"] { (t.messages.matches_status_cancelled()) }
                 }
             }
         }
@@ -1060,7 +1047,7 @@ pub fn match_edit_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-home-team"))
+                    (t.messages.matches_home_team())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1081,7 +1068,7 @@ pub fn match_edit_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-away-team"))
+                    (t.messages.matches_away_team())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1104,7 +1091,7 @@ pub fn match_edit_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-score")) " (Home)"
+                    (t.messages.matches_score()) " (Home)"
                 }
                 input
                     type="number"
@@ -1116,7 +1103,7 @@ pub fn match_edit_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-score")) " (Away)"
+                    (t.messages.matches_score()) " (Away)"
                 }
                 input
                     type="number"
@@ -1129,7 +1116,7 @@ pub fn match_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-date"))
+                (t.messages.matches_date())
             }
             input
                 type="datetime-local"
@@ -1140,43 +1127,40 @@ pub fn match_edit_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-location"))
+                (t.messages.matches_location())
             }
             input
                 type="text"
                 name="venue"
                 value=[match_entity.venue.as_ref()]
-                placeholder=(t("matches-location-placeholder"))
+                placeholder=(t.messages.matches_location_placeholder())
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
     };
 
     modal_form_i18n(
         "match-modal",
-        &t("matches-edit-title"),
+        &t.messages.matches_edit_title().to_string(),
         error,
         &format!("/matches/{}", match_entity.id),
         form_fields,
-        &t("matches-edit-submit"),
-        &t("common-cancel"),
+        &t.messages.matches_edit_submit().to_string(),
+        &t.messages.common_cancel().to_string(),
     )
 }
 
 /// Create score event modal
 pub fn score_event_create_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     error: Option<&str>,
     match_info: &MatchEntity,
     home_players: &[(i64, String)],
     away_players: &[(i64, String)],
 ) -> Markup {
-    let t = |key| i18n.translate(locale, key);
-
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-filter-team"))
+                (t.messages.matches_filter_team())
                 span style="color: red;" { "*" }
             }
             select
@@ -1192,7 +1176,7 @@ pub fn score_event_create_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-period"))
+                    (t.messages.matches_period())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1203,14 +1187,14 @@ pub fn score_event_create_modal(
                     option value="1" selected { "1st" }
                     option value="2" { "2nd" }
                     option value="3" { "3rd" }
-                    option value="4" { (t("matches-overtime")) }
-                    option value="5" { (t("matches-shootout")) }
+                    option value="4" { (t.messages.matches_overtime()) }
+                    option value="5" { (t.messages.matches_shootout()) }
                 }
             }
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-minutes"))
+                    (t.messages.matches_minutes())
                 }
                 input
                     type="number"
@@ -1223,7 +1207,7 @@ pub fn score_event_create_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-seconds"))
+                    (t.messages.matches_seconds())
                 }
                 input
                     type="number"
@@ -1237,24 +1221,24 @@ pub fn score_event_create_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-goal-type"))
+                (t.messages.matches_goal_type())
             }
             select
                 name="goal_type"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
                 option value="" { "---" }
-                option value="even_strength" { (t("matches-regular")) }
-                option value="power_play" { (t("matches-power-play")) }
-                option value="short_handed" { (t("matches-short-handed")) }
-                option value="penalty_shot" { (t("matches-penalty-shot")) }
-                option value="empty_net" { (t("matches-empty-net")) }
+                option value="even_strength" { (t.messages.matches_regular()) }
+                option value="power_play" { (t.messages.matches_power_play()) }
+                option value="short_handed" { (t.messages.matches_short_handed()) }
+                option value="penalty_shot" { (t.messages.matches_penalty_shot()) }
+                option value="empty_net" { (t.messages.matches_empty_net()) }
             }
         }
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-goal-scorer"))
+                (t.messages.matches_goal_scorer())
             }
             select
                 name="scorer_id"
@@ -1276,7 +1260,7 @@ pub fn score_event_create_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-goal-assist1"))
+                (t.messages.matches_goal_assist_1())
             }
             select
                 name="assist1_id"
@@ -1298,7 +1282,7 @@ pub fn score_event_create_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-goal-assist2"))
+                (t.messages.matches_goal_assist_2())
             }
             select
                 name="assist2_id"
@@ -1321,31 +1305,28 @@ pub fn score_event_create_modal(
 
     modal_form_i18n(
         "score-event-modal",
-        &t("matches-add-score-event"),
+        &t.messages.matches_add_score_event().to_string(),
         error,
         &format!("/matches/{}/score-events", match_info.id),
         form_fields,
-        &t("common-save"),
-        &t("common-cancel"),
+        &t.messages.common_save().to_string(),
+        &t.messages.common_cancel().to_string(),
     )
 }
 
 /// Edit score event modal
 pub fn score_event_edit_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     error: Option<&str>,
     score_event: &ScoreEventEntity,
     match_info: &MatchEntity,
     home_players: &[(i64, String)],
     away_players: &[(i64, String)],
 ) -> Markup {
-    let t = |key| i18n.translate(locale, key);
-
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-filter-team"))
+                (t.messages.matches_filter_team())
                 span style="color: red;" { "*" }
             }
             select
@@ -1371,7 +1352,7 @@ pub fn score_event_edit_modal(
         div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-period"))
+                    (t.messages.matches_period())
                     span style="color: red;" { "*" }
                 }
                 select
@@ -1382,14 +1363,14 @@ pub fn score_event_edit_modal(
                     option value="1" selected[score_event.period == 1] { "1st" }
                     option value="2" selected[score_event.period == 2] { "2nd" }
                     option value="3" selected[score_event.period == 3] { "3rd" }
-                    option value="4" selected[score_event.period == 4] { (t("matches-overtime")) }
-                    option value="5" selected[score_event.period == 5] { (t("matches-shootout")) }
+                    option value="4" selected[score_event.period == 4] { (t.messages.matches_overtime()) }
+                    option value="5" selected[score_event.period == 5] { (t.messages.matches_shootout()) }
                 }
             }
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-minutes"))
+                    (t.messages.matches_minutes())
                 }
                 input
                     type="number"
@@ -1403,7 +1384,7 @@ pub fn score_event_edit_modal(
 
             div {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("matches-seconds"))
+                    (t.messages.matches_seconds())
                 }
                 input
                     type="number"
@@ -1418,24 +1399,24 @@ pub fn score_event_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-goal-type"))
+                (t.messages.matches_goal_type())
             }
             select
                 name="goal_type"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
                 option value="" selected[score_event.goal_type.is_none()] { "---" }
-                option value="even_strength" selected[score_event.goal_type.as_deref() == Some("even_strength")] { (t("matches-regular")) }
-                option value="power_play" selected[score_event.goal_type.as_deref() == Some("power_play")] { (t("matches-power-play")) }
-                option value="short_handed" selected[score_event.goal_type.as_deref() == Some("short_handed")] { (t("matches-short-handed")) }
-                option value="penalty_shot" selected[score_event.goal_type.as_deref() == Some("penalty_shot")] { (t("matches-penalty-shot")) }
-                option value="empty_net" selected[score_event.goal_type.as_deref() == Some("empty_net")] { (t("matches-empty-net")) }
+                option value="even_strength" selected[score_event.goal_type.as_deref() == Some("even_strength")] { (t.messages.matches_regular()) }
+                option value="power_play" selected[score_event.goal_type.as_deref() == Some("power_play")] { (t.messages.matches_power_play()) }
+                option value="short_handed" selected[score_event.goal_type.as_deref() == Some("short_handed")] { (t.messages.matches_short_handed()) }
+                option value="penalty_shot" selected[score_event.goal_type.as_deref() == Some("penalty_shot")] { (t.messages.matches_penalty_shot()) }
+                option value="empty_net" selected[score_event.goal_type.as_deref() == Some("empty_net")] { (t.messages.matches_empty_net()) }
             }
         }
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-goal-scorer"))
+                (t.messages.matches_goal_scorer())
             }
             select
                 name="scorer_id"
@@ -1457,7 +1438,7 @@ pub fn score_event_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-goal-assist1"))
+                (t.messages.matches_goal_assist_1())
             }
             select
                 name="assist1_id"
@@ -1479,7 +1460,7 @@ pub fn score_event_edit_modal(
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("matches-goal-assist2"))
+                (t.messages.matches_goal_assist_2())
             }
             select
                 name="assist2_id"
@@ -1502,11 +1483,11 @@ pub fn score_event_edit_modal(
 
     modal_form_i18n(
         "score-event-modal",
-        &t("matches-edit-score-event"),
+        &t.messages.matches_edit_score_event().to_string(),
         error,
         &format!("/matches/score-events/{}", score_event.id),
         form_fields,
-        &t("common-save"),
-        &t("common-cancel"),
+        &t.messages.common_save().to_string(),
+        &t.messages.common_cancel().to_string(),
     )
 }

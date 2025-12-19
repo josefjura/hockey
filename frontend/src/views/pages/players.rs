@@ -1,6 +1,6 @@
 use maud::{html, Markup};
 
-use crate::i18n::{I18n, Locale};
+use crate::i18n::TranslationContext;
 use crate::service::players::{PagedResult, PlayerEntity, PlayerFilters, SortField, SortOrder};
 use crate::views::components::crud::{
     empty_state, modal_form_multipart, page_header, pagination, table_actions,
@@ -8,23 +8,21 @@ use crate::views::components::crud::{
 
 /// Main players page with table and filters
 pub fn players_page(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     result: &PagedResult<PlayerEntity>,
     filters: &PlayerFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
     countries: &[(i64, String)],
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div class="card" {
             // Header with title and create button
             (page_header(
-                &t("players-title"),
-                &t("players-description"),
+                &t.messages.players_title().to_string(),
+                &t.messages.players_description().to_string(),
                 "/players/new",
-                &t("players-create")
+                &t.messages.players_create().to_string()
             ))
 
             // Filters
@@ -34,26 +32,26 @@ pub fn players_page(
                         // Name filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("common-search-by-name"))
+                                (t.messages.common_search_by_name())
                             }
                             input
                                 type="text"
                                 name="name"
                                 value=[filters.name.as_ref()]
-                                placeholder=(t("players-name-placeholder"))
+                                placeholder=(t.messages.players_name_placeholder())
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
                         }
 
                         // Country filter
                         div {
                             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                                (t("common-filter-by-country"))
+                                (t.messages.common_filter_by_country())
                             }
                             select
                                 name="country_id"
                                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                             {
-                                option value="" { (t("common-all-countries")) }
+                                option value="" { (t.messages.common_all_countries()) }
                                 @for (id, name) in countries {
                                     option
                                         value=(id)
@@ -75,7 +73,7 @@ pub fn players_page(
                                 hx-target="#players-table"
                                 hx-swap="outerHTML"
                             {
-                                (t("common-clear"))
+                                (t.messages.common_clear())
                             }
                         }
                     }
@@ -83,7 +81,7 @@ pub fn players_page(
             }
 
             // Table
-            (player_list_content(i18n, locale, result, filters, sort_field, sort_order))
+            (player_list_content(t, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -93,29 +91,27 @@ pub fn players_page(
 
 /// Players table content (for HTMX updates)
 pub fn player_list_content(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     result: &PagedResult<PlayerEntity>,
     filters: &PlayerFilters,
     sort_field: &SortField,
     sort_order: &SortOrder,
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div id="players-table" {
             @if result.items.is_empty() {
                 (empty_state(
-                    &t("players-entity"),
+                    &t.messages.players_entity().to_string(),
                     filters.name.is_some() || filters.country_id.is_some()
                 ))
             } @else {
                 table class="table" {
                     thead {
                         tr {
-                            th { (t("form-photo")) }
+                            th { (t.messages.form_photo()) }
                             th {
                                 (sortable_header(
-                                    &t("common-id"),
+                                    &t.messages.common_id().to_string(),
                                     &SortField::Id,
                                     sort_field,
                                     sort_order,
@@ -124,7 +120,7 @@ pub fn player_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    &t("form-name"),
+                                    &t.messages.form_name().to_string(),
                                     &SortField::Name,
                                     sort_field,
                                     sort_order,
@@ -133,14 +129,14 @@ pub fn player_list_content(
                             }
                             th {
                                 (sortable_header(
-                                    &t("form-country"),
+                                    &t.messages.form_country().to_string(),
                                     &SortField::Country,
                                     sort_field,
                                     sort_order,
                                     filters,
                                 ))
                             }
-                            th style="text-align: right;" { (t("common-actions")) }
+                            th style="text-align: right;" { (t.messages.common_actions()) }
                         }
                     }
                     tbody {
@@ -177,7 +173,7 @@ pub fn player_list_content(
                                     &format!("/players/{}/edit", player.id),
                                     &build_delete_url(player.id, filters, sort_field, sort_order),
                                     "players-table",
-                                    &t("players-entity")
+                                    &t.messages.players_entity().to_string()
                                 ))
                             }
                         }
@@ -321,16 +317,14 @@ fn build_delete_url(
 
 /// Create player modal
 pub fn player_create_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     error: Option<&str>,
     countries: &[(i64, String)],
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("players-name-label"))
+                (t.messages.players_name_label())
                 span style="color: red;" { "*" }
             }
             input
@@ -343,7 +337,7 @@ pub fn player_create_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("form-country"))
+                (t.messages.form_country())
                 span style="color: red;" { "*" }
             }
             select
@@ -351,7 +345,7 @@ pub fn player_create_modal(
                 required
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { (t("players-select-country")) }
+                option value="" { (t.messages.players_select_country()) }
                 @for (id, name) in countries {
                     option value=(id) {
                         (name)
@@ -362,7 +356,7 @@ pub fn player_create_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("players-upload-photo"))
+                (t.messages.players_upload_photo())
             }
             input
                 type="file"
@@ -370,13 +364,13 @@ pub fn player_create_modal(
                 accept="image/jpeg,image/png,image/gif,image/webp"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                (t("players-photo-hint"))
+                (t.messages.players_photo_hint())
             }
         }
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("players-photo-url"))
+                (t.messages.players_photo_url())
             }
             input
                 type="url"
@@ -384,34 +378,32 @@ pub fn player_create_modal(
                 placeholder="https://example.com/photo.jpg"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                (t("players-photo-url-hint"))
+                (t.messages.players_photo_url_hint())
             }
         }
     };
 
     modal_form_multipart(
         "player-modal",
-        &t("players-create-title"),
+        &t.messages.players_create_title().to_string(),
         error,
         "/players",
         form_fields,
-        &t("players-create-submit"),
+        &t.messages.players_create_submit().to_string(),
     )
 }
 
 /// Edit player modal
 pub fn player_edit_modal(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     player: &PlayerEntity,
     error: Option<&str>,
     countries: &[(i64, String)],
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("players-name-label"))
+                (t.messages.players_name_label())
                 span style="color: red;" { "*" }
             }
             input
@@ -425,7 +417,7 @@ pub fn player_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("form-country"))
+                (t.messages.form_country())
                 span style="color: red;" { "*" }
             }
             select
@@ -433,7 +425,7 @@ pub fn player_edit_modal(
                 required
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { (t("players-select-country")) }
+                option value="" { (t.messages.players_select_country()) }
                 @for (id, name) in countries {
                     option value=(id) selected[*id == player.country_id] {
                         (name)
@@ -445,11 +437,11 @@ pub fn player_edit_modal(
         @if let Some(current_photo) = &player.photo_path {
             div style="margin-bottom: 1rem;" {
                 label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                    (t("players-current-photo"))
+                    (t.messages.players_current_photo())
                 }
                 img
                     src=(current_photo)
-                    alt=(t("players-current-photo"))
+                    alt=(t.messages.players_current_photo())
                     style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid var(--gray-300);"
                     onerror="this.style.display='none'";
             }
@@ -457,7 +449,7 @@ pub fn player_edit_modal(
 
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("players-upload-new-photo"))
+                (t.messages.players_upload_new_photo())
             }
             input
                 type="file"
@@ -465,13 +457,13 @@ pub fn player_edit_modal(
                 accept="image/jpeg,image/png,image/gif,image/webp"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                (t("players-photo-hint"))
+                (t.messages.players_photo_hint())
             }
         }
 
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                (t("players-photo-url"))
+                (t.messages.players_photo_url())
             }
             input
                 type="url"
@@ -480,17 +472,17 @@ pub fn player_edit_modal(
                 placeholder="https://example.com/photo.jpg"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
-                (t("players-photo-url-hint"))
+                (t.messages.players_photo_url_hint())
             }
         }
     };
 
     modal_form_multipart(
         "player-modal",
-        &t("players-edit-title"),
+        &t.messages.players_edit_title().to_string(),
         error,
         &format!("/players/{}", player.id),
         form_fields,
-        &t("common-save"),
+        &t.messages.common_save().to_string(),
     )
 }

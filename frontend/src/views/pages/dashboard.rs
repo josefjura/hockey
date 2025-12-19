@@ -1,55 +1,53 @@
 use maud::{html, Markup};
 
-use crate::i18n::{I18n, Locale};
+use crate::i18n::TranslationContext;
 use crate::service::dashboard::{DashboardStats, RecentActivity};
 
 pub fn dashboard_page(
-    i18n: &I18n,
-    locale: Locale,
+    t: &TranslationContext,
     stats: &DashboardStats,
     recent_activity: &[RecentActivity],
 ) -> Markup {
-    let t = |key: &str| i18n.translate(locale, key);
     html! {
         div class="card" {
             h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;" {
-                (t("dashboard-title"))
+                (t.messages.dashboard_title())
             }
             p style="color: var(--gray-600); margin-bottom: 2rem;" {
-                (t("dashboard-subtitle"))
+                (t.messages.dashboard_subtitle())
             }
 
             // Stats cards
             div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;" {
-                (stat_card(&t("nav-teams"), &stats.teams_count.to_string(), "/teams"))
-                (stat_card(&t("nav-players"), &stats.players_count.to_string(), "/players"))
-                (stat_card(&t("nav-events"), &stats.events_count.to_string(), "/events"))
-                (stat_card(&t("nav-seasons"), &stats.seasons_count.to_string(), "/seasons"))
-                (stat_card(&t("nav-matches"), &stats.matches_count.to_string(), "/matches"))
+                (stat_card(&t.messages.nav_teams().to_string(), &stats.teams_count.to_string(), "/teams"))
+                (stat_card(&t.messages.nav_players().to_string(), &stats.players_count.to_string(), "/players"))
+                (stat_card(&t.messages.nav_events().to_string(), &stats.events_count.to_string(), "/events"))
+                (stat_card(&t.messages.nav_seasons().to_string(), &stats.seasons_count.to_string(), "/seasons"))
+                (stat_card(&t.messages.nav_matches().to_string(), &stats.matches_count.to_string(), "/matches"))
             }
 
             // Quick actions section
             div style="margin-top: 3rem;" {
                 h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;" {
-                    (t("dashboard-quick-actions"))
+                    (t.messages.dashboard_quick_actions())
                 }
                 div style="display: flex; flex-wrap: wrap; gap: 0.75rem;" {
-                    (quick_action_button(&t("dashboard-add-team"), "/teams/new"))
-                    (quick_action_button(&t("dashboard-add-player"), "/players/new"))
-                    (quick_action_button(&t("dashboard-add-event"), "/events/new"))
-                    (quick_action_button(&t("dashboard-add-season"), "/seasons/new"))
-                    (quick_action_button(&t("dashboard-add-match"), "/matches/new"))
+                    (quick_action_button(&t.messages.dashboard_add_team().to_string(), "/teams/new"))
+                    (quick_action_button(&t.messages.dashboard_add_player().to_string(), "/players/new"))
+                    (quick_action_button(&t.messages.dashboard_add_event().to_string(), "/events/new"))
+                    (quick_action_button(&t.messages.dashboard_add_season().to_string(), "/seasons/new"))
+                    (quick_action_button(&t.messages.dashboard_add_match().to_string(), "/matches/new"))
                 }
             }
 
             // Recent activity section
             div style="margin-top: 3rem;" {
                 h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;" {
-                    (t("dashboard-recent-activity"))
+                    (t.messages.dashboard_recent_activity())
                 }
                 @if recent_activity.is_empty() {
                     div class="info" style="padding: 1rem;" {
-                        (t("dashboard-no-activity"))
+                        (t.messages.dashboard_no_activity())
                     }
                 } @else {
                     div style="background: var(--gray-50); border-radius: 8px; overflow: hidden;" {
@@ -84,9 +82,9 @@ pub fn dashboard_page(
             // Getting started info
             div style="margin-top: 3rem;" {
                 div class="info" {
-                    strong { (t("dashboard-getting-started")) }
+                    strong { (t.messages.dashboard_getting_started()) }
                     " "
-                    (t("dashboard-getting-started-text"))
+                    (t.messages.dashboard_getting_started_text())
                 }
             }
         }
@@ -104,7 +102,7 @@ fn stat_card(title: &str, value: &str, link: &str) -> Markup {
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                 transition: transform 0.2s, box-shadow 0.2s;
                 cursor: pointer;
-            " 
+            "
             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)';"
             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)';"
             {

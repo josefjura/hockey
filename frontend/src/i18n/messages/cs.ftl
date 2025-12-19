@@ -311,6 +311,13 @@ common-try-different = Zkuste jiná kritéria hledání
 common-search-by-name = Hledat podle názvu...
 common-filter-by-country = Filtrovat podle země
 common-all-countries = Všechny země
+common-no-country = Bez země
+common-id = ID
+
+# Form labels
+form-name = Název
+form-country = Země
+form-photo = Fotografie
 
 # Table headers
 table-name = Název
