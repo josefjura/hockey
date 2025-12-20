@@ -55,6 +55,13 @@ build: ## Build for production
 	@echo "$(YELLOW)==> Building for production...$(NC)"
 	@cargo build --release
 
+build-full: ## Build for production with minified assets
+	@echo "$(YELLOW)==> Building web components with minification...$(NC)"
+	@cd web_components && yarn install && yarn build:prod
+	@echo "$(YELLOW)==> Building Rust binary for production...$(NC)"
+	@cargo build --release
+	@echo "$(GREEN)✓ Production build complete!$(NC)"
+
 ##@ Docker Commands
 
 docker-build: ## Build Docker image

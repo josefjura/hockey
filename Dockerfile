@@ -1,9 +1,23 @@
 # Multi-stage Dockerfile for Hockey Management System
 # Builds a production-ready single binary with embedded assets
 
-# Stage 1: Build the Rust application
+# Stage 1: Build and minify web components
+FROM node:20-slim AS node-builder
+
+WORKDIR /app
+
+# Copy web components files
+COPY web_components/package.json web_components/yarn.lock ./web_components/
+WORKDIR /app/web_components
+RUN yarn install --frozen-lockfile
+
+# Copy source and build with minification
+COPY web_components/ ./
+RUN yarn build:prod
+
+# Stage 2: Build the Rust application
 # Rust 1.85+ required for edition2024 support
-FROM rust:1.85-slim-bookworm AS builder
+FROM rust:1.85-slim-bookworm AS rust-builder
 
 # Install build dependencies
 RUN apt-get update && \
@@ -30,21 +44,24 @@ COPY src ./src
 COPY migrations ./migrations
 COPY static ./static
 
-# Build the actual application
+# Copy minified web components from node-builder
+COPY --from=node-builder /app/static/js/components ./static/js/components
+
+# Build the actual application (with embedded assets)
 RUN cargo build --release
 
-# Stage 2: Runtime image
+# Stage 3: Runtime image
 FROM gcr.io/distroless/cc-debian12
 
-# Copy binary from builder
-COPY --from=builder /app/target/release/hockey /app/hockey
-COPY --from=builder /app/target/release/create_admin /app/create_admin
+# Copy binary from rust-builder (assets are embedded in the binary)
+COPY --from=rust-builder /app/target/release/hockey /app/hockey
+COPY --from=rust-builder /app/target/release/create_admin /app/create_admin
 
 # Copy migrations (needed for runtime schema checks)
 COPY migrations /app/migrations
 
-# Copy static files (CSS, JS, images)
-COPY static /app/static
+# Note: Static assets are now embedded in the binary
+# Only uploads directory needs to be available at runtime
 
 # Create data directory (distroless runs as nonroot by default)
 WORKDIR /app

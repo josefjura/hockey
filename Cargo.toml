@@ -18,7 +18,6 @@ axum-extra = { version = "0.9", features = ["cookie"] }
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = [
-	"fs",
 	"trace",
 	"compression-gzip",
 	"cors",
@@ -65,7 +64,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dotenvy = "0.15"
 
 # Asset embedding (for production builds)
-rust-embed = { version = "8.0", features = ["debug-embed"] }
+rust-embed = { version = "8.0", features = ["debug-embed", "include-exclude"] }
 mime_guess = "2.0"
 
 [dev-dependencies]
