@@ -39,24 +39,34 @@ pub async fn serve_static_asset(path: &str) -> impl IntoResponse {
             let mime = mime_guess::from_path(path).first_or_octet_stream();
             let body = Body::from(content.data);
 
+            let content_type = HeaderValue::from_str(mime.as_ref())
+                .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream"));
+
             Response::builder()
                 .status(StatusCode::OK)
-                .header(
-                    header::CONTENT_TYPE,
-                    HeaderValue::from_str(mime.as_ref()).unwrap(),
-                )
+                .header(header::CONTENT_TYPE, content_type)
                 // Cache static assets for 1 year (immutable content)
                 .header(
                     header::CACHE_CONTROL,
                     HeaderValue::from_static("public, max-age=31536000, immutable"),
                 )
                 .body(body)
-                .unwrap()
+                .unwrap_or_else(|_| {
+                    Response::builder()
+                        .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .body(Body::from("Failed to build response"))
+                        .expect("Fallback response should always build")
+                })
         }
         None => Response::builder()
             .status(StatusCode::NOT_FOUND)
             .body(Body::from("Asset not found"))
-            .unwrap(),
+            .unwrap_or_else(|_| {
+                Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from("Failed to build response"))
+                    .expect("Fallback response should always build")
+            }),
     }
 }
 
@@ -74,29 +84,44 @@ async fn serve_upload_file(path: &str) -> Response<Body> {
                 return Response::builder()
                     .status(StatusCode::INTERNAL_SERVER_ERROR)
                     .body(Body::from("Failed to read file"))
-                    .unwrap();
+                    .unwrap_or_else(|_| {
+                        Response::builder()
+                            .status(StatusCode::INTERNAL_SERVER_ERROR)
+                            .body(Body::from("Failed to build response"))
+                            .expect("Fallback response should always build")
+                    });
             }
 
             let mime = mime_guess::from_path(&file_path).first_or_octet_stream();
 
+            let content_type = HeaderValue::from_str(mime.as_ref())
+                .unwrap_or_else(|_| HeaderValue::from_static("application/octet-stream"));
+
             Response::builder()
                 .status(StatusCode::OK)
-                .header(
-                    header::CONTENT_TYPE,
-                    HeaderValue::from_str(mime.as_ref()).unwrap(),
-                )
+                .header(header::CONTENT_TYPE, content_type)
                 // Don't cache user uploads as aggressively
                 .header(
                     header::CACHE_CONTROL,
                     HeaderValue::from_static("public, max-age=3600"),
                 )
                 .body(Body::from(contents))
-                .unwrap()
+                .unwrap_or_else(|_| {
+                    Response::builder()
+                        .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .body(Body::from("Failed to build response"))
+                        .expect("Fallback response should always build")
+                })
         }
         Err(_) => Response::builder()
             .status(StatusCode::NOT_FOUND)
             .body(Body::from("File not found"))
-            .unwrap(),
+            .unwrap_or_else(|_| {
+                Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from("Failed to build response"))
+                    .expect("Fallback response should always build")
+            }),
     }
 }
 
