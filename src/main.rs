@@ -1,4 +1,5 @@
 mod app_state;
+mod assets;
 mod auth;
 mod common;
 mod config;
@@ -10,7 +11,7 @@ mod views;
 
 use app_state::AppState;
 use axum::{
-    extract::{Request, State},
+    extract::{Path, Request, State},
     middleware,
     response::Html,
     routing::{get, post},
@@ -19,7 +20,7 @@ use axum::{
 use i18n::TranslationContext;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::net::SocketAddr;
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use auth::{require_auth, SessionStore};
@@ -146,16 +147,20 @@ async fn main() -> Result<(), anyhow::Error> {
     // Health check (no auth)
     let health_routes = Router::new().route("/health", get(health_handler));
 
+    // Static assets routes (embedded or from filesystem in dev mode)
+    let static_routes = Router::new().route("/static/*path", get(static_asset_handler));
+
     // Build the complete application
     let app = Router::new()
         .merge(public_routes)
         .merge(protected_routes)
         .merge(health_routes)
-        .nest_service("/static", ServeDir::new("static"))
+        .merge(static_routes)
         .with_state(state)
         .layer(middleware::from_fn(
             i18n::middleware::translation_context_middleware,
         ))
+        .layer(CompressionLayer::new().gzip(true))
         .layer(TraceLayer::new_for_http());
 
     // Start the server
@@ -198,4 +203,8 @@ async fn root_handler(
 
 async fn health_handler() -> &'static str {
     "OK"
+}
+
+async fn static_asset_handler(Path(path): Path<String>) -> impl axum::response::IntoResponse {
+    assets::serve_static_asset(&path).await
 }

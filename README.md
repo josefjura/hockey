@@ -34,7 +34,8 @@ hockey/
   - Large datasets: Server-side HTMX pagination
 - **Session-based Authentication** - Cookie-based auth with bcrypt
 - **Progressive Enhancement** - Works without JavaScript, enhanced with it
-- **Single Binary Deployment** - All assets served from one executable
+- **Single Binary Deployment** - All assets embedded in binary with gzip compression
+- **Optimized Assets** - Minified JavaScript, embedded CSS/JS/images, automatic compression
 
 ## 🛠️ Tech Stack
 
@@ -138,19 +139,22 @@ If you need to modify Lit web components:
 cd web_components
 
 # Install dependencies (first time only)
-npm install
+yarn install
 
 # Build components (outputs to ../static/js/components/)
-npm run build
+yarn build
+
+# Build with minification for production
+yarn build:prod
 
 # Watch mode for development
-npm run watch
+yarn watch
 
 # Run Storybook for component development
-npm run storybook
+yarn storybook
 ```
 
-**Note:** Built JS files are committed to `static/js/components/`. After building, commit both TypeScript source and built output.
+**Note:** Built JS files are committed to `static/js/components/`. After building, commit both TypeScript source and built output. For production builds, use `yarn build:prod` to minify the JavaScript.
 
 ## 🐳 Docker Deployment
 
