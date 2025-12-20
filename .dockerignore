@@ -2,8 +2,9 @@
 target/
 node_modules/
 
-# Web components source (built files are in static/js/)
-web_components/
+# Web components node_modules (source files needed for Docker build)
+web_components/node_modules/
+web_components/dist/
 
 # Database files
 *.db

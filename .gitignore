@@ -9,6 +9,9 @@
 # Node.js
 /web_components/node_modules/
 
+# Built web components (built during Docker build)
+/static/js/components/
+
 # Archived code
 /backup/
 
