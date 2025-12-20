@@ -3,10 +3,13 @@ use sqlx::SqlitePool;
 #[derive(Debug, Clone)]
 pub struct TeamParticipationEntity {
     pub id: i64,
+    #[allow(dead_code)]
     pub team_id: i64,
     pub team_name: String,
+    #[allow(dead_code)]
     pub country_id: Option<i64>,
     pub country_iso2_code: Option<String>,
+    #[allow(dead_code)]
     pub season_id: i64,
 }
 
@@ -108,10 +111,7 @@ pub async fn add_team_to_season(
 }
 
 /// Remove a team from a season (delete team participation)
-pub async fn remove_team_from_season(
-    db: &SqlitePool,
-    id: i64,
-) -> Result<bool, sqlx::Error> {
+pub async fn remove_team_from_season(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
     let result = sqlx::query!(
         r#"
         DELETE FROM team_participation

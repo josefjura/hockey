@@ -87,7 +87,10 @@ pub fn season_detail_page(t: &TranslationContext, detail: &SeasonDetailEntity) -
 }
 
 /// Season info card with event, year, and display name
-fn season_info_card(t: &TranslationContext, season: &crate::service::seasons::SeasonEntity) -> Markup {
+fn season_info_card(
+    t: &TranslationContext,
+    season: &crate::service::seasons::SeasonEntity,
+) -> Markup {
     html! {
         div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px;" {
             div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;" {

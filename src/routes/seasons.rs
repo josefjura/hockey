@@ -554,10 +554,8 @@ pub async fn team_participation_delete(
         Err(e) => {
             tracing::error!("Failed to fetch team participation: {}", e);
             return Html(
-                crate::views::components::error::error_message(
-                    "Failed to remove team from season",
-                )
-                .into_string(),
+                crate::views::components::error::error_message("Failed to remove team from season")
+                    .into_string(),
             )
             .into_response();
         }
