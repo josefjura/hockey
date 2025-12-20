@@ -69,3 +69,11 @@ rust-embed = { version = "8.0", features = ["debug-embed"] }
 mime_guess = "2.0"
 
 [dev-dependencies]
+
+[profile.release]
+# Optimize for size and performance
+opt-level = "z"          # Optimize for size
+lto = "fat"              # Full Link-Time Optimization
+codegen-units = 1        # Better optimization, slower compile
+strip = true             # Strip symbols from binary
+panic = "abort"          # Smaller binary, no unwinding
