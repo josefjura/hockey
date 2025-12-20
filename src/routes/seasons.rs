@@ -1,5 +1,6 @@
 use axum::{
     extract::{Path, Query, State},
+    http::{HeaderMap, HeaderName},
     response::{Html, IntoResponse},
     Extension, Form,
 };
@@ -11,8 +12,10 @@ use crate::i18n::TranslationContext;
 use crate::service::seasons::{
     self, CreateSeasonEntity, SeasonFilters, SortField, SortOrder, UpdateSeasonEntity,
 };
+use crate::service::team_participations::{self, CreateTeamParticipationEntity};
 use crate::views::{
     layout::admin_layout,
+    pages::season_detail::{add_team_modal, season_detail_page},
     pages::seasons::{season_create_modal, season_edit_modal, season_list_content, seasons_page},
 };
 
@@ -60,6 +63,11 @@ pub struct UpdateSeasonForm {
     year: i64,
     display_name: Option<String>,
     event_id: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AddTeamForm {
+    team_id: i64,
 }
 
 /// GET /seasons - Seasons list page
@@ -393,6 +401,190 @@ pub async fn season_delete(
                 crate::views::components::error::error_message("Failed to delete season")
                     .into_string(),
             )
+        }
+    }
+}
+
+/// GET /seasons/{id} - Season detail page
+pub async fn season_detail(
+    Extension(session): Extension<Session>,
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> impl IntoResponse {
+    let detail = match seasons::get_season_detail(&state.db, id).await {
+        Ok(Some(detail)) => detail,
+        Ok(None) => {
+            return Html(
+                admin_layout(
+                    "Season Not Found",
+                    &session,
+                    "/seasons",
+                    &t,
+                    crate::views::components::error::error_message("Season not found"),
+                )
+                .into_string(),
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to fetch season detail: {}", e);
+            return Html(
+                admin_layout(
+                    "Error",
+                    &session,
+                    "/seasons",
+                    &t,
+                    crate::views::components::error::error_message("Failed to load season"),
+                )
+                .into_string(),
+            );
+        }
+    };
+
+    let content = season_detail_page(&t, &detail);
+    Html(admin_layout("Season Detail", &session, "/seasons", &t, content).into_string())
+}
+
+/// GET /seasons/{season_id}/teams/add - Show add team modal
+pub async fn season_add_team_form(
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(season_id): Path<i64>,
+) -> impl IntoResponse {
+    let available_teams = team_participations::get_available_teams_for_season(&state.db, season_id)
+        .await
+        .unwrap_or_default();
+
+    Html(add_team_modal(&t, season_id, None, &available_teams).into_string())
+}
+
+/// POST /seasons/{season_id}/teams - Add team to season
+pub async fn season_add_team(
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(season_id): Path<i64>,
+    Form(form): Form<AddTeamForm>,
+) -> axum::response::Response {
+    // Get available teams for form re-render on error
+    let available_teams = team_participations::get_available_teams_for_season(&state.db, season_id)
+        .await
+        .unwrap_or_default();
+
+    // Check if team is already in season
+    match team_participations::is_team_in_season(&state.db, season_id, form.team_id).await {
+        Ok(true) => {
+            return Html(
+                add_team_modal(
+                    &t,
+                    season_id,
+                    Some("This team is already participating in this season"),
+                    &available_teams,
+                )
+                .into_string(),
+            )
+            .into_response();
+        }
+        Err(e) => {
+            tracing::error!("Failed to check team participation: {}", e);
+            return Html(
+                add_team_modal(
+                    &t,
+                    season_id,
+                    Some("Failed to check team participation"),
+                    &available_teams,
+                )
+                .into_string(),
+            )
+            .into_response();
+        }
+        _ => {}
+    }
+
+    // Create team participation
+    match team_participations::add_team_to_season(
+        &state.db,
+        CreateTeamParticipationEntity {
+            team_id: form.team_id,
+            season_id,
+        },
+    )
+    .await
+    {
+        Ok(_) => {
+            // Return HTMX redirect to season detail page
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-redirect"),
+                format!("/seasons/{}", season_id).parse().unwrap(),
+            );
+            (headers, Html("".to_string())).into_response()
+        }
+        Err(e) => {
+            tracing::error!("Failed to add team to season: {}", e);
+            Html(
+                add_team_modal(
+                    &t,
+                    season_id,
+                    Some("Failed to add team. Please try again."),
+                    &available_teams,
+                )
+                .into_string(),
+            )
+            .into_response()
+        }
+    }
+}
+
+/// POST /team-participations/{id}/delete - Remove team from season
+pub async fn team_participation_delete(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> axum::response::Response {
+    // Get season_id before deleting for redirect
+    let season_id = match team_participations::get_season_id_for_participation(&state.db, id).await
+    {
+        Ok(Some(season_id)) => season_id,
+        Ok(None) => {
+            return Html(
+                crate::views::components::error::error_message("Team participation not found")
+                    .into_string(),
+            )
+            .into_response();
+        }
+        Err(e) => {
+            tracing::error!("Failed to fetch team participation: {}", e);
+            return Html(
+                crate::views::components::error::error_message(
+                    "Failed to remove team from season",
+                )
+                .into_string(),
+            )
+            .into_response();
+        }
+    };
+
+    match team_participations::remove_team_from_season(&state.db, id).await {
+        Ok(true) => {
+            // Return HTMX redirect to season detail page
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-redirect"),
+                format!("/seasons/{}", season_id).parse().unwrap(),
+            );
+            (headers, Html("".to_string())).into_response()
+        }
+        Ok(false) => Html(
+            crate::views::components::error::error_message("Team participation not found")
+                .into_string(),
+        )
+        .into_response(),
+        Err(e) => {
+            tracing::error!("Failed to remove team from season: {}", e);
+            Html(
+                crate::views::components::error::error_message("Failed to remove team from season")
+                    .into_string(),
+            )
+            .into_response()
         }
     }
 }

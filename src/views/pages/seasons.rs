@@ -151,11 +151,18 @@ pub fn season_list_content(
                                 td { (season.id) }
                                 td { (season.year) }
                                 td {
-                                    @if let Some(display_name) = &season.display_name {
-                                        (display_name)
-                                    } @else {
-                                        span style="color: var(--gray-400); font-style: italic;" {
-                                            (format!("{} Season", season.year))
+                                    a
+                                        href=(format!("/seasons/{}", season.id))
+                                        style="color: var(--primary-color); text-decoration: none; font-weight: 500;"
+                                        onmouseover="this.style.textDecoration='underline'"
+                                        onmouseout="this.style.textDecoration='none'"
+                                    {
+                                        @if let Some(display_name) = &season.display_name {
+                                            (display_name)
+                                        } @else {
+                                            span style="color: var(--gray-400); font-style: italic;" {
+                                                (format!("{} Season", season.year))
+                                            }
                                         }
                                     }
                                 }

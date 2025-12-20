@@ -3,6 +3,9 @@ use sqlx::{Row, SqlitePool};
 // Re-export common pagination types for convenience
 pub use crate::common::pagination::{PagedResult, SortOrder};
 
+// Import team participation types for detail view
+use super::team_participations::TeamParticipationEntity;
+
 #[derive(Debug, Clone)]
 pub struct SeasonEntity {
     pub id: i64,
@@ -24,6 +27,12 @@ pub struct UpdateSeasonEntity {
     pub year: i64,
     pub display_name: Option<String>,
     pub event_id: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct SeasonDetailEntity {
+    pub season_info: SeasonEntity,
+    pub participating_teams: Vec<TeamParticipationEntity>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -155,6 +164,26 @@ pub async fn get_season_by_id(
         display_name: row.get("display_name"),
         event_id: row.get("event_id"),
         event_name: row.get("event_name"),
+    }))
+}
+
+/// Get season detail with all participating teams
+pub async fn get_season_detail(
+    db: &SqlitePool,
+    id: i64,
+) -> Result<Option<SeasonDetailEntity>, sqlx::Error> {
+    // Get season info
+    let season_info = match get_season_by_id(db, id).await? {
+        Some(s) => s,
+        None => return Ok(None),
+    };
+
+    // Get participating teams
+    let participating_teams = super::team_participations::get_teams_for_season(db, id).await?;
+
+    Ok(Some(SeasonDetailEntity {
+        season_info,
+        participating_teams,
     }))
 }
 

@@ -173,6 +173,17 @@ seasons-display-name-placeholder = e.g., 2024 Championship
 seasons-display-name-help = Optional: Custom display name (defaults to year)
 seasons-default-name = { $year } Season
 seasons-enter-year = Enter year...
+seasons-back-to-list = Back to Seasons
+seasons-participating-teams = Participating Teams
+seasons-add-team = Add Team
+seasons-add-team-modal-title = Add Team to Season
+seasons-select-team = Select team
+seasons-no-available-teams = All teams are already participating in this season
+seasons-no-teams = No teams are participating in this season yet
+seasons-no-teams-hint = Click 'Add Team' to add teams to this season
+seasons-remove-team = Remove Team
+seasons-confirm-remove-team-1 = Are you sure you want to remove
+seasons-confirm-remove-team-2 = from this season?
 
 # Matches
 matches-title = Matches
@@ -313,6 +324,8 @@ common-filter-by-country = Filter by country
 common-all-countries = All countries
 common-no-country = No country
 common-id = ID
+common-add = Add
+common-remove = Remove
 
 # Form labels
 form-name = Name
