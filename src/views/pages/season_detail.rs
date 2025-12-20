@@ -125,12 +125,12 @@ fn season_info_card(
     }
 }
 
-/// Teams list in grid layout with flags and remove buttons
+/// Teams list in grid layout with flags and action buttons
 fn teams_list(t: &TranslationContext, teams: &[TeamParticipationEntity]) -> Markup {
     html! {
-        div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;" {
+        div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;" {
             @for team in teams {
-                div style="padding: 1rem; border: 1px solid var(--gray-200); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; transition: box-shadow 0.2s; cursor: pointer;"
+                div style="padding: 1rem; border: 1px solid var(--gray-200); border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; transition: box-shadow 0.2s;"
                      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                      onmouseout="this.style.boxShadow='none'"
                 {
@@ -146,23 +146,31 @@ fn teams_list(t: &TranslationContext, teams: &[TeamParticipationEntity]) -> Mark
                             (team.team_name)
                         }
                     }
-                    button
-                        class="btn btn-sm btn-danger"
-                        hx-post=(format!("/team-participations/{}/delete", team.id))
-                        hx-confirm-custom=(confirm_attrs(
-                            &t.messages.seasons_remove_team().to_string(),
-                            &format!("{} {} {}",
-                                t.messages.seasons_confirm_remove_team_1(),
-                                team.team_name,
-                                t.messages.seasons_confirm_remove_team_2()
-                            ),
-                            ConfirmVariant::Danger,
-                            Some(&t.messages.common_remove().to_string()),
-                            Some(&t.messages.common_cancel().to_string())
-                        ))
-                        onclick="event.stopPropagation()"
-                    {
-                        (t.messages.common_remove())
+                    div style="display: flex; gap: 0.5rem;" {
+                        a
+                            href=(format!("/team-participations/{}/roster", team.id))
+                            class="btn btn-sm btn-primary"
+                            style="flex: 1;"
+                        {
+                            "Manage Roster"
+                        }
+                        button
+                            class="btn btn-sm btn-danger"
+                            hx-post=(format!("/team-participations/{}/delete", team.id))
+                            hx-confirm-custom=(confirm_attrs(
+                                &t.messages.seasons_remove_team().to_string(),
+                                &format!("{} {} {}",
+                                    t.messages.seasons_confirm_remove_team_1(),
+                                    team.team_name,
+                                    t.messages.seasons_confirm_remove_team_2()
+                                ),
+                                ConfirmVariant::Danger,
+                                Some(&t.messages.common_remove().to_string()),
+                                Some(&t.messages.common_cancel().to_string())
+                            ))
+                        {
+                            (t.messages.common_remove())
+                        }
                     }
                 }
             }

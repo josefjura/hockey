@@ -127,6 +127,22 @@ async fn main() -> Result<(), anyhow::Error> {
             "/team-participations/:id/delete",
             post(routes::seasons::team_participation_delete),
         )
+        .route(
+            "/team-participations/:id/roster",
+            get(routes::player_contracts::roster_get),
+        )
+        .route(
+            "/team-participations/:id/roster/add-player",
+            get(routes::player_contracts::roster_add_player_form),
+        )
+        .route(
+            "/team-participations/:id/roster",
+            post(routes::player_contracts::roster_add_player),
+        )
+        .route(
+            "/player-contracts/:id/delete",
+            post(routes::player_contracts::player_contract_delete),
+        )
         .route("/matches", get(routes::matches::matches_get))
         .route("/matches/list", get(routes::matches::matches_list_partial))
         .route("/matches/new", get(routes::matches::match_create_form))
