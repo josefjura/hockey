@@ -315,6 +315,18 @@ fn base_styles() -> Markup {
                 margin-right: 0.5rem;
             }
 
+            .version-info {
+                text-align: center;
+                padding: 0.75rem 0.5rem;
+                margin-top: 0.5rem;
+            }
+
+            .version-text {
+                font-size: 0.75rem;
+                color: var(--gray-500);
+                font-weight: 500;
+            }
+
             /* Main Content */
             .main-content {
                 flex: 1;

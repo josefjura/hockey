@@ -58,6 +58,7 @@ pub fn sidebar(session: &Session, current_path: &str, t: &TranslationContext) ->
                 (user_info(session))
                 (locale_switcher(t))
                 (logout_button(t))
+                (version_info())
             }
         }
     }
@@ -112,6 +113,15 @@ fn logout_button(t: &TranslationContext) -> Markup {
                 span class="nav-icon" { "🚪" }
                 span { (t.messages.user_logout()) }
             }
+        }
+    }
+}
+
+fn version_info() -> Markup {
+    let version = env!("CARGO_PKG_VERSION");
+    html! {
+        div class="version-info" {
+            span class="version-text" { "v" (version) }
         }
     }
 }
