@@ -173,6 +173,17 @@ seasons-display-name-placeholder = např. Šampionát 2024
 seasons-display-name-help = Volitelné: Vlastní zobrazovaný název (výchozí je rok)
 seasons-default-name = Sezóna { $year }
 seasons-enter-year = Zadejte rok...
+seasons-back-to-list = Zpět na Sezóny
+seasons-participating-teams = Účastnící se týmy
+seasons-add-team = Přidat tým
+seasons-add-team-modal-title = Přidat tým do sezóny
+seasons-select-team = Vyberte tým
+seasons-no-available-teams = Všechny týmy již účastní v této sezóně
+seasons-no-teams = V této sezóně zatím neúčastní žádné týmy
+seasons-no-teams-hint = Klikněte na 'Přidat tým' pro přidání týmů do této sezóny
+seasons-remove-team = Odebrat tým
+seasons-confirm-remove-team-1 = Opravdu chcete odebrat
+seasons-confirm-remove-team-2 = z této sezóny?
 
 # Matches
 matches-title = Zápasy
@@ -313,6 +324,8 @@ common-filter-by-country = Filtrovat podle země
 common-all-countries = Všechny země
 common-no-country = Bez země
 common-id = ID
+common-add = Přidat
+common-remove = Odebrat
 
 # Form labels
 form-name = Název

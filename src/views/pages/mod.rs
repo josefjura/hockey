@@ -4,5 +4,6 @@ pub mod dashboard;
 pub mod events;
 pub mod matches;
 pub mod players;
+pub mod season_detail;
 pub mod seasons;
 pub mod teams;
