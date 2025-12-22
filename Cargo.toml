@@ -1,6 +1,6 @@
 [package]
 name = "hockey"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 [[bin]]
@@ -18,18 +18,18 @@ axum-extra = { version = "0.9", features = ["cookie"] }
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = [
-	"trace",
-	"compression-gzip",
-	"cors",
+  "trace",
+  "compression-gzip",
+  "cors",
 ] }
 
 # Database
 # Using bundled feature to statically link SQLite for distroless compatibility
 sqlx = { version = "0.8", features = [
-	"runtime-tokio-rustls",
-	"sqlite",
-	"chrono",
-	"uuid",
+  "runtime-tokio-rustls",
+  "sqlite",
+  "chrono",
+  "uuid",
 ] }
 libsqlite3-sys = { version = "*", features = ["bundled"] }
 
@@ -71,8 +71,8 @@ mime_guess = "2.0"
 
 [profile.release]
 # Optimize for size and performance
-opt-level = "z"          # Optimize for size
-lto = "fat"              # Full Link-Time Optimization
-codegen-units = 1        # Better optimization, slower compile
-strip = true             # Strip symbols from binary
-panic = "abort"          # Smaller binary, no unwinding
+opt-level = "z"   # Optimize for size
+lto = "fat"       # Full Link-Time Optimization
+codegen-units = 1 # Better optimization, slower compile
+strip = true      # Strip symbols from binary
+panic = "abort"   # Smaller binary, no unwinding
