@@ -113,10 +113,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
 }
 
 /// Contracts list in grid layout showing career history
-fn contracts_list(
-    _t: &TranslationContext,
-    contracts: &[PlayerContractWithTeamEntity],
-) -> Markup {
+fn contracts_list(_t: &TranslationContext, contracts: &[PlayerContractWithTeamEntity]) -> Markup {
     html! {
         div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;" {
             @for contract in contracts {

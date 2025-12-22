@@ -146,7 +146,9 @@ fn seasons_grid(t: &TranslationContext, seasons: &[SeasonEntity]) -> Markup {
 
 /// Individual season card
 fn season_card(_t: &TranslationContext, season: &SeasonEntity) -> Markup {
-    let _display_name = season.display_name.as_ref()
+    let _display_name = season
+        .display_name
+        .as_ref()
         .map(|s| format!("{} - {}", season.year, s))
         .unwrap_or_else(|| season.year.to_string());
 

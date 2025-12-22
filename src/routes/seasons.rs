@@ -195,14 +195,16 @@ pub async fn event_season_create_form(
 
     let events = vec![(event.id, event.name)];
     let return_url = format!("/events/{}", event_id);
-    Html(crate::views::pages::seasons::season_create_modal_with_return(
-        &t,
-        None,
-        &events,
-        Some(event_id),
-        Some(&return_url),
+    Html(
+        crate::views::pages::seasons::season_create_modal_with_return(
+            &t,
+            None,
+            &events,
+            Some(event_id),
+            Some(&return_url),
+        )
+        .into_string(),
     )
-    .into_string())
 }
 
 /// POST /seasons - Create new season
@@ -217,8 +219,13 @@ pub async fn season_create(
     // Validation
     if form.year < 1900 || form.year > 2100 {
         return Html(
-            season_create_modal(&t, Some("Year must be between 1900 and 2100"), &events, None)
-                .into_string(),
+            season_create_modal(
+                &t,
+                Some("Year must be between 1900 and 2100"),
+                &events,
+                None,
+            )
+            .into_string(),
         );
     }
 
@@ -270,7 +277,10 @@ pub async fn season_create(
         }
         Err(e) => {
             tracing::error!("Failed to create season: {}", e);
-            Html(season_create_modal(&t, Some("Failed to create season"), &events, None).into_string())
+            Html(
+                season_create_modal(&t, Some("Failed to create season"), &events, None)
+                    .into_string(),
+            )
         }
     }
 }
