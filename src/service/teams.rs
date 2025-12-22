@@ -17,7 +17,6 @@ pub struct TeamParticipationWithSeasonEntity {
     pub season_id: i64,
     pub season_year: i64,
     pub season_display_name: Option<String>,
-    pub event_id: i64,
     pub event_name: String,
     pub player_count: i64,
 }
@@ -278,7 +277,6 @@ pub async fn get_team_detail(
             tp.season_id,
             s.year as season_year,
             s.display_name as season_display_name,
-            s.event_id,
             e.name as event_name,
             COALESCE(
                 (SELECT COUNT(*) FROM player_contract pc WHERE pc.team_participation_id = tp.id),
@@ -301,7 +299,6 @@ pub async fn get_team_detail(
             season_id: row.get("season_id"),
             season_year: row.get("season_year"),
             season_display_name: row.get("season_display_name"),
-            event_id: row.get("event_id"),
             event_name: row.get("event_name"),
             player_count: row.get("player_count"),
         })
