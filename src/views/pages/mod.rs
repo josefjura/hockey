@@ -3,6 +3,7 @@ pub mod countries;
 pub mod dashboard;
 pub mod events;
 pub mod matches;
+pub mod player_detail;
 pub mod players;
 pub mod roster;
 pub mod season_detail;

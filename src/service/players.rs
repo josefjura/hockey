@@ -14,6 +14,26 @@ pub struct PlayerEntity {
 }
 
 #[derive(Debug, Clone)]
+pub struct PlayerContractWithTeamEntity {
+    pub player_contract_id: i64,
+    pub team_participation_id: i64,
+    pub team_id: i64,
+    pub team_name: String,
+    pub team_country_iso2_code: Option<String>,
+    pub season_id: i64,
+    pub season_year: i64,
+    pub season_display_name: Option<String>,
+    pub event_id: i64,
+    pub event_name: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct PlayerDetailEntity {
+    pub player_info: PlayerEntity,
+    pub contracts: Vec<PlayerContractWithTeamEntity>,
+}
+
+#[derive(Debug, Clone)]
 pub struct CreatePlayerEntity {
     pub name: String,
     pub country_id: i64,
@@ -218,4 +238,63 @@ pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::
         .into_iter()
         .map(|row| (row.get("id"), row.get("name")))
         .collect())
+}
+
+/// Get player detail with all contracts (career history)
+pub async fn get_player_detail(
+    db: &SqlitePool,
+    id: i64,
+) -> Result<Option<PlayerDetailEntity>, sqlx::Error> {
+    // Get player info
+    let player_info = match get_player_by_id(db, id).await? {
+        Some(p) => p,
+        None => return Ok(None),
+    };
+
+    // Get all contracts with team, season, and event info
+    let rows = sqlx::query(
+        "SELECT
+            pc.id as player_contract_id,
+            pc.team_participation_id,
+            t.id as team_id,
+            t.name as team_name,
+            tc.iso2Code as team_country_iso2_code,
+            s.id as season_id,
+            s.year as season_year,
+            s.display_name as season_display_name,
+            e.id as event_id,
+            e.name as event_name
+        FROM player_contract pc
+        INNER JOIN team_participation tp ON pc.team_participation_id = tp.id
+        INNER JOIN team t ON tp.team_id = t.id
+        LEFT JOIN country tc ON t.country_id = tc.id
+        INNER JOIN season s ON tp.season_id = s.id
+        INNER JOIN event e ON s.event_id = e.id
+        WHERE pc.player_id = ?
+        ORDER BY s.year DESC, e.name ASC",
+    )
+    .bind(id)
+    .fetch_all(db)
+    .await?;
+
+    let contracts = rows
+        .into_iter()
+        .map(|row| PlayerContractWithTeamEntity {
+            player_contract_id: row.get("player_contract_id"),
+            team_participation_id: row.get("team_participation_id"),
+            team_id: row.get("team_id"),
+            team_name: row.get("team_name"),
+            team_country_iso2_code: row.get("team_country_iso2_code"),
+            season_id: row.get("season_id"),
+            season_year: row.get("season_year"),
+            season_display_name: row.get("season_display_name"),
+            event_id: row.get("event_id"),
+            event_name: row.get("event_name"),
+        })
+        .collect();
+
+    Ok(Some(PlayerDetailEntity {
+        player_info,
+        contracts,
+    }))
 }

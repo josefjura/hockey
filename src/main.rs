@@ -105,6 +105,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/players/list", get(routes::players::players_list_partial))
         .route("/players/new", get(routes::players::player_create_form))
         .route("/players", post(routes::players::player_create))
+        .route("/players/:id", get(routes::players::player_detail))
         .route("/players/:id/edit", get(routes::players::player_edit_form))
         .route("/players/:id", post(routes::players::player_update))
         .route("/players/:id/delete", post(routes::players::player_delete))

@@ -13,6 +13,7 @@ use crate::service::players::{
 };
 use crate::views::{
     layout::admin_layout,
+    pages::player_detail::player_detail_page,
     pages::players::{player_create_modal, player_edit_modal, player_list_content, players_page},
 };
 
@@ -524,4 +525,44 @@ pub async fn player_delete(
             )
         }
     }
+}
+
+/// GET /players/{id} - Player detail page
+pub async fn player_detail(
+    Extension(session): Extension<Session>,
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> impl IntoResponse {
+    let detail = match players::get_player_detail(&state.db, id).await {
+        Ok(Some(detail)) => detail,
+        Ok(None) => {
+            return Html(
+                admin_layout(
+                    "Player Not Found",
+                    &session,
+                    "/players",
+                    &t,
+                    crate::views::components::error::error_message("Player not found"),
+                )
+                .into_string(),
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to fetch player detail: {}", e);
+            return Html(
+                admin_layout(
+                    "Error",
+                    &session,
+                    "/players",
+                    &t,
+                    crate::views::components::error::error_message("Failed to load player"),
+                )
+                .into_string(),
+            );
+        }
+    };
+
+    let content = player_detail_page(&t, &detail);
+    Html(admin_layout("Player Detail", &session, "/players", &t, content).into_string())
 }

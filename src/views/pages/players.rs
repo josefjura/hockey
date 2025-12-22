@@ -162,7 +162,14 @@ pub fn player_list_content(
                                     }
                                 }
                                 td { (player.id) }
-                                td { (player.name) }
+                                td {
+                                    a
+                                        href=(format!("/players/{}", player.id))
+                                        style="color: var(--primary-color); text-decoration: none; font-weight: 500;"
+                                    {
+                                        (player.name)
+                                    }
+                                }
                                 td {
                                     span style="display: inline-flex; align-items: center; gap: 0.5rem;" {
                                         img
