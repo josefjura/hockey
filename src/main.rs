@@ -88,11 +88,16 @@ async fn main() -> Result<(), anyhow::Error> {
         )
         .route("/events", get(routes::events::events_get))
         .route("/events/list", get(routes::events::events_list_partial))
+        .route("/events/:id", get(routes::events::event_detail))
         .route("/events/new", get(routes::events::event_create_form))
         .route("/events", post(routes::events::event_create))
         .route("/events/:id/edit", get(routes::events::event_edit_form))
         .route("/events/:id", post(routes::events::event_update))
         .route("/events/:id/delete", post(routes::events::event_delete))
+        .route(
+            "/events/:event_id/seasons/new",
+            get(routes::seasons::event_season_create_form),
+        )
         .route("/teams", get(routes::teams::teams_get))
         .route("/teams/list", get(routes::teams::teams_list_partial))
         .route("/teams/new", get(routes::teams::team_create_form))

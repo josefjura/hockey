@@ -137,7 +137,14 @@ pub fn event_list_content(
                         @for event in &result.items {
                             tr {
                                 td { (event.id) }
-                                td { (event.name) }
+                                td {
+                                    a
+                                        href=(format!("/events/{}", event.id))
+                                        style="color: var(--primary-color); text-decoration: none; font-weight: 500;"
+                                    {
+                                        (event.name)
+                                    }
+                                }
                                 td {
                                     @if let Some(country_name) = &event.country_name {
                                         @if let Some(iso2) = &event.country_iso2_code {

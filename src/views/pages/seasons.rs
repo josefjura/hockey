@@ -321,23 +321,54 @@ pub fn season_create_modal(
     t: &TranslationContext,
     error: Option<&str>,
     events: &[(i64, String)],
+    preselected_event_id: Option<i64>,
+) -> Markup {
+    season_create_modal_with_return(t, error, events, preselected_event_id, None)
+}
+
+pub fn season_create_modal_with_return(
+    t: &TranslationContext,
+    error: Option<&str>,
+    events: &[(i64, String)],
+    preselected_event_id: Option<i64>,
+    return_url: Option<&str>,
 ) -> Markup {
     let form_fields = html! {
+        @if let Some(url) = return_url {
+            input type="hidden" name="return_url" value=(url);
+        }
+
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                 (t.messages.seasons_event())
                 span style="color: red;" { "*" }
             }
-            select
-                name="event_id"
-                required
-                autofocus
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-            {
-                option value="" { (t.messages.seasons_select_event()) }
-                @for (id, name) in events {
-                    option value=(id) {
-                        (name)
+            @if let Some(event_id) = preselected_event_id {
+                // When event is preselected, show it as a disabled field and use a hidden input
+                select
+                    disabled
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px; background: var(--gray-100);"
+                {
+                    @for (id, name) in events {
+                        @if *id == event_id {
+                            option selected { (name) }
+                        }
+                    }
+                }
+                input type="hidden" name="event_id" value=(event_id);
+            } @else {
+                // Regular event selection dropdown
+                select
+                    name="event_id"
+                    required
+                    autofocus
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="" { (t.messages.seasons_select_event()) }
+                    @for (id, name) in events {
+                        option value=(id) {
+                            (name)
+                        }
                     }
                 }
             }
@@ -354,6 +385,7 @@ pub fn season_create_modal(
                 required
                 min="1900"
                 max="2100"
+                autofocus[preselected_event_id.is_some()]
                 placeholder=(t.messages.seasons_year_placeholder())
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }

@@ -11,6 +11,7 @@ use crate::i18n::TranslationContext;
 use crate::service::events::{self, CreateEventEntity, EventFilters, UpdateEventEntity};
 use crate::views::{
     layout::admin_layout,
+    pages::event_detail::event_detail_page,
     pages::events::{event_create_modal, event_edit_modal, event_list_content, events_page},
 };
 
@@ -37,12 +38,14 @@ fn default_page_size() -> usize {
 #[derive(Debug, Deserialize)]
 pub struct CreateEventForm {
     name: String,
+    #[serde(default, deserialize_with = "crate::utils::empty_string_as_none_i64")]
     country_id: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateEventForm {
     name: String,
+    #[serde(default, deserialize_with = "crate::utils::empty_string_as_none_i64")]
     country_id: Option<i64>,
 }
 
@@ -107,6 +110,46 @@ pub async fn events_list_partial(
     };
 
     Html(event_list_content(&t, &result, &filters).into_string())
+}
+
+/// GET /events/{id} - Event detail page
+pub async fn event_detail(
+    Extension(session): Extension<Session>,
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> impl IntoResponse {
+    let detail = match events::get_event_detail(&state.db, id).await {
+        Ok(Some(detail)) => detail,
+        Ok(None) => {
+            return Html(
+                admin_layout(
+                    "Event Not Found",
+                    &session,
+                    "/events",
+                    &t,
+                    crate::views::components::error::error_message("Event not found"),
+                )
+                .into_string(),
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to fetch event detail: {}", e);
+            return Html(
+                admin_layout(
+                    "Error",
+                    &session,
+                    "/events",
+                    &t,
+                    crate::views::components::error::error_message("Failed to load event"),
+                )
+                .into_string(),
+            );
+        }
+    };
+
+    let content = event_detail_page(&t, &detail);
+    Html(admin_layout("Event Detail", &session, "/events", &t, content).into_string())
 }
 
 /// GET /events/new - Show create modal

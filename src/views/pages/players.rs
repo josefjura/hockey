@@ -342,7 +342,6 @@ pub fn player_create_modal(
                 type="text"
                 name="name"
                 required
-                autofocus
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
 
@@ -422,7 +421,6 @@ pub fn player_edit_modal(
                 name="name"
                 value=(player.name)
                 required
-                autofocus
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
 

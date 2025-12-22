@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod countries;
 pub mod dashboard;
+pub mod event_detail;
 pub mod events;
 pub mod matches;
 pub mod player_detail;

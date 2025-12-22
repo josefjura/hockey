@@ -134,6 +134,56 @@ pub async fn get_event_by_id(db: &SqlitePool, id: i64) -> Result<Option<EventEnt
     }))
 }
 
+#[derive(Debug, Clone)]
+pub struct SeasonEntity {
+    pub id: i64,
+    pub year: i64,
+    pub display_name: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct EventDetailEntity {
+    pub event_info: EventEntity,
+    pub seasons: Vec<SeasonEntity>,
+}
+
+/// Get event detail with all seasons
+pub async fn get_event_detail(
+    db: &SqlitePool,
+    event_id: i64,
+) -> Result<Option<EventDetailEntity>, sqlx::Error> {
+    // Get event info
+    let event_info = match get_event_by_id(db, event_id).await? {
+        Some(event) => event,
+        None => return Ok(None),
+    };
+
+    // Get seasons for this event
+    let rows = sqlx::query(
+        "SELECT id, year, display_name
+         FROM season
+         WHERE event_id = ?
+         ORDER BY year DESC",
+    )
+    .bind(event_id)
+    .fetch_all(db)
+    .await?;
+
+    let seasons = rows
+        .into_iter()
+        .map(|row| SeasonEntity {
+            id: row.get("id"),
+            year: row.get("year"),
+            display_name: row.get("display_name"),
+        })
+        .collect();
+
+    Ok(Some(EventDetailEntity {
+        event_info,
+        seasons,
+    }))
+}
+
 /// Update an event
 pub async fn update_event(
     db: &SqlitePool,

@@ -56,6 +56,8 @@ pub struct CreateSeasonForm {
     year: i64,
     display_name: Option<String>,
     event_id: i64,
+    #[serde(default, deserialize_with = "crate::utils::empty_string_as_none")]
+    return_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -165,7 +167,42 @@ pub async fn season_create_form(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
-    Html(season_create_modal(&t, None, &events).into_string())
+    Html(season_create_modal(&t, None, &events, None).into_string())
+}
+
+/// GET /events/{event_id}/seasons/new - Show create modal for specific event
+pub async fn event_season_create_form(
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(event_id): Path<i64>,
+) -> impl IntoResponse {
+    // Get event info
+    let event = match crate::service::events::get_event_by_id(&state.db, event_id).await {
+        Ok(Some(event)) => event,
+        Ok(None) => {
+            return Html(
+                crate::views::components::error::error_message("Event not found").into_string(),
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to fetch event: {}", e);
+            return Html(
+                crate::views::components::error::error_message("Failed to load event")
+                    .into_string(),
+            );
+        }
+    };
+
+    let events = vec![(event.id, event.name)];
+    let return_url = format!("/events/{}", event_id);
+    Html(crate::views::pages::seasons::season_create_modal_with_return(
+        &t,
+        None,
+        &events,
+        Some(event_id),
+        Some(&return_url),
+    )
+    .into_string())
 }
 
 /// POST /seasons - Create new season
@@ -180,7 +217,7 @@ pub async fn season_create(
     // Validation
     if form.year < 1900 || form.year > 2100 {
         return Html(
-            season_create_modal(&t, Some("Year must be between 1900 and 2100"), &events)
+            season_create_modal(&t, Some("Year must be between 1900 and 2100"), &events, None)
                 .into_string(),
         );
     }
@@ -193,6 +230,7 @@ pub async fn season_create(
                     &t,
                     Some("Display name cannot exceed 255 characters"),
                     &events,
+                    None,
                 )
                 .into_string(),
             );
@@ -218,12 +256,21 @@ pub async fn season_create(
     .await
     {
         Ok(_) => {
-            // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            // Return HTMX response based on context
+            if let Some(return_url) = &form.return_url {
+                // Redirect to the return URL (e.g., event detail page)
+                Html(format!(
+                    "<div hx-get=\"{}\" hx-target=\"body\" hx-push-url=\"true\" hx-trigger=\"load\" hx-swap=\"innerHTML\"></div>",
+                    return_url
+                ))
+            } else {
+                // Reload the seasons table (default behavior)
+                Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            }
         }
         Err(e) => {
             tracing::error!("Failed to create season: {}", e);
-            Html(season_create_modal(&t, Some("Failed to create season"), &events).into_string())
+            Html(season_create_modal(&t, Some("Failed to create season"), &events, None).into_string())
         }
     }
 }
