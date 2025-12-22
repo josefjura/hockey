@@ -147,7 +147,14 @@ pub fn team_list_content(
                         @for team in &result.items {
                             tr {
                                 td { (team.id) }
-                                td { (team.name) }
+                                td {
+                                    a
+                                        href=(format!("/teams/{}", team.id))
+                                        style="color: var(--primary-color); text-decoration: none; font-weight: 500;"
+                                    {
+                                        (team.name)
+                                    }
+                                }
                                 td {
                                     @if let Some(country_name) = &team.country_name {
                                         @if let Some(iso2) = &team.country_iso2_code {

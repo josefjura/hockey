@@ -66,6 +66,7 @@ teams-select-country = Select a country
 teams-create-title = Create Team
 teams-create-submit = Create Team
 teams-edit-title = Edit Team
+teams-back-to-list = Back to Teams
 
 # Players
 players-title = Players

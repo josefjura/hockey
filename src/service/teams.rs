@@ -12,6 +12,23 @@ pub struct TeamEntity {
 }
 
 #[derive(Debug, Clone)]
+pub struct TeamParticipationWithSeasonEntity {
+    pub id: i64,
+    pub season_id: i64,
+    pub season_year: i64,
+    pub season_display_name: Option<String>,
+    pub event_id: i64,
+    pub event_name: String,
+    pub player_count: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct TeamDetailEntity {
+    pub team_info: TeamEntity,
+    pub participations: Vec<TeamParticipationWithSeasonEntity>,
+}
+
+#[derive(Debug, Clone)]
 pub struct CreateTeamEntity {
     pub name: String,
     pub country_id: Option<i64>,
@@ -241,4 +258,57 @@ pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::
         .into_iter()
         .map(|row| (row.get("id"), row.get("name")))
         .collect())
+}
+
+/// Get team detail with all participations (seasons/events)
+pub async fn get_team_detail(
+    db: &SqlitePool,
+    id: i64,
+) -> Result<Option<TeamDetailEntity>, sqlx::Error> {
+    // Get team info
+    let team_info = match get_team_by_id(db, id).await? {
+        Some(t) => t,
+        None => return Ok(None),
+    };
+
+    // Get all participations with season and event info
+    let rows = sqlx::query(
+        "SELECT
+            tp.id,
+            tp.season_id,
+            s.year as season_year,
+            s.display_name as season_display_name,
+            s.event_id,
+            e.name as event_name,
+            COALESCE(
+                (SELECT COUNT(*) FROM player_contract pc WHERE pc.team_participation_id = tp.id),
+                0
+            ) as player_count
+        FROM team_participation tp
+        INNER JOIN season s ON tp.season_id = s.id
+        INNER JOIN event e ON s.event_id = e.id
+        WHERE tp.team_id = ?
+        ORDER BY s.year DESC, e.name ASC",
+    )
+    .bind(id)
+    .fetch_all(db)
+    .await?;
+
+    let participations = rows
+        .into_iter()
+        .map(|row| TeamParticipationWithSeasonEntity {
+            id: row.get("id"),
+            season_id: row.get("season_id"),
+            season_year: row.get("season_year"),
+            season_display_name: row.get("season_display_name"),
+            event_id: row.get("event_id"),
+            event_name: row.get("event_name"),
+            player_count: row.get("player_count"),
+        })
+        .collect();
+
+    Ok(Some(TeamDetailEntity {
+        team_info,
+        participations,
+    }))
 }

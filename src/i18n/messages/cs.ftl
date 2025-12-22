@@ -66,6 +66,7 @@ teams-select-country = Vyberte zemi
 teams-create-title = Vytvořit tým
 teams-create-submit = Vytvořit tým
 teams-edit-title = Upravit tým
+teams-back-to-list = Zpět na Týmy
 
 # Players
 players-title = Hráči

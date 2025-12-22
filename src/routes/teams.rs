@@ -13,6 +13,7 @@ use crate::service::teams::{
 };
 use crate::views::{
     layout::admin_layout,
+    pages::team_detail::team_detail_page,
     pages::teams::{team_create_modal, team_edit_modal, team_list_content, teams_page},
 };
 
@@ -311,4 +312,44 @@ pub async fn team_delete(
             )
         }
     }
+}
+
+/// GET /teams/{id} - Team detail page
+pub async fn team_detail(
+    Extension(session): Extension<Session>,
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> impl IntoResponse {
+    let detail = match teams::get_team_detail(&state.db, id).await {
+        Ok(Some(detail)) => detail,
+        Ok(None) => {
+            return Html(
+                admin_layout(
+                    "Team Not Found",
+                    &session,
+                    "/teams",
+                    &t,
+                    crate::views::components::error::error_message("Team not found"),
+                )
+                .into_string(),
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to fetch team detail: {}", e);
+            return Html(
+                admin_layout(
+                    "Error",
+                    &session,
+                    "/teams",
+                    &t,
+                    crate::views::components::error::error_message("Failed to load team"),
+                )
+                .into_string(),
+            );
+        }
+    };
+
+    let content = team_detail_page(&t, &detail);
+    Html(admin_layout("Team Detail", &session, "/teams", &t, content).into_string())
 }

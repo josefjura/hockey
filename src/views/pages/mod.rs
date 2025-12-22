@@ -7,4 +7,5 @@ pub mod players;
 pub mod roster;
 pub mod season_detail;
 pub mod seasons;
+pub mod team_detail;
 pub mod teams;
