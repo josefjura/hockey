@@ -57,6 +57,14 @@ pub fn team_detail_page(t: &TranslationContext, detail: &TeamDetailEntity) -> Ma
                     h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;" {
                         "Season Participations"
                     }
+                    button
+                        class="btn btn-primary"
+                        hx-get=(format!("/team-participations/new?team_id={}&return_to=/teams/{}", team.id, team.id))
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML"
+                    {
+                        (t.messages.teams_add_to_season())
+                    }
                 }
 
                 @if detail.participations.is_empty() {
@@ -167,17 +175,17 @@ fn participations_list(
 }
 
 /// Empty state when no participations exist
-fn empty_participations_state(_t: &TranslationContext) -> Markup {
+fn empty_participations_state(t: &TranslationContext) -> Markup {
     html! {
         div style="padding: 3rem; text-align: center; background: var(--gray-50); border-radius: 8px; border: 2px dashed var(--gray-300);" {
             div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;" {
                 "🏒"
             }
             p style="color: var(--gray-600); font-size: 1.125rem; margin-bottom: 0.5rem; font-weight: 500;" {
-                "No Season Participations"
+                (t.messages.teams_no_participations())
             }
             p style="font-size: 0.875rem; color: var(--gray-500);" {
-                "This team hasn't been added to any seasons yet. Add this team to a season from the season detail page."
+                (t.messages.teams_no_participations_help())
             }
         }
     }

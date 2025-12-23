@@ -6,4 +6,5 @@ pub mod matches;
 pub mod player_contracts;
 pub mod players;
 pub mod seasons;
+pub mod team_participations;
 pub mod teams;

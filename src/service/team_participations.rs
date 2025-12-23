@@ -80,6 +80,42 @@ pub async fn get_available_teams_for_season(
         .collect())
 }
 
+/// Get seasons where a team is not yet participating (for dropdown)
+pub async fn get_available_seasons_for_team(
+    db: &SqlitePool,
+    team_id: i64,
+) -> Result<Vec<(i64, String)>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT s.id, s.display_name, s.year, e.name as event_name
+        FROM season s
+        INNER JOIN event e ON s.event_id = e.id
+        WHERE s.id NOT IN (
+            SELECT season_id FROM team_participation WHERE team_id = ?
+        )
+        ORDER BY s.year DESC, e.name ASC",
+    )
+    .bind(team_id)
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| {
+            let year: i64 = row.get("year");
+            let event_name: String = row.get("event_name");
+            let display_name: Option<String> = row.get("display_name");
+
+            let label = if let Some(dn) = display_name {
+                format!("{} {} ({})", event_name, dn, year)
+            } else {
+                format!("{} {}", event_name, year)
+            };
+
+            (row.get("id"), label)
+        })
+        .collect())
+}
+
 /// Check if a team is already participating in a season
 pub async fn is_team_in_season(
     db: &SqlitePool,
@@ -135,4 +171,61 @@ pub async fn get_season_id_for_participation(
         .await?;
 
     Ok(row.map(|r| r.get("season_id")))
+}
+
+/// Get all teams for dropdown (not filtered)
+pub async fn get_all_teams_for_dropdown(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT t.id, t.name, c.iso2Code as country_code
+        FROM team t
+        LEFT JOIN country c ON t.country_id = c.id
+        ORDER BY t.name ASC",
+    )
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| {
+            let name: String = row.get("name");
+            let country_code: Option<String> = row.get("country_code");
+
+            let display = if let Some(code) = country_code {
+                format!("{} ({})", name, code)
+            } else {
+                name
+            };
+
+            (row.get("id"), display)
+        })
+        .collect())
+}
+
+/// Get all seasons for dropdown (not filtered)
+pub async fn get_all_seasons_for_dropdown(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT s.id, s.display_name, s.year, e.name as event_name
+        FROM season s
+        INNER JOIN event e ON s.event_id = e.id
+        ORDER BY s.year DESC, e.name ASC",
+    )
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| {
+            let year: i64 = row.get("year");
+            let event_name: String = row.get("event_name");
+            let display_name: Option<String> = row.get("display_name");
+
+            let label = if let Some(dn) = display_name {
+                format!("{} {} ({})", event_name, dn, year)
+            } else {
+                format!("{} {}", event_name, year)
+            };
+
+            (row.get("id"), label)
+        })
+        .collect())
 }

@@ -106,6 +106,14 @@ async fn main() -> Result<(), anyhow::Error> {
         .route("/teams/:id/edit", get(routes::teams::team_edit_form))
         .route("/teams/:id", post(routes::teams::team_update))
         .route("/teams/:id/delete", post(routes::teams::team_delete))
+        .route(
+            "/team-participations/new",
+            get(routes::team_participations::team_participation_create_form),
+        )
+        .route(
+            "/team-participations",
+            post(routes::team_participations::team_participation_create),
+        )
         .route("/players", get(routes::players::players_get))
         .route("/players/list", get(routes::players::players_list_partial))
         .route("/players/new", get(routes::players::player_create_form))

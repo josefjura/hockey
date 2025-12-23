@@ -67,6 +67,9 @@ teams-create-title = Create Team
 teams-create-submit = Create Team
 teams-edit-title = Edit Team
 teams-back-to-list = Back to Teams
+teams-add-to-season = Add to Season
+teams-no-participations = No Season Participations
+teams-no-participations-help = This team hasn't been added to any seasons yet. Add this team to a season using the button above.
 
 # Players
 players-title = Players
@@ -334,6 +337,12 @@ common-remove = Remove
 form-name = Name
 form-country = Country
 form-photo = Photo
+label-team = Team
+label-season = Season
+placeholder-select-team = Choose a team...
+placeholder-select-season = Choose a season...
+title-add-team-to-season = Add Team to Season
+button-add-to-season = Add to Season
 
 # Table headers
 table-name = Name
@@ -354,3 +363,7 @@ error-unauthorized = Unauthorized
 error-server-error = Server error
 error-unknown = An unknown error occurred
 error-loading = Error loading data
+error-loading-form-data = Failed to load form data
+error-system = A system error occurred. Please try again.
+error-team-already-in-season = This team is already participating in the selected season
+error-creating-participation = Failed to add team to season

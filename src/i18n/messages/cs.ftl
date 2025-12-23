@@ -67,6 +67,9 @@ teams-create-title = Vytvořit tým
 teams-create-submit = Vytvořit tým
 teams-edit-title = Upravit tým
 teams-back-to-list = Zpět na Týmy
+teams-add-to-season = Přidat do sezóny
+teams-no-participations = Žádné účasti v sezónách
+teams-no-participations-help = Tento tým ještě nebyl přidán do žádné sezóny. Přidejte tým do sezóny pomocí tlačítka výše.
 
 # Players
 players-title = Hráči
@@ -334,6 +337,12 @@ common-remove = Odebrat
 form-name = Název
 form-country = Země
 form-photo = Fotografie
+label-team = Tým
+label-season = Sezóna
+placeholder-select-team = Vyberte tým...
+placeholder-select-season = Vyberte sezónu...
+title-add-team-to-season = Přidat tým do sezóny
+button-add-to-season = Přidat do sezóny
 
 # Table headers
 table-name = Název
@@ -354,3 +363,7 @@ error-unauthorized = Neautorizováno
 error-server-error = Chyba serveru
 error-unknown = Nastala neznámá chyba
 error-loading = Chyba při načítání dat
+error-loading-form-data = Nepodařilo se načíst data formuláře
+error-system = Nastala systémová chyba. Zkuste to prosím znovu.
+error-team-already-in-season = Tento tým již v vybrané sezóně účinkuje
+error-creating-participation = Nepodařilo se přidat tým do sezóny
