@@ -22,7 +22,7 @@ The rewrite uses simplified session-based authentication instead of JWT:
 
 ## Architecture
 
-### New Frontend (Rust - Active Development in `frontend/`)
+### New Frontend (Rust - Active Development)
 - **Framework**: Axum web framework
 - **Templating**: Maud for type-safe HTML generation
 - **Interactivity**: HTMX for dynamic updates
@@ -53,7 +53,6 @@ The database follows a hierarchical structure:
 
 ### New Frontend (Active Development)
 ```bash
-cd frontend
 cargo run                    # Start development server (creates DB from migrations)
 cargo build                  # Build the project
 cargo test                   # Run tests
@@ -66,7 +65,6 @@ cargo watch -x run           # Hot reload (requires cargo-watch)
 
 ### Database
 ```bash
-cd frontend
 # Database is automatically created on first run from migrations/
 # Migrations are applied automatically at startup
 ```
@@ -103,8 +101,7 @@ See README.md for complete setup instructions.
 
 ### New Frontend Structure (Active Development)
 ```
-frontend/
-├── src/
+src/
 │   ├── main.rs                    # Entry point, server setup
 │   ├── config.rs                  # Configuration management
 │   ├── routes/                    # Route handlers (return HTML)
@@ -191,7 +188,7 @@ Protected routes check session cookie. HTMX endpoints return HTML fragments.
 ## Development Workflow
 
 1. **Code Changes**: Modify Rust code, use `cargo watch -x run` for hot reload
-2. **Database Changes**: Create new migration files in `frontend/migrations/`
+2. **Database Changes**: Create new migration files in `migrations/`
 3. **Templates**: Edit Maud templates in `src/views/`
 4. **HTMX**: Add HTMX attributes to templates for dynamic behavior
 5. **Web Components**: Edit Lit components in `web_components/`, compile with npm
