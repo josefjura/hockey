@@ -16,6 +16,7 @@ use crate::service::matches::{
     UpdateScoreEventEntity,
 };
 use crate::views::{
+    components::htmx::htmx_reload_table,
     layout::admin_layout,
     pages::matches::{
         match_create_modal, match_detail_page, match_edit_modal, match_list_content, matches_page,
@@ -358,7 +359,7 @@ pub async fn match_create(
     {
         Ok(_) => {
             // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/matches/list\" hx-target=\"#matches-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            htmx_reload_table("/matches/list", "matches-table")
         }
         Err(e) => {
             tracing::error!("Failed to create match: {}", e);

@@ -14,6 +14,7 @@ use crate::service::seasons::{
 };
 use crate::service::team_participations::{self, CreateTeamParticipationEntity};
 use crate::views::{
+    components::htmx::htmx_reload_table,
     layout::admin_layout,
     pages::season_detail::{add_team_modal, season_detail_page},
     pages::seasons::{season_create_modal, season_edit_modal, season_list_content, seasons_page},
@@ -272,7 +273,7 @@ pub async fn season_create(
                 ))
             } else {
                 // Reload the seasons table (default behavior)
-                Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+                htmx_reload_table("/seasons/list", "seasons-table")
             }
         }
         Err(e) => {

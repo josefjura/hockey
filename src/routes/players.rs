@@ -12,6 +12,7 @@ use crate::service::players::{
     self, CreatePlayerEntity, PlayerFilters, SortField, SortOrder, UpdatePlayerEntity,
 };
 use crate::views::{
+    components::htmx::htmx_reload_table,
     layout::admin_layout,
     pages::player_detail::player_detail_page,
     pages::players::{player_create_modal, player_edit_modal, player_list_content, players_page},
@@ -249,7 +250,7 @@ pub async fn player_create(
     {
         Ok(_) => {
             // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/players/list\" hx-target=\"#players-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            htmx_reload_table("/players/list", "players-table")
         }
         Err(e) => {
             tracing::error!("Failed to create player: {}", e);
@@ -453,7 +454,7 @@ pub async fn player_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/players/list\" hx-target=\"#players-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            htmx_reload_table("/players/list", "players-table")
         }
         Ok(false) => Html(
             player_edit_modal(&t, &current_player, Some("Player not found"), &countries)

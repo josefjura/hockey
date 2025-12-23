@@ -12,6 +12,7 @@ use crate::service::teams::{
     self, CreateTeamEntity, SortField, SortOrder, TeamFilters, UpdateTeamEntity,
 };
 use crate::views::{
+    components::htmx::htmx_reload_table,
     layout::admin_layout,
     pages::team_detail::team_detail_page,
     pages::teams::{team_create_modal, team_edit_modal, team_list_content, teams_page},
@@ -185,7 +186,7 @@ pub async fn team_create(
     {
         Ok(_) => {
             // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/teams/list\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            htmx_reload_table("/teams/list", "teams-table")
         }
         Err(e) => {
             tracing::error!("Failed to create team: {}", e);
@@ -259,7 +260,7 @@ pub async fn team_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/teams/list\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            htmx_reload_table("/teams/list", "teams-table")
         }
         Ok(false) => {
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();

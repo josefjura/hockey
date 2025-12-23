@@ -10,6 +10,7 @@ use crate::auth::Session;
 use crate::i18n::TranslationContext;
 use crate::service::events::{self, CreateEventEntity, EventFilters, UpdateEventEntity};
 use crate::views::{
+    components::htmx::htmx_reload_table,
     layout::admin_layout,
     pages::event_detail::event_detail_page,
     pages::events::{event_create_modal, event_edit_modal, event_list_content, events_page},
@@ -200,7 +201,7 @@ pub async fn event_create(
     {
         Ok(_) => {
             // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/events/list\" hx-target=\"#events-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            htmx_reload_table("/events/list", "events-table")
         }
         Err(e) => {
             tracing::error!("Failed to create event: {}", e);
@@ -286,7 +287,7 @@ pub async fn event_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/events/list\" hx-target=\"#events-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            htmx_reload_table("/events/list", "events-table")
         }
         Ok(false) => {
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
@@ -318,7 +319,7 @@ pub async fn event_delete(State(state): State<AppState>, Path(id): Path<i64>) ->
     match events::delete_event(&state.db, id).await {
         Ok(true) => {
             // Return HTMX response to reload table
-            Html("<div hx-get=\"/events/list\" hx-target=\"#events-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            htmx_reload_table("/events/list", "events-table")
         }
         Ok(false) => {
             Html(crate::views::components::error::error_message("Event not found").into_string())
