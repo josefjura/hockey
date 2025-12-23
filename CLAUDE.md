@@ -118,8 +118,6 @@ src/
 - Linting with `cargo clippy`
 - Formatting with `cargo fmt --check`
 
-**Current Status**: 15 tests (low coverage - see issue #126 for improvement plan)
-
 ## Domain Model
 
 ### Core Entities
@@ -287,8 +285,3 @@ pub async fn event_create_post(...) -> impl IntoResponse { }
 - Entity structs for database operations
 - DTO structs for API responses
 - Fixture SQL files for complex queries
-
-## Development Notes
-
-- **Development Environment**:
-  - The application may be running in the background. If you need to test changes, ask first.
