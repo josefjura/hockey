@@ -11,6 +11,7 @@ use crate::i18n::TranslationContext;
 use crate::service::teams::{
     self, CreateTeamEntity, SortField, SortOrder, TeamFilters, UpdateTeamEntity,
 };
+use crate::validation::validate_name;
 use crate::views::{
     components::htmx::htmx_reload_table,
     layout::admin_layout,
@@ -163,16 +164,10 @@ pub async fn team_create(
     Form(form): Form<CreateTeamForm>,
 ) -> impl IntoResponse {
     // Validation
-    let name = form.name.trim();
-    if name.is_empty() {
-        return Html(team_create_modal(&t, Some("Team name cannot be empty")).into_string());
-    }
-
-    if name.len() > 255 {
-        return Html(
-            team_create_modal(&t, Some("Team name cannot exceed 255 characters")).into_string(),
-        );
-    }
+    let name = match validate_name(&form.name) {
+        Ok(n) => n,
+        Err(error) => return Html(team_create_modal(&t, Some(error)).into_string()),
+    };
 
     // Create team
     match teams::create_team(
@@ -227,25 +222,13 @@ pub async fn team_update(
     Form(form): Form<UpdateTeamForm>,
 ) -> impl IntoResponse {
     // Validation
-    let name = form.name.trim();
-    if name.is_empty() {
-        let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-        return Html(
-            team_edit_modal(&t, &team.unwrap(), Some("Team name cannot be empty")).into_string(),
-        );
-    }
-
-    if name.len() > 255 {
-        let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-        return Html(
-            team_edit_modal(
-                &t,
-                &team.unwrap(),
-                Some("Team name cannot exceed 255 characters"),
-            )
-            .into_string(),
-        );
-    }
+    let name = match validate_name(&form.name) {
+        Ok(n) => n,
+        Err(error) => {
+            let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
+            return Html(team_edit_modal(&t, &team.unwrap(), Some(error)).into_string());
+        }
+    };
 
     // Update team
     match teams::update_team(

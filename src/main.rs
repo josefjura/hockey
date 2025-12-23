@@ -7,6 +7,7 @@ mod i18n;
 mod routes;
 mod service;
 mod utils;
+mod validation;
 mod views;
 
 use app_state::AppState;

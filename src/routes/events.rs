@@ -9,6 +9,7 @@ use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::TranslationContext;
 use crate::service::events::{self, CreateEventEntity, EventFilters, UpdateEventEntity};
+use crate::validation::validate_name;
 use crate::views::{
     components::htmx::htmx_reload_table,
     layout::admin_layout,
@@ -169,25 +170,13 @@ pub async fn event_create(
     Form(form): Form<CreateEventForm>,
 ) -> impl IntoResponse {
     // Validation
-    let name = form.name.trim();
-    if name.is_empty() {
-        let countries = events::get_countries(&state.db).await.unwrap_or_default();
-        return Html(
-            event_create_modal(&t, &countries, Some("Event name cannot be empty")).into_string(),
-        );
-    }
-
-    if name.len() > 255 {
-        let countries = events::get_countries(&state.db).await.unwrap_or_default();
-        return Html(
-            event_create_modal(
-                &t,
-                &countries,
-                Some("Event name cannot exceed 255 characters"),
-            )
-            .into_string(),
-        );
-    }
+    let name = match validate_name(&form.name) {
+        Ok(n) => n,
+        Err(error) => {
+            let countries = events::get_countries(&state.db).await.unwrap_or_default();
+            return Html(event_create_modal(&t, &countries, Some(error)).into_string());
+        }
+    };
 
     // Create event
     match events::create_event(
@@ -245,34 +234,16 @@ pub async fn event_update(
     Form(form): Form<UpdateEventForm>,
 ) -> impl IntoResponse {
     // Validation
-    let name = form.name.trim();
-    if name.is_empty() {
-        let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
-        let countries = events::get_countries(&state.db).await.unwrap_or_default();
-        return Html(
-            event_edit_modal(
-                &t,
-                &event.unwrap(),
-                &countries,
-                Some("Event name cannot be empty"),
-            )
-            .into_string(),
-        );
-    }
-
-    if name.len() > 255 {
-        let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
-        let countries = events::get_countries(&state.db).await.unwrap_or_default();
-        return Html(
-            event_edit_modal(
-                &t,
-                &event.unwrap(),
-                &countries,
-                Some("Event name cannot exceed 255 characters"),
-            )
-            .into_string(),
-        );
-    }
+    let name = match validate_name(&form.name) {
+        Ok(n) => n,
+        Err(error) => {
+            let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
+            let countries = events::get_countries(&state.db).await.unwrap_or_default();
+            return Html(
+                event_edit_modal(&t, &event.unwrap(), &countries, Some(error)).into_string(),
+            );
+        }
+    };
 
     // Update event
     match events::update_event(
