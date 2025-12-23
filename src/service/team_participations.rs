@@ -81,6 +81,7 @@ pub async fn get_available_teams_for_season(
 }
 
 /// Get seasons where a team is not yet participating (for dropdown)
+#[allow(dead_code)]
 pub async fn get_available_seasons_for_team(
     db: &SqlitePool,
     team_id: i64,
