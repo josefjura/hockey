@@ -194,7 +194,10 @@ async fn main() -> Result<(), anyhow::Error> {
         .layer(middleware::from_fn_with_state(state.clone(), require_auth));
 
     // Health check (no auth)
-    let health_routes = Router::new().route("/health", get(health_handler));
+    let health_routes = Router::new()
+        .route("/health", get(health_handler))
+        .route("/liveness", get(health_handler))
+        .route("/readiness", get(readiness_handler));
 
     // Static assets routes (embedded or from filesystem in dev mode)
     let static_routes = Router::new().route("/static/*path", get(static_asset_handler));
@@ -252,6 +255,16 @@ async fn root_handler(
 
 async fn health_handler() -> &'static str {
     "OK"
+}
+
+async fn readiness_handler(State(state): State<AppState>) -> impl axum::response::IntoResponse {
+    match sqlx::query("SELECT 1").execute(&state.db).await {
+        Ok(_) => (axum::http::StatusCode::OK, "OK"),
+        Err(e) => {
+            tracing::error!("Readiness check failed: {}", e);
+            (axum::http::StatusCode::SERVICE_UNAVAILABLE, "Unavailable")
+        }
+    }
 }
 
 async fn static_asset_handler(Path(path): Path<String>) -> impl axum::response::IntoResponse {
