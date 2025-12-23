@@ -84,13 +84,6 @@ hockey/
 
 5. **Visit the application:**
    Open http://localhost:8080 in your browser
-   ```bash
-   cargo run
-   ```
-   The database will be created automatically from migrations on first run.
-
-5. **Visit the application:**
-   Open http://localhost:8080 in your browser
 
 ### Create Admin User
 
