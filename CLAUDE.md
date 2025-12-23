@@ -4,25 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a hockey management application being rewritten as a single Rust binary using Axum, Maud, and HTMX. The system manages hockey tournaments, teams, players, and their relationships across seasons and events.
+This is a hockey management application built as a single Rust binary using Axum, Maud, and HTMX. The system manages hockey tournaments, teams, players, and their relationships across seasons and events.
 
-**Status**: Active rewrite from Next.js/React to HTMX/Maud architecture (see REWRITE_ANALYSIS.md)
+### Authentication System
 
-### Authentication System (New Architecture)
-
-The rewrite uses simplified session-based authentication instead of JWT:
+Session-based authentication with cookies:
 
 **Key Features**:
 - Session cookies (HttpOnly, Secure, SameSite)
-- Bcrypt password hashing (preserved from old system)
+- Bcrypt password hashing
 - CSRF protection
 - Session expiration
-
-**Why the change**: Simpler for server-rendered HTMX architecture, no client-side token management needed.
+- No client-side token management required
 
 ## Architecture
 
-### New Frontend (Rust - Active Development)
+### Tech Stack
 - **Framework**: Axum web framework
 - **Templating**: Maud for type-safe HTML generation
 - **Interactivity**: HTMX for dynamic updates
@@ -34,24 +31,13 @@ The rewrite uses simplified session-based authentication instead of JWT:
 - **Deployment**: Single binary with embedded assets
 - **Port**: Runs on port 8080
 
-### Old Backend (Rust - Reference in `backend/`)
-- Preserved for SQL query reference
-- Business logic patterns can be ported
-- Service layer patterns reusable
-
-### Old Frontend (Next.js - Archived in `backup/`)
-- Gitignored, kept as reference only
-- UI patterns and workflows documented in REWRITE_ANALYSIS.md
-
 ### Database Schema
 The database follows a hierarchical structure:
 - `country` → `event` → `season` → `team_participation` → `player_contract`
 - Junction tables: `team_participation` (teams in seasons), `player_contract` (players in team participations)
-- Authentication: `users` table with bcrypt password hashing, `refresh_tokens` table for token management
+- Authentication: `users` table with bcrypt password hashing
 
 ## Development Commands
-
-### New Frontend (Active Development)
 ```bash
 cargo run                    # Start development server (creates DB from migrations)
 cargo build                  # Build the project
@@ -69,21 +55,7 @@ cargo watch -x run           # Hot reload (requires cargo-watch)
 # Migrations are applied automatically at startup
 ```
 
-### Reference Old Code
-```bash
-# SQL queries
-cat backend/src/*/service/fixtures/*.sql
-
-# Business logic patterns
-cat backend/src/*/business.rs
-
-# Service patterns
-cat backend/src/*/service/mod.rs
-```
-
 ## Environment Configuration
-
-### New Frontend Environment Variables
 - `DATABASE_URL`: SQLite database file path (default: `sqlite:./hockey.db`)
 - `SESSION_SECRET`: Secret key for session encryption (generate with `openssl rand -hex 32`)
 - `ENVIRONMENT`: Environment mode - `development` or `production`
@@ -99,7 +71,7 @@ See README.md for complete setup instructions.
 
 ## Key File Locations
 
-### New Frontend Structure (Active Development)
+### Project Structure
 ```
 src/
 │   ├── main.rs                    # Entry point, server setup
@@ -137,18 +109,16 @@ src/
 └── Cargo.toml
 ```
 
-### Reference Directories
-- `backend/`: Old Rust API (for SQL queries and business logic patterns)
-- `backup/`: Old Next.js frontend (gitignored, UI patterns reference)
-
 ## Testing
 
-### Tests
-- Unit tests will be in `src/*/tests.rs`
-- Integration tests in `tests/`
+- Unit tests in `src/*/tests.rs` or `#[cfg(test)]` modules
+- Integration tests in `tests/` directory
 - Run with `cargo test`
+- Prefer `#[sqlx::test]` for database tests (automatic setup/teardown)
 - Linting with `cargo clippy`
 - Formatting with `cargo fmt --check`
+
+**Current Status**: 15 tests (low coverage - see issue #126 for improvement plan)
 
 ## Domain Model
 
@@ -167,7 +137,7 @@ src/
 - Season-specific team and player relationships
 - Authentication required for most operations
 
-## API Structure (New HTMX Architecture)
+## API Structure
 
 Routes return HTML (full pages or fragments):
 - `/`: Dashboard (protected)
@@ -194,9 +164,9 @@ Protected routes check session cookie. HTMX endpoints return HTML fragments.
 5. **Web Components**: Edit Lit components in `web_components/`, compile with npm
 6. **Authentication**: All protected routes check session cookie
 
-## Common Patterns (New Architecture)
+## Common Patterns
 
-### Backend Service Pattern (Preserved)
+### Service Layer Pattern
 Each domain follows this structure:
 ```rust
 // routes/{domain}.rs - Route handlers returning HTML
@@ -262,7 +232,7 @@ pub async fn event_create_post(...) -> impl IntoResponse { }
 - **Lit components**: For rich client-side (small tables, selectors)
 - **Progressive enhancement**: Works without JS, enhanced with HTMX/Lit
 
-### Error Handling (New Architecture)
+### Error Handling
 **CRITICAL**: Proper error handling in Axum routes and templates.
 
 #### Error Patterns:
@@ -287,13 +257,14 @@ pub async fn event_create_post(...) -> impl IntoResponse { }
    }
    ```
 
-2. **Validation**: Server-side validation in business layer
+2. **Validation**: Use validation helpers from `src/validation.rs`
    ```rust
-   if name.trim().is_empty() {
-       return Err(AppError::InvalidInput {
-           message: "Name cannot be empty".to_string()
-       });
-   }
+   use crate::validation::validate_name;
+
+   let name = match validate_name(&form.name) {
+       Ok(n) => n,
+       Err(error) => return Html(error_modal(&t, Some(error)).into_string()),
+   };
    ```
 
 3. **Graceful Fallbacks**: Empty states in templates
@@ -320,4 +291,4 @@ pub async fn event_create_post(...) -> impl IntoResponse { }
 ## Development Notes
 
 - **Development Environment**:
-  - I'm usually running the frontend and backend in the background, so if you want to test something, just tell me
+  - The application may be running in the background. If you need to test changes, ask first.
