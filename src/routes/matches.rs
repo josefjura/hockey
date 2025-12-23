@@ -4,6 +4,7 @@ use axum::{
     response::{Html, IntoResponse},
     Extension, Form,
 };
+use maud::html;
 use serde::Deserialize;
 
 use crate::app_state::AppState;
@@ -237,11 +238,37 @@ pub async fn match_create_form(
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    // Get seasons and teams for dropdowns
+    // Get seasons for dropdown (teams will be loaded dynamically based on season)
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
-    let teams = matches::get_teams(&state.db).await.unwrap_or_default();
 
-    Html(match_create_modal(&t, None, &seasons, &teams).into_string())
+    Html(match_create_modal(&t, None, &seasons, &[]).into_string())
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TeamsForSeasonQuery {
+    season_id: i64,
+}
+
+/// GET /matches/teams-for-season - HTMX endpoint to get teams for a selected season
+pub async fn teams_for_season(
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Query(query): Query<TeamsForSeasonQuery>,
+) -> impl IntoResponse {
+    let teams = matches::get_teams_for_season(&state.db, query.season_id)
+        .await
+        .unwrap_or_default();
+
+    // Return HTML <option> elements for both home and away team dropdowns
+    Html(
+        html! {
+            option value="" { (t.messages.matches_select_team()) }
+            @for (id, name) in teams {
+                option value=(id) { (name) }
+            }
+        }
+        .into_string(),
+    )
 }
 
 /// POST /matches - Create new match
@@ -250,9 +277,11 @@ pub async fn match_create(
     State(state): State<AppState>,
     Form(form): Form<CreateMatchForm>,
 ) -> impl IntoResponse {
-    // Get seasons and teams for dropdowns (in case we need to show the form again with error)
+    // Get seasons for dropdown (in case we need to show the form again with error)
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
-    let teams = matches::get_teams(&state.db).await.unwrap_or_default();
+    let teams = matches::get_teams_for_season(&state.db, form.season_id)
+        .await
+        .unwrap_or_default();
 
     // Validation
     if form.home_team_id == form.away_team_id {
@@ -272,6 +301,43 @@ pub async fn match_create(
             match_create_modal(&t, Some("Scores cannot be negative"), &seasons, &teams)
                 .into_string(),
         );
+    }
+
+    // Validate that both teams participate in the selected season
+    match matches::validate_teams_in_season(
+        &state.db,
+        form.season_id,
+        form.home_team_id,
+        form.away_team_id,
+    )
+    .await
+    {
+        Ok(true) => {
+            // Both teams participate, proceed
+        }
+        Ok(false) => {
+            return Html(
+                match_create_modal(
+                    &t,
+                    Some("Both teams must participate in the selected season"),
+                    &seasons,
+                    &teams,
+                )
+                .into_string(),
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to validate teams in season: {}", e);
+            return Html(
+                match_create_modal(
+                    &t,
+                    Some("Failed to validate team participation"),
+                    &seasons,
+                    &teams,
+                )
+                .into_string(),
+            );
+        }
     }
 
     // Create match
@@ -326,9 +392,11 @@ pub async fn match_edit_form(
         }
     };
 
-    // Get seasons and teams for dropdowns
+    // Get seasons for dropdown and teams for the current season
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
-    let teams = matches::get_teams(&state.db).await.unwrap_or_default();
+    let teams = matches::get_teams_for_season(&state.db, match_entity.season_id)
+        .await
+        .unwrap_or_default();
 
     Html(match_edit_modal(&t, &match_entity, None, &seasons, &teams).into_string())
 }
@@ -343,7 +411,9 @@ pub async fn match_update(
     // Get match for re-showing form on error
     let match_entity = matches::get_match_by_id(&state.db, id).await.ok().flatten();
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
-    let teams = matches::get_teams(&state.db).await.unwrap_or_default();
+    let teams = matches::get_teams_for_season(&state.db, form.season_id)
+        .await
+        .unwrap_or_default();
 
     // Validation
     if form.home_team_id == form.away_team_id {
@@ -372,6 +442,47 @@ pub async fn match_update(
             .into_string(),
         )
         .into_response();
+    }
+
+    // Validate that both teams participate in the selected season
+    match matches::validate_teams_in_season(
+        &state.db,
+        form.season_id,
+        form.home_team_id,
+        form.away_team_id,
+    )
+    .await
+    {
+        Ok(true) => {
+            // Both teams participate, proceed
+        }
+        Ok(false) => {
+            return Html(
+                match_edit_modal(
+                    &t,
+                    &match_entity.unwrap(),
+                    Some("Both teams must participate in the selected season"),
+                    &seasons,
+                    &teams,
+                )
+                .into_string(),
+            )
+            .into_response();
+        }
+        Err(e) => {
+            tracing::error!("Failed to validate teams in season: {}", e);
+            return Html(
+                match_edit_modal(
+                    &t,
+                    &match_entity.unwrap(),
+                    Some("Failed to validate team participation"),
+                    &seasons,
+                    &teams,
+                )
+                .into_string(),
+            )
+            .into_response();
+        }
     }
 
     // Update match

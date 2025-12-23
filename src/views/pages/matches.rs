@@ -895,6 +895,11 @@ pub fn match_create_modal(
                 select
                     name="season_id"
                     required
+                    hx-get="/matches/teams-for-season"
+                    hx-target="#home_team_id, #away_team_id"
+                    hx-swap="innerHTML"
+                    hx-include="[name='season_id']"
+                    hx-trigger="change"
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
                     option value="" { (t.messages.matches_select_season()) }
@@ -930,6 +935,7 @@ pub fn match_create_modal(
                 }
                 select
                     name="home_team_id"
+                    id="home_team_id"
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
@@ -947,6 +953,7 @@ pub fn match_create_modal(
                 }
                 select
                     name="away_team_id"
+                    id="away_team_id"
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
@@ -1035,6 +1042,11 @@ pub fn match_edit_modal(
                 select
                     name="season_id"
                     required
+                    hx-get="/matches/teams-for-season"
+                    hx-target="#edit_home_team_id, #edit_away_team_id"
+                    hx-swap="innerHTML"
+                    hx-include="[name='season_id']"
+                    hx-trigger="change"
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
                     @for (id, name) in seasons {
@@ -1074,6 +1086,7 @@ pub fn match_edit_modal(
                 }
                 select
                     name="home_team_id"
+                    id="edit_home_team_id"
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
@@ -1095,6 +1108,7 @@ pub fn match_edit_modal(
                 }
                 select
                     name="away_team_id"
+                    id="edit_away_team_id"
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {

@@ -1,9 +1,9 @@
+use axum::http::{HeaderMap, HeaderName};
 use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse, Response},
     Extension, Form,
 };
-use axum::http::{HeaderMap, HeaderName};
 use serde::Deserialize;
 
 use crate::app_state::AppState;
@@ -55,21 +55,25 @@ pub async fn team_participation_create_form(
             tracing::error!("Failed to load teams/seasons for form: {}", e);
             return Html(
                 crate::views::components::error::error_message(
-                    &t.messages.error_loading_form_data().to_string()
-                ).into_string()
+                    &t.messages.error_loading_form_data().to_string(),
+                )
+                .into_string(),
             );
         }
     };
 
-    Html(team_participation_create_modal(
-        &t,
-        None,
-        query.team_id,
-        query.season_id,
-        query.return_to.as_deref(),
-        &available_teams,
-        &available_seasons,
-    ).into_string())
+    Html(
+        team_participation_create_modal(
+            &t,
+            None,
+            query.team_id,
+            query.season_id,
+            query.return_to.as_deref(),
+            &available_teams,
+            &available_seasons,
+        )
+        .into_string(),
+    )
 }
 
 /// POST /team-participations - Create team participation
@@ -99,21 +103,27 @@ pub async fn team_participation_create(
                     tracing::error!("Failed to reload form data after error: {}", e);
                     return Html(
                         crate::views::components::error::error_message(
-                            &t.messages.error_system().to_string()
-                        ).into_string()
-                    ).into_response();
+                            &t.messages.error_system().to_string(),
+                        )
+                        .into_string(),
+                    )
+                    .into_response();
                 }
             };
 
-            return Html(team_participation_create_modal(
-                &t,
-                Some(&t.messages.error_team_already_in_season().to_string()),
-                Some(form.team_id),
-                Some(form.season_id),
-                form.return_to.as_deref(),
-                &available_teams,
-                &available_seasons,
-            ).into_string()).into_response();
+            return Html(
+                team_participation_create_modal(
+                    &t,
+                    Some(&t.messages.error_team_already_in_season().to_string()),
+                    Some(form.team_id),
+                    Some(form.season_id),
+                    form.return_to.as_deref(),
+                    &available_teams,
+                    &available_seasons,
+                )
+                .into_string(),
+            )
+            .into_response();
         }
         Ok(false) => {
             // Good to proceed
@@ -122,9 +132,11 @@ pub async fn team_participation_create(
             tracing::error!("Database error checking team participation: {}", e);
             return Html(
                 crate::views::components::error::error_message(
-                    &t.messages.error_system().to_string()
-                ).into_string()
-            ).into_response();
+                    &t.messages.error_system().to_string(),
+                )
+                .into_string(),
+            )
+            .into_response();
         }
     }
 
@@ -135,7 +147,9 @@ pub async fn team_participation_create(
             team_id: form.team_id,
             season_id: form.season_id,
         },
-    ).await {
+    )
+    .await
+    {
         Ok(_) => {
             tracing::info!(
                 "Successfully added team {} to season {}",
@@ -144,7 +158,9 @@ pub async fn team_participation_create(
             );
 
             // Redirect to return_to URL or default to teams list
-            let redirect_url = form.return_to.unwrap_or_else(|| "/team-participations".to_string());
+            let redirect_url = form
+                .return_to
+                .unwrap_or_else(|| "/team-participations".to_string());
 
             let mut headers = HeaderMap::new();
             headers.insert(
@@ -166,21 +182,27 @@ pub async fn team_participation_create(
                     tracing::error!("Failed to reload form data after error: {}", e);
                     return Html(
                         crate::views::components::error::error_message(
-                            &t.messages.error_system().to_string()
-                        ).into_string()
-                    ).into_response();
+                            &t.messages.error_system().to_string(),
+                        )
+                        .into_string(),
+                    )
+                    .into_response();
                 }
             };
 
-            Html(team_participation_create_modal(
-                &t,
-                Some(&t.messages.error_creating_participation().to_string()),
-                Some(form.team_id),
-                Some(form.season_id),
-                form.return_to.as_deref(),
-                &available_teams,
-                &available_seasons,
-            ).into_string()).into_response()
+            Html(
+                team_participation_create_modal(
+                    &t,
+                    Some(&t.messages.error_creating_participation().to_string()),
+                    Some(form.team_id),
+                    Some(form.season_id),
+                    form.return_to.as_deref(),
+                    &available_teams,
+                    &available_seasons,
+                )
+                .into_string(),
+            )
+            .into_response()
         }
     }
 }

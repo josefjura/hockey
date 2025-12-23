@@ -174,7 +174,9 @@ pub async fn get_season_id_for_participation(
 }
 
 /// Get all teams for dropdown (not filtered)
-pub async fn get_all_teams_for_dropdown(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
+pub async fn get_all_teams_for_dropdown(
+    db: &SqlitePool,
+) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query(
         "SELECT t.id, t.name, c.iso2Code as country_code
         FROM team t
@@ -202,7 +204,9 @@ pub async fn get_all_teams_for_dropdown(db: &SqlitePool) -> Result<Vec<(i64, Str
 }
 
 /// Get all seasons for dropdown (not filtered)
-pub async fn get_all_seasons_for_dropdown(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
+pub async fn get_all_seasons_for_dropdown(
+    db: &SqlitePool,
+) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query(
         "SELECT s.id, s.display_name, s.year, e.name as event_name
         FROM season s

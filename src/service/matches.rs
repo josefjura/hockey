@@ -388,6 +388,51 @@ pub async fn get_teams(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Erro
         .collect())
 }
 
+/// Get teams participating in a specific season (for match creation/editing)
+pub async fn get_teams_for_season(
+    db: &SqlitePool,
+    season_id: i64,
+) -> Result<Vec<(i64, String)>, sqlx::Error> {
+    let rows = sqlx::query(
+        "SELECT DISTINCT t.id, t.name \
+         FROM team t \
+         INNER JOIN team_participation tp ON t.id = tp.team_id \
+         WHERE tp.season_id = ? \
+         ORDER BY t.name ASC",
+    )
+    .bind(season_id)
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| (row.get("id"), row.get("name")))
+        .collect())
+}
+
+/// Check if both teams participate in the given season (for validation)
+pub async fn validate_teams_in_season(
+    db: &SqlitePool,
+    season_id: i64,
+    home_team_id: i64,
+    away_team_id: i64,
+) -> Result<bool, sqlx::Error> {
+    let row = sqlx::query(
+        "SELECT COUNT(*) as count \
+         FROM team_participation \
+         WHERE season_id = ? AND (team_id = ? OR team_id = ?)",
+    )
+    .bind(season_id)
+    .bind(home_team_id)
+    .bind(away_team_id)
+    .fetch_one(db)
+    .await?;
+
+    let count: i64 = row.get("count");
+    // Should be exactly 2 if both teams participate
+    Ok(count == 2)
+}
+
 #[derive(Debug, Clone)]
 pub struct CreateMatchEntity {
     pub season_id: i64,

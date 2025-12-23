@@ -160,6 +160,10 @@ async fn main() -> Result<(), anyhow::Error> {
         )
         .route("/matches", get(routes::matches::matches_get))
         .route("/matches/list", get(routes::matches::matches_list_partial))
+        .route(
+            "/matches/teams-for-season",
+            get(routes::matches::teams_for_season),
+        )
         .route("/matches/new", get(routes::matches::match_create_form))
         .route("/matches", post(routes::matches::match_create))
         .route("/matches/:id", get(routes::matches::match_detail))
