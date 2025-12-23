@@ -106,7 +106,7 @@ Updated `Makefile`:
 
 ### 5. Documentation ✅
 
-#### Updated `README.md`:
+#### Updated `../../README.md`:
 - Removed "🚧 Active Rewrite" section
 - Updated project structure diagram
 - Changed features from "Planned" to current
@@ -115,7 +115,7 @@ Updated `Makefile`:
 - Added project history note
 - Comprehensive command reference
 
-#### Created `DEPLOYMENT.md`:
+#### Created `../deployment/guide.md`:
 - Complete production deployment guide
 - Server setup instructions (Docker, Traefik)
 - GitHub Actions configuration
@@ -227,11 +227,11 @@ ghcr.io/josefjura/hockey:master-<sha>
 ### Created:
 - `Dockerfile`
 - `.github/workflows/ci.yml`
-- `DEPLOYMENT.md`
-- `REORGANIZATION.md` (this file)
+- `../deployment/guide.md`
+- `project-history.md` (this file)
 
 ### Modified:
-- `README.md` - Complete rewrite for new structure
+- `../../README.md` - Complete rewrite for new structure
 - `Makefile` - Simplified for single project
 - `docker-compose.yaml` - Single service
 - `docker-compose.prod.yaml` - Single service with Traefik

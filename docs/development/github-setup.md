@@ -108,7 +108,7 @@ gh pr create --title "Teams CRUD implementation" --body "Closes #68, #69, #70"
 
 ## Project Structure (Reference)
 
-From REWRITE_ANALYSIS.md:
+From `../architecture/rewrite-analysis.md`:
 
 ```
 hockey-rewrite/
@@ -150,7 +150,7 @@ hockey-rewrite/
 
 ## Success Criteria
 
-From REWRITE_ANALYSIS.md:
+From `../architecture/rewrite-analysis.md`:
 
 - [ ] Feature parity with current application
 - [ ] Single binary deployment
@@ -165,7 +165,7 @@ From REWRITE_ANALYSIS.md:
 
 ## Resources
 
-- **Analysis Document**: `/home/josef/source/hockey/REWRITE_ANALYSIS.md`
+- **Analysis Document**: `../architecture/rewrite-analysis.md`
 - **Current Codebase**: `/home/josef/source/hockey/` (reference only)
 - **Technologies**:
   - Axum: https://docs.rs/axum/
