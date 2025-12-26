@@ -56,7 +56,7 @@ async fn main() -> Result<(), anyhow::Error> {
     tracing::info!("Migrations completed successfully");
 
     // Create session store
-    let session_store = SessionStore::new();
+    let session_store = SessionStore::new(db_pool.clone());
 
     // Create app state
     let state = AppState::new(db_pool, session_store.clone());

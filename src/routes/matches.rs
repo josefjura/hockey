@@ -554,14 +554,8 @@ pub async fn match_update(
             (headers, Html("".to_string())).into_response()
         }
         Ok(false) => Html(
-            match_edit_modal(
-                &t,
-                &match_entity,
-                Some("Match not found"),
-                &seasons,
-                &teams,
-            )
-            .into_string(),
+            match_edit_modal(&t, &match_entity, Some("Match not found"), &seasons, &teams)
+                .into_string(),
         )
         .into_response(),
         Err(e) => {

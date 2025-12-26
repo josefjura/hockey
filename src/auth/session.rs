@@ -1,7 +1,5 @@
 use chrono::{DateTime, Duration, Utc};
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use sqlx::SqlitePool;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -38,37 +36,75 @@ impl Session {
         Utc::now() > self.expires_at
     }
 
+    #[allow(dead_code)]
     pub fn refresh_expiry(&mut self) {
         self.expires_at = Utc::now() + Duration::days(7);
     }
 }
 
-/// In-memory session store
-/// TODO: Replace with Redis or persistent storage for production
+/// SQLite-backed session store for production use
 #[derive(Debug, Clone)]
 pub struct SessionStore {
-    sessions: Arc<RwLock<HashMap<String, Session>>>,
+    db: SqlitePool,
 }
 
 impl SessionStore {
-    pub fn new() -> Self {
-        Self {
-            sessions: Arc::new(RwLock::new(HashMap::new())),
-        }
+    pub fn new(db: SqlitePool) -> Self {
+        Self { db }
     }
 
     /// Create a new session
     pub async fn create_session(&self, user_id: i64, email: String, name: String) -> Session {
         let session = Session::new(user_id, email, name);
-        let mut sessions = self.sessions.write().await;
-        sessions.insert(session.id.clone(), session.clone());
+
+        // Store in database
+        let _ = sqlx::query!(
+            r#"
+            INSERT INTO sessions (id, user_id, user_email, user_name, csrf_token, created_at, expires_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+            "#,
+            session.id,
+            session.user_id,
+            session.user_email,
+            session.user_name,
+            session.csrf_token,
+            session.created_at,
+            session.expires_at
+        )
+        .execute(&self.db)
+        .await;
+
         session
     }
 
     /// Get a session by ID
     pub async fn get_session(&self, session_id: &str) -> Option<Session> {
-        let sessions = self.sessions.read().await;
-        sessions.get(session_id).cloned()
+        let result = sqlx::query!(
+            r#"
+            SELECT id, user_id, user_email, user_name, csrf_token, created_at, expires_at
+            FROM sessions
+            WHERE id = ?1
+            "#,
+            session_id
+        )
+        .fetch_optional(&self.db)
+        .await
+        .ok()?;
+
+        result.map(|row| {
+            let created_at = row.created_at.and_utc();
+            let expires_at = row.expires_at.and_utc();
+
+            Session {
+                id: row.id,
+                user_id: row.user_id,
+                user_email: row.user_email,
+                user_name: row.user_name,
+                csrf_token: row.csrf_token,
+                created_at,
+                expires_at,
+            }
+        })
     }
 
     /// Validate and get session (checks expiry)
@@ -86,52 +122,104 @@ impl SessionStore {
 
     /// Refresh session expiry
     pub async fn refresh_session(&self, session_id: &str) -> Option<Session> {
-        let mut sessions = self.sessions.write().await;
+        let session = self.get_session(session_id).await?;
 
-        if let Some(session) = sessions.get_mut(session_id) {
-            if !session.is_expired() {
-                session.refresh_expiry();
-                return Some(session.clone());
-            }
+        if session.is_expired() {
+            return None;
         }
 
-        None
+        let new_expires_at = Utc::now() + Duration::days(7);
+
+        let _ = sqlx::query!(
+            r#"
+            UPDATE sessions
+            SET expires_at = ?1
+            WHERE id = ?2
+            "#,
+            new_expires_at,
+            session_id
+        )
+        .execute(&self.db)
+        .await;
+
+        Some(Session {
+            expires_at: new_expires_at,
+            ..session
+        })
     }
 
     /// Delete a session
     pub async fn delete_session(&self, session_id: &str) {
-        let mut sessions = self.sessions.write().await;
-        sessions.remove(session_id);
+        let _ = sqlx::query!(
+            r#"
+            DELETE FROM sessions
+            WHERE id = ?1
+            "#,
+            session_id
+        )
+        .execute(&self.db)
+        .await;
     }
 
     /// Clean up expired sessions (should be called periodically)
     pub async fn cleanup_expired(&self) {
-        let mut sessions = self.sessions.write().await;
-        sessions.retain(|_, session| !session.is_expired());
+        let now = Utc::now();
+        let _ = sqlx::query!(
+            r#"
+            DELETE FROM sessions
+            WHERE expires_at < ?1
+            "#,
+            now
+        )
+        .execute(&self.db)
+        .await;
     }
 
     /// Get number of active sessions
     #[allow(dead_code)]
     pub async fn session_count(&self) -> usize {
-        let sessions = self.sessions.read().await;
-        sessions.len()
-    }
-}
+        let result = sqlx::query!(
+            r#"
+            SELECT COUNT(*) as count
+            FROM sessions
+            "#
+        )
+        .fetch_one(&self.db)
+        .await;
 
-impl Default for SessionStore {
-    fn default() -> Self {
-        Self::new()
+        result.map(|r| r.count as usize).unwrap_or(0)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio;
+    use sqlx::SqlitePool;
+
+    async fn setup_test_db() -> SqlitePool {
+        let pool = SqlitePool::connect(":memory:").await.unwrap();
+
+        // Run migrations
+        sqlx::migrate!("./migrations").run(&pool).await.unwrap();
+
+        // Create a test user for foreign key constraint
+        sqlx::query!(
+            r#"
+            INSERT INTO users (id, email, name, password_hash)
+            VALUES (1, 'test@example.com', 'Test User', 'hash')
+            "#
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        pool
+    }
 
     #[tokio::test]
     async fn test_session_creation() {
-        let store = SessionStore::new();
+        let pool = setup_test_db().await;
+        let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
             .await;
@@ -143,7 +231,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_session_retrieval() {
-        let store = SessionStore::new();
+        let pool = setup_test_db().await;
+        let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
             .await;
@@ -155,7 +244,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_session_deletion() {
-        let store = SessionStore::new();
+        let pool = setup_test_db().await;
+        let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
             .await;
@@ -167,7 +257,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_session_validation() {
-        let store = SessionStore::new();
+        let pool = setup_test_db().await;
+        let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
             .await;

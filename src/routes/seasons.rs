@@ -387,9 +387,7 @@ pub async fn season_update(
             // Return HTMX response to close modal and reload table
             Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
         }
-        Ok(false) => {
-            Html(error_message("Season not found").into_string())
-        }
+        Ok(false) => Html(error_message("Season not found").into_string()),
         Err(e) => {
             tracing::error!("Failed to update season: {}", e);
             let season = seasons::get_season_by_id(&state.db, id)
@@ -400,13 +398,8 @@ pub async fn season_update(
                 return Html(error_message("Season not found").into_string());
             };
             Html(
-                season_edit_modal(
-                    &t,
-                    &season,
-                    Some("Failed to update season"),
-                    &events,
-                )
-                .into_string(),
+                season_edit_modal(&t, &season, Some("Failed to update season"), &events)
+                    .into_string(),
             )
         }
     }

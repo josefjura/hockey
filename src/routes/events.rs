@@ -242,9 +242,7 @@ pub async fn event_update(
             let Some(event) = event else {
                 return Html(error_message("Event not found").into_string());
             };
-            return Html(
-                event_edit_modal(&t, &event, &countries, Some(error)).into_string(),
-            );
+            return Html(event_edit_modal(&t, &event, &countries, Some(error)).into_string());
         }
     };
 
@@ -263,9 +261,7 @@ pub async fn event_update(
             // Return HTMX response to close modal and reload table
             htmx_reload_table("/events/list", "events-table")
         }
-        Ok(false) => {
-            Html(error_message("Event not found").into_string())
-        }
+        Ok(false) => Html(error_message("Event not found").into_string()),
         Err(e) => {
             tracing::error!("Failed to update event: {}", e);
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
@@ -274,13 +270,8 @@ pub async fn event_update(
                 return Html(error_message("Event not found").into_string());
             };
             Html(
-                event_edit_modal(
-                    &t,
-                    &event,
-                    &countries,
-                    Some("Failed to update event"),
-                )
-                .into_string(),
+                event_edit_modal(&t, &event, &countries, Some("Failed to update event"))
+                    .into_string(),
             )
         }
     }
