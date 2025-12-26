@@ -330,7 +330,7 @@ fn build_delete_url(
 pub fn player_create_modal(
     t: &TranslationContext,
     error: Option<&str>,
-    countries: &[(i64, String)],
+    _countries: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
@@ -350,18 +350,11 @@ pub fn player_create_modal(
                 (t.messages.form_country())
                 span style="color: red;" { "*" }
             }
-            select
+            country-selector
                 name="country_id"
-                required
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-            {
-                option value="" { (t.messages.players_select_country()) }
-                @for (id, name) in countries {
-                    option value=(id) {
-                        (name)
-                    }
-                }
-            }
+                placeholder=(t.messages.players_select_country())
+                enabled-only
+                required;
         }
 
         div style="margin-bottom: 1rem;" {
@@ -408,7 +401,7 @@ pub fn player_edit_modal(
     t: &TranslationContext,
     player: &PlayerEntity,
     error: Option<&str>,
-    countries: &[(i64, String)],
+    _countries: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
@@ -429,18 +422,12 @@ pub fn player_edit_modal(
                 (t.messages.form_country())
                 span style="color: red;" { "*" }
             }
-            select
+            country-selector
                 name="country_id"
-                required
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-            {
-                option value="" { (t.messages.players_select_country()) }
-                @for (id, name) in countries {
-                    option value=(id) selected[*id == player.country_id] {
-                        (name)
-                    }
-                }
-            }
+                value=(player.country_id)
+                placeholder=(t.messages.players_select_country())
+                enabled-only
+                required;
         }
 
         @if let Some(current_photo) = &player.photo_path {

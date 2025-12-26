@@ -246,21 +246,19 @@ pub fn match_list_content(
                                     div style="display: flex; flex-direction: column; gap: 0.25rem;" {
                                         div style="display: flex; align-items: center; gap: 0.5rem;" {
                                             @if let Some(iso2) = &match_item.home_team_country_iso2 {
-                                                img
-                                                    src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
-                                                    alt=(match_item.home_team_name)
-                                                    style="width: 20px; height: 15px; object-fit: cover; border: 1px solid var(--gray-300);"
-                                                    onerror="this.style.display='none'";
+                                                flag-icon
+                                                    country-code=(iso2.to_lowercase())
+                                                    country-name=(match_item.home_team_name)
+                                                    size="sm";
                                             }
                                             span { (match_item.home_team_name) }
                                         }
                                         div style="display: flex; align-items: center; gap: 0.5rem;" {
                                             @if let Some(iso2) = &match_item.away_team_country_iso2 {
-                                                img
-                                                    src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
-                                                    alt=(match_item.away_team_name)
-                                                    style="width: 20px; height: 15px; object-fit: cover; border: 1px solid var(--gray-300);"
-                                                    onerror="this.style.display='none'";
+                                                flag-icon
+                                                    country-code=(iso2.to_lowercase())
+                                                    country-name=(match_item.away_team_name)
+                                                    size="sm";
                                             }
                                             span { (match_item.away_team_name) }
                                         }
@@ -547,11 +545,10 @@ pub fn match_detail_page(t: &TranslationContext, detail: &MatchDetailEntity) -> 
                         div style="flex: 1; text-align: right;" {
                             div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;" {
                                 @if let Some(iso2) = &match_info.home_team_country_iso2 {
-                                    img
-                                        src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
-                                        alt=(match_info.home_team_name)
-                                        style="width: 24px; height: 18px; object-fit: cover; border: 1px solid var(--gray-300);"
-                                        onerror="this.style.display='none'";
+                                    flag-icon
+                                        country-code=(iso2.to_lowercase())
+                                        country-name=(match_info.home_team_name)
+                                        size="sm";
                                 }
                                 span style="font-size: 1.5rem; font-weight: 600;" {
                                     (match_info.home_team_name)
@@ -573,11 +570,10 @@ pub fn match_detail_page(t: &TranslationContext, detail: &MatchDetailEntity) -> 
                                     (match_info.away_team_name)
                                 }
                                 @if let Some(iso2) = &match_info.away_team_country_iso2 {
-                                    img
-                                        src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
-                                        alt=(match_info.away_team_name)
-                                        style="width: 24px; height: 18px; object-fit: cover; border: 1px solid var(--gray-300);"
-                                        onerror="this.style.display='none'";
+                                    flag-icon
+                                        country-code=(iso2.to_lowercase())
+                                        country-name=(match_info.away_team_name)
+                                        size="sm";
                                 }
                             }
                         }

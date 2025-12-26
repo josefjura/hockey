@@ -247,16 +247,9 @@ fn apply_filters<'a>(
     }
 }
 
-/// Get all countries for dropdowns
+/// Get all countries for dropdowns (only enabled countries)
 pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query("SELECT id, name FROM country ORDER BY name")
-        .fetch_all(db)
-        .await?;
-
-    Ok(rows
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect())
+    crate::service::countries::get_countries_simple(db).await
 }
 
 /// Get team detail with all participations (seasons/events)

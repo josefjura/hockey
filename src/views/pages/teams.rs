@@ -341,7 +341,8 @@ pub fn team_create_modal(t: &TranslationContext, error: Option<&str>) -> Markup 
             }
             country-selector
                 name="country_id"
-                placeholder=(t.messages.teams_select_country()) {}
+                placeholder=(t.messages.teams_select_country())
+                enabled-only;
         }
     };
 
@@ -380,11 +381,13 @@ pub fn team_edit_modal(t: &TranslationContext, team: &TeamEntity, error: Option<
                 country-selector
                     name="country_id"
                     placeholder=(t.messages.teams_select_country())
-                    value=(country_id) {}
+                    value=(country_id)
+                    enabled-only;
             } @else {
                 country-selector
                     name="country_id"
-                    placeholder=(t.messages.teams_select_country()) {}
+                    placeholder=(t.messages.teams_select_country())
+                    enabled-only;
             }
         }
     };

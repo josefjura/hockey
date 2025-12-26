@@ -324,7 +324,7 @@ fn pagination_pages(current_page: usize, total_pages: usize) -> Vec<usize> {
 /// Create event modal
 pub fn event_create_modal(
     t: &TranslationContext,
-    countries: &[(i64, String)],
+    _countries: &[(i64, String)],
     error: Option<&str>,
 ) -> Markup {
     html! {
@@ -366,15 +366,10 @@ pub fn event_create_modal(
                         label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                             (t.messages.events_host_country())
                         }
-                        select
+                        country-selector
                             name="country_id"
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-                        {
-                            option value="" { (t.messages.common_no_country()) }
-                            @for (id, name) in countries {
-                                option value=(id) { (name) }
-                            }
-                        }
+                            placeholder=(t.messages.common_no_country())
+                            enabled-only;
                     }
 
                     div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
@@ -408,7 +403,7 @@ pub fn event_create_modal(
 pub fn event_edit_modal(
     t: &TranslationContext,
     event: &EventEntity,
-    countries: &[(i64, String)],
+    _countries: &[(i64, String)],
     error: Option<&str>,
 ) -> Markup {
     html! {
@@ -451,19 +446,17 @@ pub fn event_edit_modal(
                         label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                             (t.messages.events_host_country())
                         }
-                        select
-                            name="country_id"
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-                        {
-                            option value="" selected[event.country_id.is_none()] { (t.messages.common_no_country()) }
-                            @for (id, name) in countries {
-                                option
-                                    value=(id)
-                                    selected[event.country_id == Some(*id)]
-                                {
-                                    (name)
-                                }
-                            }
+                        @if let Some(country_id) = event.country_id {
+                            country-selector
+                                name="country_id"
+                                value=(country_id)
+                                placeholder=(t.messages.common_no_country())
+                                enabled-only;
+                        } @else {
+                            country-selector
+                                name="country_id"
+                                placeholder=(t.messages.common_no_country())
+                                enabled-only;
                         }
                     }
 

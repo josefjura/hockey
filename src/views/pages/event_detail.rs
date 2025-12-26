@@ -100,11 +100,10 @@ fn event_info_card(t: &TranslationContext, event: &EventEntity) -> Markup {
                     @if let Some(country_name) = &event.country_name {
                         div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;" {
                             @if let Some(iso2) = &event.country_iso2_code {
-                                img
-                                    src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
-                                    alt=(country_name)
-                                    style="width: 24px; height: 18px; object-fit: cover; border: 1px solid var(--gray-300); border-radius: 2px;"
-                                    onerror="this.style.display='none'";
+                                flag-icon
+                                    country-code=(iso2.to_lowercase())
+                                    country-name=(country_name)
+                                    size="sm";
                             }
                             (country_name)
                         }

@@ -71,11 +71,10 @@ fn context_card(context: &TeamParticipationContext) -> Markup {
                     }
                     div style="font-weight: 600; display: flex; align-items: center; gap: 0.5rem;" {
                         @if let Some(iso2) = &context.country_iso2_code {
-                            img
-                                src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
-                                alt=(context.team_name)
-                                style="width: 24px; height: 18px; object-fit: cover; border: 1px solid var(--gray-300); border-radius: 2px;"
-                                onerror="this.style.display='none'";
+                            flag-icon
+                                country-code=(iso2.to_lowercase())
+                                country-name=(context.team_name)
+                                size="sm";
                         }
                         (context.team_name)
                     }
@@ -135,11 +134,10 @@ fn roster_table(roster: &[PlayerInRoster]) -> Markup {
                         }
                         td {
                             div style="display: flex; align-items: center; gap: 0.5rem;" {
-                                img
-                                    src=(format!("https://flagcdn.com/w40/{}.png", player.country_iso2_code.to_lowercase()))
-                                    alt=(player.country_name)
-                                    style="width: 24px; height: 18px; object-fit: cover; border: 1px solid var(--gray-300); border-radius: 2px;"
-                                    onerror="this.style.display='none'";
+                                flag-icon
+                                    country-code=(player.country_iso2_code.to_lowercase())
+                                    country-name=(player.country_name)
+                                    size="sm";
                                 (player.country_name)
                             }
                         }

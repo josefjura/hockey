@@ -95,9 +95,9 @@ pub async fn get_country_by_id(
 }
 
 /// Get simple list of countries for dropdowns (id, name)
-#[allow(dead_code)]
+/// Only returns enabled countries
 pub async fn get_countries_simple(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query("SELECT id, name FROM country ORDER BY name")
+    let rows = sqlx::query("SELECT id, name FROM country WHERE enabled = 1 ORDER BY name")
         .fetch_all(db)
         .await?;
 
