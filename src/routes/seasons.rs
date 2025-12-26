@@ -14,7 +14,7 @@ use crate::service::seasons::{
 };
 use crate::service::team_participations::{self, CreateTeamParticipationEntity};
 use crate::views::{
-    components::htmx::htmx_reload_table,
+    components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
     pages::season_detail::{add_team_modal, season_detail_page},
     pages::seasons::{season_create_modal, season_edit_modal, season_list_content, seasons_page},
@@ -328,10 +328,13 @@ pub async fn season_update(
             .await
             .ok()
             .flatten();
+        let Some(season) = season else {
+            return Html(error_message("Season not found").into_string());
+        };
         return Html(
             season_edit_modal(
                 &t,
-                &season.unwrap(),
+                &season,
                 Some("Year must be between 1900 and 2100"),
                 &events,
             )
@@ -346,10 +349,13 @@ pub async fn season_update(
                 .await
                 .ok()
                 .flatten();
+            let Some(season) = season else {
+                return Html(error_message("Season not found").into_string());
+            };
             return Html(
                 season_edit_modal(
                     &t,
-                    &season.unwrap(),
+                    &season,
                     Some("Display name cannot exceed 255 characters"),
                     &events,
                 )
@@ -382,14 +388,7 @@ pub async fn season_update(
             Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
         }
         Ok(false) => {
-            let season = seasons::get_season_by_id(&state.db, id)
-                .await
-                .ok()
-                .flatten();
-            Html(
-                season_edit_modal(&t, &season.unwrap(), Some("Season not found"), &events)
-                    .into_string(),
-            )
+            Html(error_message("Season not found").into_string())
         }
         Err(e) => {
             tracing::error!("Failed to update season: {}", e);
@@ -397,10 +396,13 @@ pub async fn season_update(
                 .await
                 .ok()
                 .flatten();
+            let Some(season) = season else {
+                return Html(error_message("Season not found").into_string());
+            };
             Html(
                 season_edit_modal(
                     &t,
-                    &season.unwrap(),
+                    &season,
                     Some("Failed to update season"),
                     &events,
                 )
@@ -573,7 +575,9 @@ pub async fn season_add_team(
             let mut headers = HeaderMap::new();
             headers.insert(
                 HeaderName::from_static("hx-redirect"),
-                format!("/seasons/{}", season_id).parse().unwrap(),
+                format!("/seasons/{}", season_id)
+                    .parse()
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html("".to_string())).into_response()
         }
@@ -625,7 +629,9 @@ pub async fn team_participation_delete(
             let mut headers = HeaderMap::new();
             headers.insert(
                 HeaderName::from_static("hx-redirect"),
-                format!("/seasons/{}", season_id).parse().unwrap(),
+                format!("/seasons/{}", season_id)
+                    .parse()
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html("".to_string())).into_response()
         }

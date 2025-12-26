@@ -12,7 +12,7 @@ use crate::service::players::{
     self, CreatePlayerEntity, PlayerFilters, SortField, SortOrder, UpdatePlayerEntity,
 };
 use crate::views::{
-    components::htmx::htmx_reload_table,
+    components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
     pages::player_detail::player_detail_page,
     pages::players::{player_create_modal, player_edit_modal, player_list_content, players_page},
@@ -299,35 +299,11 @@ pub async fn player_update(
     let current_player = match players::get_player_by_id(&state.db, id).await {
         Ok(Some(player)) => player,
         Ok(None) => {
-            return Html(
-                player_edit_modal(
-                    &t,
-                    &players::get_player_by_id(&state.db, id)
-                        .await
-                        .ok()
-                        .flatten()
-                        .unwrap(),
-                    Some("Player not found"),
-                    &countries,
-                )
-                .into_string(),
-            );
+            return Html(error_message("Player not found").into_string());
         }
         Err(e) => {
             tracing::error!("Failed to fetch player: {}", e);
-            return Html(
-                player_edit_modal(
-                    &t,
-                    &players::get_player_by_id(&state.db, id)
-                        .await
-                        .ok()
-                        .flatten()
-                        .unwrap(),
-                    Some("Failed to load player"),
-                    &countries,
-                )
-                .into_string(),
-            );
+            return Html(error_message("Failed to load player").into_string());
         }
     };
 

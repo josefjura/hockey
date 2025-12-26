@@ -442,6 +442,14 @@ pub async fn match_update(
 ) -> impl IntoResponse {
     // Get match for re-showing form on error
     let match_entity = matches::get_match_by_id(&state.db, id).await.ok().flatten();
+
+    let Some(match_entity) = match_entity else {
+        return Html(
+            crate::views::components::error::error_message("Match not found").into_string(),
+        )
+        .into_response();
+    };
+
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
     let teams = matches::get_teams_for_season(&state.db, form.season_id)
         .await
@@ -452,7 +460,7 @@ pub async fn match_update(
         return Html(
             match_edit_modal(
                 &t,
-                &match_entity.unwrap(),
+                &match_entity,
                 Some("Home and away teams must be different"),
                 &seasons,
                 &teams,
@@ -466,7 +474,7 @@ pub async fn match_update(
         return Html(
             match_edit_modal(
                 &t,
-                &match_entity.unwrap(),
+                &match_entity,
                 Some("Scores cannot be negative"),
                 &seasons,
                 &teams,
@@ -492,7 +500,7 @@ pub async fn match_update(
             return Html(
                 match_edit_modal(
                     &t,
-                    &match_entity.unwrap(),
+                    &match_entity,
                     Some("Both teams must participate in the selected season"),
                     &seasons,
                     &teams,
@@ -506,7 +514,7 @@ pub async fn match_update(
             return Html(
                 match_edit_modal(
                     &t,
-                    &match_entity.unwrap(),
+                    &match_entity,
                     Some("Failed to validate team participation"),
                     &seasons,
                     &teams,
@@ -539,14 +547,16 @@ pub async fn match_update(
             let mut headers = HeaderMap::new();
             headers.insert(
                 HeaderName::from_static("hx-redirect"),
-                format!("/matches/{}", id).parse().unwrap(),
+                format!("/matches/{}", id)
+                    .parse()
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html("".to_string())).into_response()
         }
         Ok(false) => Html(
             match_edit_modal(
                 &t,
-                &match_entity.unwrap(),
+                &match_entity,
                 Some("Match not found"),
                 &seasons,
                 &teams,
@@ -559,7 +569,7 @@ pub async fn match_update(
             Html(
                 match_edit_modal(
                     &t,
-                    &match_entity.unwrap(),
+                    &match_entity,
                     Some("Failed to update match"),
                     &seasons,
                     &teams,
@@ -682,18 +692,20 @@ pub async fn score_event_create(
         .await
         .ok()
         .flatten();
-    let home_players = matches::get_players_for_team(
-        &state.db,
-        match_info.as_ref().map(|m| m.home_team_id).unwrap_or(0),
-    )
-    .await
-    .unwrap_or_default();
-    let away_players = matches::get_players_for_team(
-        &state.db,
-        match_info.as_ref().map(|m| m.away_team_id).unwrap_or(0),
-    )
-    .await
-    .unwrap_or_default();
+
+    let Some(match_info) = match_info else {
+        return Html(
+            crate::views::components::error::error_message("Match not found").into_string(),
+        )
+        .into_response();
+    };
+
+    let home_players = matches::get_players_for_team(&state.db, match_info.home_team_id)
+        .await
+        .unwrap_or_default();
+    let away_players = matches::get_players_for_team(&state.db, match_info.away_team_id)
+        .await
+        .unwrap_or_default();
 
     // Validation
     if form.period < 1 || form.period > 5 {
@@ -701,7 +713,7 @@ pub async fn score_event_create(
             score_event_create_modal(
                 &t,
                 Some("Period must be between 1 and 5"),
-                &match_info.unwrap(),
+                &match_info,
                 &home_players,
                 &away_players,
             )
@@ -716,7 +728,7 @@ pub async fn score_event_create(
                 score_event_create_modal(
                     &t,
                     Some("Minutes must be between 0 and 60"),
-                    &match_info.unwrap(),
+                    &match_info,
                     &home_players,
                     &away_players,
                 )
@@ -732,7 +744,7 @@ pub async fn score_event_create(
                 score_event_create_modal(
                     &t,
                     Some("Seconds must be between 0 and 59"),
-                    &match_info.unwrap(),
+                    &match_info,
                     &home_players,
                     &away_players,
                 )
@@ -764,7 +776,9 @@ pub async fn score_event_create(
             let mut headers = HeaderMap::new();
             headers.insert(
                 HeaderName::from_static("hx-redirect"),
-                format!("/matches/{}", match_id).parse().unwrap(),
+                format!("/matches/{}", match_id)
+                    .parse()
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html("".to_string())).into_response()
         }
@@ -774,7 +788,7 @@ pub async fn score_event_create(
                 score_event_create_modal(
                     &t,
                     Some("Failed to create goal"),
-                    &match_info.unwrap(),
+                    &match_info,
                     &home_players,
                     &away_players,
                 )
@@ -858,23 +872,33 @@ pub async fn score_event_update(
         .await
         .ok()
         .flatten();
-    let match_id = score_event.as_ref().map(|se| se.match_id).unwrap_or(0);
+
+    let Some(score_event) = score_event else {
+        return Html(
+            crate::views::components::error::error_message("Score event not found").into_string(),
+        )
+        .into_response();
+    };
+
+    let match_id = score_event.match_id;
     let match_info = matches::get_match_by_id(&state.db, match_id)
         .await
         .ok()
         .flatten();
-    let home_players = matches::get_players_for_team(
-        &state.db,
-        match_info.as_ref().map(|m| m.home_team_id).unwrap_or(0),
-    )
-    .await
-    .unwrap_or_default();
-    let away_players = matches::get_players_for_team(
-        &state.db,
-        match_info.as_ref().map(|m| m.away_team_id).unwrap_or(0),
-    )
-    .await
-    .unwrap_or_default();
+
+    let Some(match_info) = match_info else {
+        return Html(
+            crate::views::components::error::error_message("Match not found").into_string(),
+        )
+        .into_response();
+    };
+
+    let home_players = matches::get_players_for_team(&state.db, match_info.home_team_id)
+        .await
+        .unwrap_or_default();
+    let away_players = matches::get_players_for_team(&state.db, match_info.away_team_id)
+        .await
+        .unwrap_or_default();
 
     // Validation
     if form.period < 1 || form.period > 5 {
@@ -882,8 +906,8 @@ pub async fn score_event_update(
             score_event_edit_modal(
                 &t,
                 Some("Period must be between 1 and 5"),
-                &score_event.unwrap(),
-                &match_info.unwrap(),
+                &score_event,
+                &match_info,
                 &home_players,
                 &away_players,
             )
@@ -898,8 +922,8 @@ pub async fn score_event_update(
                 score_event_edit_modal(
                     &t,
                     Some("Minutes must be between 0 and 60"),
-                    &score_event.unwrap(),
-                    &match_info.unwrap(),
+                    &score_event,
+                    &match_info,
                     &home_players,
                     &away_players,
                 )
@@ -915,8 +939,8 @@ pub async fn score_event_update(
                 score_event_edit_modal(
                     &t,
                     Some("Seconds must be between 0 and 59"),
-                    &score_event.unwrap(),
-                    &match_info.unwrap(),
+                    &score_event,
+                    &match_info,
                     &home_players,
                     &away_players,
                 )
@@ -948,7 +972,9 @@ pub async fn score_event_update(
             let mut headers = HeaderMap::new();
             headers.insert(
                 HeaderName::from_static("hx-redirect"),
-                format!("/matches/{}", match_id).parse().unwrap(),
+                format!("/matches/{}", match_id)
+                    .parse()
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html("".to_string())).into_response()
         }
@@ -956,8 +982,8 @@ pub async fn score_event_update(
             score_event_edit_modal(
                 &t,
                 Some("Score event not found"),
-                &score_event.unwrap(),
-                &match_info.unwrap(),
+                &score_event,
+                &match_info,
                 &home_players,
                 &away_players,
             )
@@ -970,8 +996,8 @@ pub async fn score_event_update(
                 score_event_edit_modal(
                     &t,
                     Some("Failed to update goal"),
-                    &score_event.unwrap(),
-                    &match_info.unwrap(),
+                    &score_event,
+                    &match_info,
                     &home_players,
                     &away_players,
                 )
@@ -1013,7 +1039,9 @@ pub async fn score_event_delete(
             let mut headers = HeaderMap::new();
             headers.insert(
                 HeaderName::from_static("hx-redirect"),
-                format!("/matches/{}", match_id).parse().unwrap(),
+                format!("/matches/{}", match_id)
+                    .parse()
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html("".to_string())).into_response()
         }

@@ -13,7 +13,7 @@ use crate::service::teams::{
 };
 use crate::validation::validate_name;
 use crate::views::{
-    components::htmx::htmx_reload_table,
+    components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
     pages::team_detail::team_detail_page,
     pages::teams::{team_create_modal, team_edit_modal, team_list_content, teams_page},
@@ -226,7 +226,10 @@ pub async fn team_update(
         Ok(n) => n,
         Err(error) => {
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-            return Html(team_edit_modal(&t, &team.unwrap(), Some(error)).into_string());
+            let Some(team) = team else {
+                return Html(error_message("Team not found").into_string());
+            };
+            return Html(team_edit_modal(&t, &team, Some(error)).into_string());
         }
     };
 
@@ -245,14 +248,14 @@ pub async fn team_update(
             // Return HTMX response to close modal and reload table
             htmx_reload_table("/teams/list", "teams-table")
         }
-        Ok(false) => {
-            let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-            Html(team_edit_modal(&t, &team.unwrap(), Some("Team not found")).into_string())
-        }
+        Ok(false) => Html(error_message("Team not found").into_string()),
         Err(e) => {
             tracing::error!("Failed to update team: {}", e);
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-            Html(team_edit_modal(&t, &team.unwrap(), Some("Failed to update team")).into_string())
+            let Some(team) = team else {
+                return Html(error_message("Team not found").into_string());
+            };
+            Html(team_edit_modal(&t, &team, Some("Failed to update team")).into_string())
         }
     }
 }

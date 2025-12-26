@@ -11,7 +11,7 @@ use crate::i18n::TranslationContext;
 use crate::service::events::{self, CreateEventEntity, EventFilters, UpdateEventEntity};
 use crate::validation::validate_name;
 use crate::views::{
-    components::htmx::htmx_reload_table,
+    components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
     pages::event_detail::event_detail_page,
     pages::events::{event_create_modal, event_edit_modal, event_list_content, events_page},
@@ -239,8 +239,11 @@ pub async fn event_update(
         Err(error) => {
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
+            let Some(event) = event else {
+                return Html(error_message("Event not found").into_string());
+            };
             return Html(
-                event_edit_modal(&t, &event.unwrap(), &countries, Some(error)).into_string(),
+                event_edit_modal(&t, &event, &countries, Some(error)).into_string(),
             );
         }
     };
@@ -261,21 +264,19 @@ pub async fn event_update(
             htmx_reload_table("/events/list", "events-table")
         }
         Ok(false) => {
-            let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
-            let countries = events::get_countries(&state.db).await.unwrap_or_default();
-            Html(
-                event_edit_modal(&t, &event.unwrap(), &countries, Some("Event not found"))
-                    .into_string(),
-            )
+            Html(error_message("Event not found").into_string())
         }
         Err(e) => {
             tracing::error!("Failed to update event: {}", e);
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
+            let Some(event) = event else {
+                return Html(error_message("Event not found").into_string());
+            };
             Html(
                 event_edit_modal(
                     &t,
-                    &event.unwrap(),
+                    &event,
                     &countries,
                     Some("Failed to update event"),
                 )

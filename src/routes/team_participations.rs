@@ -165,7 +165,9 @@ pub async fn team_participation_create(
             let mut headers = HeaderMap::new();
             headers.insert(
                 HeaderName::from_static("hx-redirect"),
-                redirect_url.parse().unwrap(),
+                redirect_url
+                    .parse()
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html(String::new())).into_response()
         }

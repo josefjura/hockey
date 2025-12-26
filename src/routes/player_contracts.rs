@@ -164,7 +164,7 @@ pub async fn roster_add_player(
                 HeaderName::from_static("hx-redirect"),
                 format!("/team-participations/{}/roster", team_participation_id)
                     .parse()
-                    .unwrap(),
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html("".to_string())).into_response()
         }
@@ -224,7 +224,7 @@ pub async fn player_contract_delete(
                 HeaderName::from_static("hx-redirect"),
                 format!("/team-participations/{}/roster", team_participation_id)
                     .parse()
-                    .unwrap(),
+                    .expect("Valid redirect URL should parse"),
             );
             (headers, Html("".to_string())).into_response()
         }
