@@ -29,6 +29,9 @@ RUN apt-get update && \
 # Create app directory
 WORKDIR /app
 
+# Install sqlx-cli for database setup (needed for sqlx macros at compile time)
+RUN cargo install sqlx-cli --no-default-features --features sqlite --locked
+
 # Copy dependency files first for better caching
 COPY Cargo.toml Cargo.lock ./
 
@@ -46,6 +49,10 @@ COPY static ./static
 
 # Copy minified web components from node-builder
 COPY --from=node-builder /app/static/js/components ./static/js/components
+
+# Setup database for sqlx compile-time verification
+ENV DATABASE_URL=sqlite:./build_time.db
+RUN sqlx database create && sqlx migrate run
 
 # Build the actual application (with embedded assets)
 RUN cargo build --release

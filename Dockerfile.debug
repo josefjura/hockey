@@ -13,6 +13,9 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+# Install sqlx-cli for database setup (needed for sqlx macros at compile time)
+RUN cargo install sqlx-cli --no-default-features --features sqlite --locked
+
 COPY Cargo.toml Cargo.lock ./
 
 RUN mkdir -p src/bin && \
@@ -24,6 +27,10 @@ RUN mkdir -p src/bin && \
 COPY src ./src
 COPY migrations ./migrations
 COPY static ./static
+
+# Setup database for sqlx compile-time verification
+ENV DATABASE_URL=sqlite:./build_time.db
+RUN sqlx database create && sqlx migrate run
 
 RUN cargo build --release
 
