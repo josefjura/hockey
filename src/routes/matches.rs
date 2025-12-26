@@ -260,12 +260,43 @@ pub async fn teams_for_season(
         .await
         .unwrap_or_default();
 
-    // Return HTML <option> elements for both home and away team dropdowns
+    // Return HTML with out-of-band swaps to update both home and away team dropdowns
+    // This ensures both dropdowns get updated independently
     Html(
         html! {
-            option value="" { (t.messages.matches_select_team()) }
-            @for (id, name) in teams {
-                option value=(id) { (name) }
+            // Primary response (will be ignored since we're using oob swaps)
+            div {}
+            // Out-of-band swap for home team dropdown (create modal)
+            select id="home_team_id" hx-swap-oob="true" name="home_team_id" class="team-select" required
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;" {
+                option value="" { (t.messages.matches_select_team()) }
+                @for (id, name) in &teams {
+                    option value=(id) { (name) }
+                }
+            }
+            // Out-of-band swap for away team dropdown (create modal)
+            select id="away_team_id" hx-swap-oob="true" name="away_team_id" class="team-select" required
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;" {
+                option value="" { (t.messages.matches_select_team()) }
+                @for (id, name) in &teams {
+                    option value=(id) { (name) }
+                }
+            }
+            // Out-of-band swap for home team dropdown (edit modal)
+            select id="edit_home_team_id" hx-swap-oob="true" name="home_team_id" class="edit-team-select" required
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;" {
+                option value="" { (t.messages.matches_select_team()) }
+                @for (id, name) in &teams {
+                    option value=(id) { (name) }
+                }
+            }
+            // Out-of-band swap for away team dropdown (edit modal)
+            select id="edit_away_team_id" hx-swap-oob="true" name="away_team_id" class="edit-team-select" required
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;" {
+                option value="" { (t.messages.matches_select_team()) }
+                @for (id, name) in &teams {
+                    option value=(id) { (name) }
+                }
             }
         }
         .into_string(),

@@ -896,9 +896,7 @@ pub fn match_create_modal(
                     name="season_id"
                     required
                     hx-get="/matches/teams-for-season"
-                    hx-target="#home_team_id, #away_team_id"
-                    hx-swap="innerHTML"
-                    hx-include="[name='season_id']"
+                    hx-swap="none"
                     hx-trigger="change"
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
@@ -936,6 +934,7 @@ pub fn match_create_modal(
                 select
                     name="home_team_id"
                     id="home_team_id"
+                    class="team-select"
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
@@ -954,6 +953,7 @@ pub fn match_create_modal(
                 select
                     name="away_team_id"
                     id="away_team_id"
+                    class="team-select"
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
@@ -1043,9 +1043,7 @@ pub fn match_edit_modal(
                     name="season_id"
                     required
                     hx-get="/matches/teams-for-season"
-                    hx-target="#edit_home_team_id, #edit_away_team_id"
-                    hx-swap="innerHTML"
-                    hx-include="[name='season_id']"
+                    hx-swap="none"
                     hx-trigger="change"
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
@@ -1087,6 +1085,7 @@ pub fn match_edit_modal(
                 select
                     name="home_team_id"
                     id="edit_home_team_id"
+                    class="edit-team-select"
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
@@ -1109,6 +1108,7 @@ pub fn match_edit_modal(
                 select
                     name="away_team_id"
                     id="edit_away_team_id"
+                    class="edit-team-select"
                     required
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
