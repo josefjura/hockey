@@ -18,7 +18,7 @@ pub fn dashboard_page(
             }
 
             // Stats cards
-            div class="stats-grid" {
+            div id="dashboard-stats" class="stats-grid" {
                 (stat_card(&t.messages.nav_teams().to_string(), &stats.teams_count.to_string(), "/teams"))
                 (stat_card(&t.messages.nav_players().to_string(), &stats.players_count.to_string(), "/players"))
                 (stat_card(&t.messages.nav_events().to_string(), &stats.events_count.to_string(), "/events"))
@@ -84,6 +84,19 @@ pub fn dashboard_page(
                     (t.messages.dashboard_getting_started_text())
                 }
             }
+        }
+    }
+}
+
+/// Partial template for dashboard stats (for out-of-band updates)
+pub fn dashboard_stats_partial(t: &TranslationContext, stats: &DashboardStats) -> Markup {
+    html! {
+        div id="dashboard-stats" class="stats-grid" hx-swap-oob="true" {
+            (stat_card(&t.messages.nav_teams().to_string(), &stats.teams_count.to_string(), "/teams"))
+            (stat_card(&t.messages.nav_players().to_string(), &stats.players_count.to_string(), "/players"))
+            (stat_card(&t.messages.nav_events().to_string(), &stats.events_count.to_string(), "/events"))
+            (stat_card(&t.messages.nav_seasons().to_string(), &stats.seasons_count.to_string(), "/seasons"))
+            (stat_card(&t.messages.nav_matches().to_string(), &stats.matches_count.to_string(), "/matches"))
         }
     }
 }

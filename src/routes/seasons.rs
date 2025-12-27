@@ -14,8 +14,9 @@ use crate::service::seasons::{
 };
 use crate::service::team_participations::{self, CreateTeamParticipationEntity};
 use crate::views::{
-    components::{error::error_message, htmx::htmx_reload_table},
+    components::error::error_message,
     layout::admin_layout,
+    pages::dashboard::dashboard_stats_partial,
     pages::season_detail::{add_team_modal, season_detail_page},
     pages::seasons::{season_create_modal, season_edit_modal, season_list_content, seasons_page},
 };
@@ -264,16 +265,31 @@ pub async fn season_create(
     .await
     {
         Ok(_) => {
+            // Fetch updated dashboard stats
+            let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
+                .await
+                .unwrap_or_default();
+
             // Return HTMX response based on context
+            use maud::html;
             if let Some(return_url) = &form.return_url {
-                // Redirect to the return URL (e.g., event detail page)
-                Html(format!(
-                    "<div hx-get=\"{}\" hx-target=\"body\" hx-push-url=\"true\" hx-trigger=\"load\" hx-swap=\"innerHTML\"></div>",
-                    return_url
-                ))
+                // Redirect to the return URL (e.g., event detail page) and update stats
+                Html(
+                    html! {
+                        div hx-get=(return_url) hx-target="body" hx-push-url="true" hx-trigger="load" hx-swap="innerHTML" {}
+                        (dashboard_stats_partial(&t, &stats))
+                    }
+                    .into_string(),
+                )
             } else {
-                // Reload the seasons table (default behavior)
-                htmx_reload_table("/seasons/list", "seasons-table")
+                // Reload the seasons table (default behavior) and update stats
+                Html(
+                    html! {
+                        div hx-get="/seasons/list" hx-target="#seasons-table" hx-trigger="load" hx-swap="outerHTML" {}
+                        (dashboard_stats_partial(&t, &stats))
+                    }
+                    .into_string(),
+                )
             }
         }
         Err(e) => {

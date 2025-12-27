@@ -15,6 +15,7 @@ use crate::validation::validate_name;
 use crate::views::{
     components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
+    pages::dashboard::dashboard_stats_partial,
     pages::team_detail::team_detail_page,
     pages::teams::{team_create_modal, team_edit_modal, team_list_content, teams_page},
 };
@@ -180,8 +181,20 @@ pub async fn team_create(
     .await
     {
         Ok(_) => {
-            // Return HTMX response to close modal and reload table
-            htmx_reload_table("/teams/list", "teams-table")
+            // Fetch updated dashboard stats
+            let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
+                .await
+                .unwrap_or_default();
+
+            // Return HTMX response to close modal, reload table, and update dashboard stats
+            use maud::html;
+            Html(
+                html! {
+                    div hx-get="/teams/list" hx-target="#teams-table" hx-trigger="load" hx-swap="outerHTML" {}
+                    (dashboard_stats_partial(&t, &stats))
+                }
+                .into_string(),
+            )
         }
         Err(e) => {
             tracing::error!("Failed to create team: {}", e);
