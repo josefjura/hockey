@@ -1,63 +1,5 @@
 use maud::{html, Markup, PreEscaped};
 
-// Re-export table components for convenience
-pub use crate::views::components::table::pagination;
-
-// Import confirm component for enhanced delete dialogs
-use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
-use crate::views::components::empty_state::{empty_state_enhanced, EmptyStateIcon};
-
-/// Page header with title, description, and create button
-pub fn page_header(title: &str, description: &str, create_url: &str, create_label: &str) -> Markup {
-    html! {
-        div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
-            div {
-                h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;" {
-                    (title)
-                }
-                p style="color: var(--gray-600);" {
-                    (description)
-                }
-            }
-            button
-                class="btn btn-primary"
-                hx-get=(create_url)
-                hx-target="#modal-container"
-                hx-swap="innerHTML"
-            {
-                (create_label)
-            }
-        }
-    }
-}
-
-/// Empty state when no items are found (enhanced with icon)
-pub fn empty_state(entity_name: &str, has_filters: bool) -> Markup {
-    let (icon, description) = if has_filters {
-        (
-            EmptyStateIcon::Search,
-            format!(
-                "No {} match your search criteria. Try adjusting your filters.",
-                entity_name.to_lowercase()
-            ),
-        )
-    } else {
-        (
-            EmptyStateIcon::Box,
-            format!("No {} have been added yet.", entity_name.to_lowercase()),
-        )
-    };
-
-    empty_state_enhanced(
-        icon,
-        &format!("No {} found", entity_name),
-        &description,
-        None,
-        None,
-        None,
-    )
-}
-
 /// Modal wrapper with backdrop and form structure
 ///
 /// # Features
@@ -141,11 +83,11 @@ pub fn modal_form(
             (function() {{
                 const modal = document.getElementById('{}');
                 if (!modal) return;
-                
+
                 // Focus first input
                 const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
                 if (firstInput) firstInput.focus();
-                
+
                 // Keyboard handler
                 const keyHandler = function(e) {{
                     // Escape to close
@@ -164,9 +106,9 @@ pub fn modal_form(
                         }}
                     }}
                 }};
-                
+
                 document.addEventListener('keydown', keyHandler);
-                
+
                 // Click outside to close
                 modal.addEventListener('click', function(e) {{
                     if (e.target === this) {{
@@ -270,11 +212,11 @@ pub fn modal_form_multipart(
             (function() {{
                 const modal = document.getElementById('{}');
                 if (!modal) return;
-                
+
                 // Focus first input
                 const firstInput = modal.querySelector('input:not([type="hidden"]):not([type="file"]), select, textarea');
                 if (firstInput) firstInput.focus();
-                
+
                 // Keyboard handler
                 const keyHandler = function(e) {{
                     // Escape to close
@@ -293,9 +235,9 @@ pub fn modal_form_multipart(
                         }}
                     }}
                 }};
-                
+
                 document.addEventListener('keydown', keyHandler);
-                
+
                 // Click outside to close
                 modal.addEventListener('click', function(e) {{
                     if (e.target === this) {{
@@ -306,138 +248,6 @@ pub fn modal_form_multipart(
             }})();
         </script>
         "#, modal_id)))
-    }
-}
-
-/// Table actions (Edit/Delete buttons) with custom confirmation dialog
-pub fn table_actions(
-    edit_url: &str,
-    delete_url: &str,
-    table_id: &str,
-    entity_label: &str,
-) -> Markup {
-    let confirm = confirm_attrs(
-        &format!("Delete {}", entity_label),
-        &format!(
-            "Are you sure you want to delete this {}? This action cannot be undone.",
-            entity_label.to_lowercase()
-        ),
-        ConfirmVariant::Danger,
-        Some("Delete"),
-        Some("Cancel"),
-    );
-
-    html! {
-        td style="text-align: right;" {
-            button
-                class="btn btn-sm"
-                hx-get=(edit_url)
-                hx-target="#modal-container"
-                hx-swap="innerHTML"
-                style="margin-right: 0.5rem;"
-            {
-                "Edit"
-            }
-            button
-                class="btn btn-sm btn-danger"
-                hx-post=(delete_url)
-                hx-target=(format!("#{}", table_id))
-                hx-swap="outerHTML"
-                hx-confirm-custom=(confirm)
-            {
-                "Delete"
-            }
-        }
-    }
-}
-
-// ============================================
-// i18n-enabled versions of CRUD components
-// ============================================
-
-/// Page header with i18n support
-pub fn page_header_i18n(
-    title: &str,
-    description: &str,
-    create_url: &str,
-    create_label: &str,
-) -> Markup {
-    html! {
-        div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
-            div {
-                h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;" {
-                    (title)
-                }
-                p style="color: var(--gray-600);" {
-                    (description)
-                }
-            }
-            button
-                class="btn btn-primary"
-                hx-get=(create_url)
-                hx-target="#modal-container"
-                hx-swap="innerHTML"
-            {
-                (create_label)
-            }
-        }
-    }
-}
-
-/// Empty state with i18n support
-pub fn empty_state_i18n(title: &str, message: &str, _has_filters: bool) -> Markup {
-    html! {
-        div style="padding: 3rem; text-align: center; color: var(--gray-500);" {
-            h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;" {
-                (title)
-            }
-            p {
-                (message)
-            }
-        }
-    }
-}
-
-/// Table actions with i18n support and custom confirmation dialog
-#[allow(dead_code)]
-pub fn table_actions_i18n(
-    edit_url: &str,
-    delete_url: &str,
-    table_id: &str,
-    edit_label: &str,
-    delete_label: &str,
-    confirm_title: &str,
-    confirm_message: &str,
-) -> Markup {
-    let confirm = confirm_attrs(
-        confirm_title,
-        confirm_message,
-        ConfirmVariant::Danger,
-        Some(delete_label),
-        None,
-    );
-
-    html! {
-        td style="text-align: right;" {
-            button
-                class="btn btn-sm"
-                hx-get=(edit_url)
-                hx-target="#modal-container"
-                hx-swap="innerHTML"
-                style="margin-right: 0.5rem;"
-            {
-                (edit_label)
-            }
-            button
-                class="btn btn-sm btn-danger"
-                hx-post=(delete_url)
-                hx-target=(format!("#{}", table_id))
-                hx-swap="outerHTML"
-                hx-confirm-custom=(confirm)
-            {
-                (delete_label)
-            }
-        }
     }
 }
 
@@ -517,11 +327,11 @@ pub fn modal_form_i18n(
             (function() {{
                 const modal = document.getElementById('{}');
                 if (!modal) return;
-                
+
                 // Focus first input
                 const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
                 if (firstInput) firstInput.focus();
-                
+
                 // Keyboard handler
                 const keyHandler = function(e) {{
                     // Escape to close
@@ -540,9 +350,9 @@ pub fn modal_form_i18n(
                         }}
                     }}
                 }};
-                
+
                 document.addEventListener('keydown', keyHandler);
-                
+
                 // Click outside to close
                 modal.addEventListener('click', function(e) {{
                     if (e.target === this) {{
@@ -638,11 +448,11 @@ pub fn modal_form_multipart_i18n(
             (function() {{
                 const modal = document.getElementById('{}');
                 if (!modal) return;
-                
+
                 // Focus first input (skip hidden and file inputs for file uploads)
                 const firstInput = modal.querySelector('input:not([type="hidden"]):not([type="file"]), select, textarea');
                 if (firstInput) firstInput.focus();
-                
+
                 // Keyboard handler
                 const keyHandler = function(e) {{
                     // Escape to close
@@ -661,9 +471,9 @@ pub fn modal_form_multipart_i18n(
                         }}
                     }}
                 }};
-                
+
                 document.addEventListener('keydown', keyHandler);
-                
+
                 // Click outside to close
                 modal.addEventListener('click', function(e) {{
                     if (e.target === this) {{
