@@ -90,40 +90,19 @@ pub fn empty_state_enhanced(
     action_target: Option<&str>,
 ) -> Markup {
     html! {
-        div
-            class="empty-state"
-            style="
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 3rem 2rem;
-                text-align: center;
-                min-height: 300px;
-            "
-        {
+        div class="empty-state" {
             // Icon
-            div style="color: var(--gray-300); margin-bottom: 1.5rem;" {
+            div class="empty-state-icon" {
                 (PreEscaped(icon.svg()))
             }
 
             // Title
-            h3 style="
-                font-size: 1.25rem;
-                font-weight: 600;
-                color: var(--gray-700);
-                margin-bottom: 0.5rem;
-            " {
+            h3 class="empty-state-title" {
                 (title)
             }
 
             // Description
-            p style="
-                color: var(--gray-500);
-                max-width: 360px;
-                line-height: 1.5;
-                margin-bottom: 1.5rem;
-            " {
+            p class="empty-state-description" {
                 (description)
             }
 
@@ -195,17 +174,9 @@ pub fn empty_state_table(
 /// Compact empty state for small areas
 pub fn empty_state_compact(message: &str) -> Markup {
     html! {
-        div
-            class="empty-state-compact"
-            style="
-                padding: 1.5rem;
-                text-align: center;
-                color: var(--gray-500);
-                font-size: 0.875rem;
-            "
-        {
+        div class="empty-state-compact" {
             // Small icon
-            div style="color: var(--gray-300); margin-bottom: 0.5rem;" {
+            div class="empty-state-compact-icon" {
                 (PreEscaped(r#"<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                     <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>

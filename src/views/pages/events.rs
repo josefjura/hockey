@@ -15,8 +15,8 @@ pub fn events_page(
     html! {
         div class="card" {
             // Header with title and create button
-            div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
-                h1 style="font-size: 2rem; font-weight: 700;" {
+            div class="page-header" {
+                h1 class="page-header-title" {
                     (t.messages.events_title())
                 }
                 button
@@ -30,12 +30,12 @@ pub fn events_page(
             }
 
             // Filters
-            div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--gray-50); border-radius: 8px;" {
+            div class="filters-container" {
                 form hx-get="/events/list" hx-target="#events-table" hx-swap="outerHTML" hx-trigger="submit, change delay:300ms" {
-                    div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;" {
+                    div class="filters-grid" {
                         // Name filter
                         div {
-                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                            label class="filter-label" {
                                 (t.messages.common_search_by_name())
                             }
                             input
@@ -43,17 +43,17 @@ pub fn events_page(
                                 name="name"
                                 value=[filters.name.as_ref()]
                                 placeholder=(t.messages.events_name_placeholder())
-                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                                class="filter-input";
                         }
 
                         // Country filter
                         div {
-                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                            label class="filter-label" {
                                 (t.messages.common_filter_by_country())
                             }
                             select
                                 name="country_id"
-                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                                class="filter-select"
                             {
                                 option value="" { (t.messages.common_all_countries()) }
                                 @for (id, name) in countries {
@@ -130,7 +130,7 @@ pub fn event_list_content(
                             th { (t.messages.common_id()) }
                             th { (t.messages.form_name()) }
                             th { (t.messages.form_country()) }
-                            th style="text-align: right;" { (t.messages.common_actions()) }
+                            th class="text-right" { (t.messages.common_actions()) }
                         }
                     }
                     tbody {
@@ -140,7 +140,7 @@ pub fn event_list_content(
                                 td {
                                     a
                                         href=(format!("/events/{}", event.id))
-                                        style="color: var(--primary-color); text-decoration: none; font-weight: 500;"
+                                        class="primary-link"
                                     {
                                         (event.name)
                                     }
@@ -148,11 +148,11 @@ pub fn event_list_content(
                                 td {
                                     @if let Some(country_name) = &event.country_name {
                                         @if let Some(iso2) = &event.country_iso2_code {
-                                            span style="display: inline-flex; align-items: center; gap: 0.5rem;" {
+                                            span class="flag-display" {
                                                 img
                                                     src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
                                                     alt=(country_name)
-                                                    style="width: 20px; height: 15px; object-fit: cover; border: 1px solid var(--gray-300);"
+                                                    class="flag-image"
                                                     onerror="this.style.display='none'";
                                                 (country_name)
                                             }
@@ -160,16 +160,15 @@ pub fn event_list_content(
                                             (country_name)
                                         }
                                     } @else {
-                                        span style="color: var(--gray-400); font-style: italic;" { (t.messages.common_no_country()) }
+                                        span class="no-value-text" { (t.messages.common_no_country()) }
                                     }
                                 }
-                                td style="text-align: right;" {
+                                td class="text-right" {
                                     button
-                                        class="btn btn-sm"
+                                        class="btn btn-sm mr-2"
                                         hx-get=(format!("/events/{}/edit", event.id))
                                         hx-target="#modal-container"
                                         hx-swap="innerHTML"
-                                        style="margin-right: 0.5rem;"
                                     {
                                         (t.messages.common_edit())
                                     }
@@ -204,9 +203,9 @@ pub fn event_list_content(
 /// Pagination component
 fn pagination(result: &PagedResult<EventEntity>, filters: &EventFilters) -> Markup {
     html! {
-        div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);" {
+        div class="pagination-container" {
             // Stats
-            div style="color: var(--gray-600); font-size: 0.875rem;" {
+            div class="pagination-stats" {
                 "Showing "
                 strong { (((result.page - 1) * result.page_size + 1)) }
                 " to "
@@ -218,7 +217,7 @@ fn pagination(result: &PagedResult<EventEntity>, filters: &EventFilters) -> Mark
 
             // Page buttons
             @if result.total_pages > 1 {
-                div style="display: flex; gap: 0.5rem;" {
+                div class="pagination-buttons" {
                     // Previous button
                     @if result.has_previous {
                         button
@@ -330,40 +329,37 @@ pub fn event_create_modal(
     html! {
         div
             class="modal-backdrop"
-            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;"
             id="event-modal"
         {
             div
                 class="modal"
-                style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
                 onclick="event.stopPropagation()"
             {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
+                h2 class="modal-header" {
                     (t.messages.events_create_title())
                 }
 
                 @if let Some(error_msg) = error {
-                    div class="error" style="margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;" {
+                    div class="error" {
                         (error_msg)
                     }
                 }
 
                 form hx-post="/events" hx-target="#event-modal" hx-swap="outerHTML" {
-                    div style="margin-bottom: 1rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    div class="form-group" {
+                        label class="form-label" {
                             (t.messages.events_name_label())
-                            span style="color: red;" { "*" }
+                            span class="required-indicator" { "*" }
                         }
                         input
                             type="text"
                             name="name"
                             required
-                            autofocus
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                            autofocus;
                     }
 
-                    div style="margin-bottom: 1.5rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    div class="form-group" {
+                        label class="form-label" {
                             (t.messages.events_host_country())
                         }
                         country-selector
@@ -372,7 +368,7 @@ pub fn event_create_modal(
                             enabled-only;
                     }
 
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
+                    div class="modal-actions" {
                         button
                             type="button"
                             class="btn btn-secondary"
@@ -409,41 +405,38 @@ pub fn event_edit_modal(
     html! {
         div
             class="modal-backdrop"
-            style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;"
             id="event-modal"
         {
             div
                 class="modal"
-                style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;"
                 onclick="event.stopPropagation()"
             {
-                h2 style="margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 700;" {
+                h2 class="modal-header" {
                     (t.messages.events_edit_title())
                 }
 
                 @if let Some(error_msg) = error {
-                    div class="error" style="margin-bottom: 1rem; padding: 0.75rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;" {
+                    div class="error" {
                         (error_msg)
                     }
                 }
 
                 form hx-post=(format!("/events/{}", event.id)) hx-target="#event-modal" hx-swap="outerHTML" {
-                    div style="margin-bottom: 1rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    div class="form-group" {
+                        label class="form-label" {
                             (t.messages.events_name_label())
-                            span style="color: red;" { "*" }
+                            span class="required-indicator" { "*" }
                         }
                         input
                             type="text"
                             name="name"
                             value=(event.name)
                             required
-                            autofocus
-                            style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                            autofocus;
                     }
 
-                    div style="margin-bottom: 1.5rem;" {
-                        label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    div class="form-group" {
+                        label class="form-label" {
                             (t.messages.events_host_country())
                         }
                         @if let Some(country_id) = event.country_id {
@@ -460,7 +453,7 @@ pub fn event_edit_modal(
                         }
                     }
 
-                    div style="display: flex; gap: 0.5rem; justify-content: flex-end;" {
+                    div class="modal-actions" {
                         button
                             type="button"
                             class="btn btn-secondary"

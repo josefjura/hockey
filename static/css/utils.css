@@ -60,3 +60,12 @@
 .loading-overlay.htmx-request .loading-spinner-overlay {
   display: block;
 }
+
+/* ========== Spacing Utilities ========== */
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}

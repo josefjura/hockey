@@ -27,12 +27,12 @@ pub fn teams_page(
             ))
 
             // Filters
-            div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--gray-50); border-radius: 8px;" {
+            div class="filters-container" {
                 form hx-get="/teams/list" hx-target="#teams-table" hx-swap="outerHTML" hx-trigger="submit, change delay:300ms" {
-                    div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;" {
+                    div class="filters-grid" {
                         // Name filter
                         div {
-                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                            label class="filter-label" {
                                 (t.messages.common_search_by_name())
                             }
                             input
@@ -40,17 +40,17 @@ pub fn teams_page(
                                 name="name"
                                 value=[filters.name.as_ref()]
                                 placeholder=(t.messages.teams_name_placeholder())
-                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                                class="filter-input";
                         }
 
                         // Country filter
                         div {
-                            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                            label class="filter-label" {
                                 (t.messages.common_filter_by_country())
                             }
                             select
                                 name="country_id"
-                                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                                class="filter-select"
                             {
                                 option value="" { (t.messages.common_all_countries()) }
                                 @for (id, name) in countries {
@@ -140,7 +140,7 @@ pub fn team_list_content(
                                     filters,
                                 ))
                             }
-                            th style="text-align: right;" { (t.messages.common_actions()) }
+                            th class="text-right" { (t.messages.common_actions()) }
                         }
                     }
                     tbody {
@@ -150,7 +150,7 @@ pub fn team_list_content(
                                 td {
                                     a
                                         href=(format!("/teams/{}", team.id))
-                                        style="color: var(--primary-color); text-decoration: none; font-weight: 500;"
+                                        class="primary-link"
                                     {
                                         (team.name)
                                     }
@@ -158,11 +158,11 @@ pub fn team_list_content(
                                 td {
                                     @if let Some(country_name) = &team.country_name {
                                         @if let Some(iso2) = &team.country_iso2_code {
-                                            span style="display: inline-flex; align-items: center; gap: 0.5rem;" {
+                                            span class="flag-display" {
                                                 img
                                                     src=(format!("https://flagcdn.com/w40/{}.png", iso2.to_lowercase()))
                                                     alt=(country_name)
-                                                    style="width: 20px; height: 15px; object-fit: cover; border: 1px solid var(--gray-300);"
+                                                    class="flag-image"
                                                     onerror="this.style.display='none'";
                                                 (country_name)
                                             }
@@ -170,7 +170,7 @@ pub fn team_list_content(
                                             (country_name)
                                         }
                                     } @else {
-                                        span style="color: var(--gray-400); font-style: italic;" { (t.messages.common_no_country()) }
+                                        span class="no-value-text" { (t.messages.common_no_country()) }
                                     }
                                 }
                                 (table_actions(
@@ -238,11 +238,16 @@ fn sortable_header(
             hx-get=(url)
             hx-target="#teams-table"
             hx-swap="outerHTML"
-            style="background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;"
         {
             (label)
-            span style=(if is_active { "font-size: 0.75rem; color: var(--primary-color);" } else { "font-size: 0.75rem;" }) {
-                (indicator)
+            @if is_active {
+                span class="sort-indicator active" {
+                    (indicator)
+                }
+            } @else {
+                span class="sort-indicator" {
+                    (indicator)
+                }
             }
         }
     }
@@ -322,21 +327,20 @@ fn build_delete_url(
 /// Create team modal
 pub fn team_create_modal(t: &TranslationContext, error: Option<&str>) -> Markup {
     let form_fields = html! {
-        div style="margin-bottom: 1rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label class="form-label" {
                 (t.messages.teams_name_label())
-                span style="color: red;" { "*" }
+                span class="required-indicator" { "*" }
             }
             input
                 type="text"
                 name="name"
                 required
-                autofocus
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                autofocus;
         }
 
-        div style="margin-bottom: 1.5rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label class="form-label" {
                 (t.messages.form_country())
             }
             country-selector
@@ -359,22 +363,21 @@ pub fn team_create_modal(t: &TranslationContext, error: Option<&str>) -> Markup 
 /// Edit team modal
 pub fn team_edit_modal(t: &TranslationContext, team: &TeamEntity, error: Option<&str>) -> Markup {
     let form_fields = html! {
-        div style="margin-bottom: 1rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label class="form-label" {
                 (t.messages.teams_name_label())
-                span style="color: red;" { "*" }
+                span class="required-indicator" { "*" }
             }
             input
                 type="text"
                 name="name"
                 value=(team.name)
                 required
-                autofocus
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                autofocus;
         }
 
-        div style="margin-bottom: 1.5rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label class="form-label" {
                 (t.messages.form_country())
             }
             @if let Some(country_id) = team.country_id {

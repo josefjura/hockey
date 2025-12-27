@@ -230,3 +230,16 @@
   font-size: 0.875rem;
   font-weight: 500;
 }
+
+/* ========== Common Page Patterns ========== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.page-header-title {
+  font-size: 2rem;
+  font-weight: 700;
+}

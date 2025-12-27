@@ -1,6 +1,42 @@
 /**
  * Modal Styles - Modal backdrops, containers, headers, and actions
- * These will be populated when converting inline modal styles to classes
  */
 
-/* Modal classes to be added during Phase 3 inline style conversion */
+/* ========== Modal Backdrop ========== */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* ========== Modal Container ========== */
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* ========== Modal Header ========== */
+.modal-header {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* ========== Modal Actions ========== */
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

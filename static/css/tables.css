@@ -49,3 +49,30 @@
   width: auto;
   text-align: right;
 }
+
+/* ========== Sortable Headers ========== */
+.sort-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.sort-button:hover {
+  color: var(--primary-color);
+}
+
+.sort-indicator {
+  font-size: 0.75rem;
+}
+
+.sort-indicator.active {
+  color: var(--primary-color);
+}
