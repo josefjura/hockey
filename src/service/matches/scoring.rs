@@ -149,12 +149,10 @@ pub async fn delete_score_event(db: &SqlitePool, id: i64) -> Result<bool, sqlx::
     let mut tx = db.begin().await?;
 
     // Get the score event to determine match and team
-    let score_event_row = sqlx::query!(
-        "SELECT match_id, team_id FROM score_event WHERE id = ?",
-        id
-    )
-    .fetch_optional(&mut *tx)
-    .await?;
+    let score_event_row =
+        sqlx::query!("SELECT match_id, team_id FROM score_event WHERE id = ?", id)
+            .fetch_optional(&mut *tx)
+            .await?;
 
     let (match_id, team_id) = match score_event_row {
         Some(row) => (row.match_id, row.team_id),

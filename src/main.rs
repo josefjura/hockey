@@ -81,6 +81,7 @@ async fn main() -> Result<(), anyhow::Error> {
     // Protected routes (authentication required)
     let protected_routes = Router::new()
         .route("/", get(root_handler))
+        .route("/management", get(routes::management::management_get))
         .route("/countries", get(routes::countries::countries_get))
         .route("/api/countries", get(routes::countries::countries_list_api))
         .route(

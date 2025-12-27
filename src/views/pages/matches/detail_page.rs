@@ -231,7 +231,11 @@ pub fn match_detail_page(t: &TranslationContext, detail: &MatchDetailEntity) -> 
 }
 
 /// Render score events list
-pub fn score_events_list(events: &[ScoreEventEntity], home_team_id: i64, _away_team_id: i64) -> Markup {
+pub fn score_events_list(
+    events: &[ScoreEventEntity],
+    home_team_id: i64,
+    _away_team_id: i64,
+) -> Markup {
     html! {
         div style="border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden;" {
             @for event in events {

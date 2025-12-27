@@ -174,9 +174,12 @@ pub async fn remove_player_from_roster(
     db: &SqlitePool,
     player_contract_id: i64,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query!("DELETE FROM player_contract WHERE id = ?", player_contract_id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        "DELETE FROM player_contract WHERE id = ?",
+        player_contract_id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
