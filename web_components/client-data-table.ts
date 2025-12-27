@@ -68,7 +68,7 @@ export class ClientDataTable<T = any> extends LitElement {
     }
 
     .search-input:focus {
-      outline: 2px solid #3b82f6;
+      outline: 2px solid var(--primary-color);
       outline-offset: -2px;
     }
 
@@ -111,7 +111,7 @@ export class ClientDataTable<T = any> extends LitElement {
     }
 
     .sortable-header:hover {
-      color: #3b82f6;
+      color: var(--primary-color);
     }
 
     .sort-icon {
@@ -121,7 +121,7 @@ export class ClientDataTable<T = any> extends LitElement {
 
     .sort-icon.active {
       opacity: 1;
-      color: #3b82f6;
+      color: var(--primary-color);
     }
 
     td {
@@ -154,7 +154,7 @@ export class ClientDataTable<T = any> extends LitElement {
       width: 40px;
       height: 40px;
       border: 4px solid var(--gray-200, #e5e7eb);
-      border-top-color: #3b82f6;
+      border-top-color: var(--primary-color);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -217,18 +217,18 @@ export class ClientDataTable<T = any> extends LitElement {
     }
 
     .page-button.active {
-      background-color: #3b82f6;
+      background-color: var(--primary-color);
       color: white;
-      border-color: #3b82f6;
+      border-color: var(--primary-color);
     }
 
     .error {
       padding: 1rem;
       margin: 1rem 0;
-      background-color: #fee2e2;
-      border: 1px solid #ef4444;
+      background-color: #fee2e2; /* TODO: Add CSS variable for light danger bg */
+      border: 1px solid var(--danger-color);
       border-radius: 4px;
-      color: #991b1b;
+      color: #991b1b; /* TODO: Add CSS variable for dark danger text */
     }
   `;
 

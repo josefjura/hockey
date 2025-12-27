@@ -84,7 +84,7 @@ export class ToggleSwitch extends LitElement {
     }
 
     input:checked + .toggle-slider {
-      background-color: #3b82f6;
+      background-color: var(--primary-color);
     }
 
     input:checked + .toggle-slider:before {
@@ -92,7 +92,7 @@ export class ToggleSwitch extends LitElement {
     }
 
     input:focus + .toggle-slider {
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); /* TODO: Use CSS variable for rgba */
     }
 
     .toggle-switch.loading .toggle-slider {
@@ -113,7 +113,7 @@ export class ToggleSwitch extends LitElement {
     }
 
     .error-message {
-      color: #ef4444;
+      color: var(--danger-color);
       font-size: 0.75rem;
       margin-top: 0.25rem;
     }

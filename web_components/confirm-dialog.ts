@@ -102,18 +102,18 @@ export class ConfirmDialog extends LitElement {
     }
 
     .icon-container.danger {
-      background: #fef2f2;
-      color: #ef4444;
+      background: #fef2f2; /* TODO: Add CSS variable for light danger bg */
+      color: var(--danger-color);
     }
 
     .icon-container.warning {
-      background: #fffbeb;
-      color: #f59e0b;
+      background: #fffbeb; /* TODO: Add CSS variable for light warning bg */
+      color: var(--warning-color);
     }
 
     .icon-container.info {
-      background: #eff6ff;
-      color: #3b82f6;
+      background: #eff6ff; /* TODO: Add CSS variable for light info bg */
+      color: var(--primary-color);
     }
 
     .icon-container svg {
@@ -169,27 +169,27 @@ export class ConfirmDialog extends LitElement {
     }
 
     .btn-confirm.danger {
-      background: #ef4444;
+      background: var(--danger-color);
     }
 
     .btn-confirm.danger:hover {
-      background: #dc2626;
+      background: var(--danger-hover);
     }
 
     .btn-confirm.warning {
-      background: #f59e0b;
+      background: var(--warning-color);
     }
 
     .btn-confirm.warning:hover {
-      background: #d97706;
+      background: var(--warning-hover);
     }
 
     .btn-confirm.info {
-      background: #3b82f6;
+      background: var(--primary-color);
     }
 
     .btn-confirm.info:hover {
-      background: #2563eb;
+      background: var(--primary-hover);
     }
 
     .btn:focus {

@@ -33,27 +33,27 @@ export class Badge extends LitElement {
 
     /* Filled variants */
     .badge-primary {
-      background-color: #3b82f6;
+      background-color: var(--primary-color);
       color: white;
     }
 
     .badge-success {
-      background-color: #10b981;
+      background-color: var(--success-color);
       color: white;
     }
 
     .badge-warning {
-      background-color: #f59e0b;
+      background-color: var(--warning-color);
       color: white;
     }
 
     .badge-danger {
-      background-color: #ef4444;
+      background-color: var(--danger-color);
       color: white;
     }
 
     .badge-info {
-      background-color: #06b6d4;
+      background-color: var(--info-color);
       color: white;
     }
 
@@ -65,32 +65,32 @@ export class Badge extends LitElement {
     /* Outlined variants */
     .badge-primary.outlined {
       background-color: transparent;
-      color: #3b82f6;
-      border: 1px solid #3b82f6;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
     }
 
     .badge-success.outlined {
       background-color: transparent;
-      color: #10b981;
-      border: 1px solid #10b981;
+      color: var(--success-color);
+      border: 1px solid var(--success-color);
     }
 
     .badge-warning.outlined {
       background-color: transparent;
-      color: #f59e0b;
-      border: 1px solid #f59e0b;
+      color: var(--warning-color);
+      border: 1px solid var(--warning-color);
     }
 
     .badge-danger.outlined {
       background-color: transparent;
-      color: #ef4444;
-      border: 1px solid #ef4444;
+      color: var(--danger-color);
+      border: 1px solid var(--danger-color);
     }
 
     .badge-info.outlined {
       background-color: transparent;
-      color: #06b6d4;
-      border: 1px solid #06b6d4;
+      color: var(--info-color);
+      border: 1px solid var(--info-color);
     }
 
     .badge-default.outlined {

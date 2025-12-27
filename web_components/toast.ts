@@ -232,22 +232,22 @@ export class Toast extends LitElement {
 
     /* Variant styles */
     .toast-success {
-      background: #10b981;
+      background: var(--success-color);
       color: white;
     }
 
     .toast-error {
-      background: #ef4444;
+      background: var(--danger-color);
       color: white;
     }
 
     .toast-warning {
-      background: #f59e0b;
+      background: var(--warning-color);
       color: white;
     }
 
     .toast-info {
-      background: #3b82f6;
+      background: var(--primary-color);
       color: white;
     }
 
