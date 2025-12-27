@@ -10,15 +10,15 @@ pub fn dashboard_page(
 ) -> Markup {
     html! {
         div class="card" {
-            h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;" {
+            h1 class="dashboard-title" {
                 (t.messages.dashboard_title())
             }
-            p style="color: var(--gray-600); margin-bottom: 2rem;" {
+            p class="dashboard-subtitle" {
                 (t.messages.dashboard_subtitle())
             }
 
             // Stats cards
-            div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;" {
+            div class="stats-grid" {
                 (stat_card(&t.messages.nav_teams().to_string(), &stats.teams_count.to_string(), "/teams"))
                 (stat_card(&t.messages.nav_players().to_string(), &stats.players_count.to_string(), "/players"))
                 (stat_card(&t.messages.nav_events().to_string(), &stats.events_count.to_string(), "/events"))
@@ -27,11 +27,11 @@ pub fn dashboard_page(
             }
 
             // Quick actions section
-            div style="margin-top: 3rem;" {
-                h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;" {
+            div class="dashboard-section" {
+                h2 class="section-heading" {
                     (t.messages.dashboard_quick_actions())
                 }
-                div style="display: flex; flex-wrap: wrap; gap: 0.75rem;" {
+                div class="quick-actions" {
                     (quick_action_button(&t.messages.dashboard_add_team().to_string(), "/teams/new"))
                     (quick_action_button(&t.messages.dashboard_add_player().to_string(), "/players/new"))
                     (quick_action_button(&t.messages.dashboard_add_event().to_string(), "/events/new"))
@@ -41,8 +41,8 @@ pub fn dashboard_page(
             }
 
             // Recent activity section
-            div style="margin-top: 3rem;" {
-                h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;" {
+            div class="dashboard-section" {
+                h2 class="section-heading" {
                     (t.messages.dashboard_recent_activity())
                 }
                 @if recent_activity.is_empty() {
@@ -50,27 +50,24 @@ pub fn dashboard_page(
                         (t.messages.dashboard_no_activity())
                     }
                 } @else {
-                    div style="background: var(--gray-50); border-radius: 8px; overflow: hidden;" {
-                        @for (i, activity) in recent_activity.iter().enumerate() {
-                            div style={
-                                @if i > 0 { "border-top: 1px solid var(--gray-200);" }
-                                "padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem;"
-                            } {
+                    div class="activity-feed" {
+                        @for activity in recent_activity.iter() {
+                            div class="activity-item" {
                                 // Entity type icon
-                                span style="font-size: 1.25rem;" {
+                                span class="activity-icon" {
                                     (get_entity_icon(&activity.entity_type))
                                 }
                                 // Activity details
-                                div style="flex: 1;" {
-                                    span style="font-weight: 500;" {
+                                div class="activity-details" {
+                                    span class="activity-name" {
                                         (activity.entity_name)
                                     }
-                                    span style="color: var(--gray-500); margin-left: 0.5rem;" {
+                                    span class="activity-action" {
                                         (activity.action)
                                     }
                                 }
                                 // Timestamp
-                                span style="color: var(--gray-400); font-size: 0.875rem;" {
+                                span class="activity-timestamp" {
                                     (format_timestamp(&activity.timestamp))
                                 }
                             }
@@ -80,7 +77,7 @@ pub fn dashboard_page(
             }
 
             // Getting started info
-            div style="margin-top: 3rem;" {
+            div class="dashboard-section" {
                 div class="info" {
                     strong { (t.messages.dashboard_getting_started()) }
                     " "
@@ -93,24 +90,11 @@ pub fn dashboard_page(
 
 fn stat_card(title: &str, value: &str, link: &str) -> Markup {
     html! {
-        a href=(link) style="text-decoration: none;" {
-            div style="
-                background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-                padding: 1.5rem;
-                border-radius: 12px;
-                color: white;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                transition: transform 0.2s, box-shadow 0.2s;
-                cursor: pointer;
-            "
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0, 0, 0, 0.15)';"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1)';"
-            {
-                div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;" {
-                    div style="font-size: 2.5rem; font-weight: 700; line-height: 1;" { (value) }
-                }
-                div style="font-size: 0.875rem; opacity: 0.9; font-weight: 500;" { (title) }
+        a href=(link) class="stat-card" {
+            div class="stat-card-header" {
+                div class="stat-card-value" { (value) }
             }
+            div class="stat-card-title" { (title) }
         }
     }
 }
@@ -122,21 +106,7 @@ fn quick_action_button(label: &str, href: &str) -> Markup {
             hx-get=(href)
             hx-target="#modal-container"
             hx-swap="innerHTML"
-            style="
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-                padding: 0.75rem 1.25rem;
-                background: white;
-                border: 1px solid var(--gray-300);
-                border-radius: 8px;
-                color: var(--gray-700);
-                font-weight: 500;
-                text-decoration: none;
-                transition: all 0.2s;
-            "
-            onmouseover="this.style.borderColor='var(--primary-color)'; this.style.color='var(--primary-color)';"
-            onmouseout="this.style.borderColor='var(--gray-300)'; this.style.color='var(--gray-700)';"
+            class="quick-action-btn"
         {
             span { (label) }
         }
