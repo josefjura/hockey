@@ -11,9 +11,11 @@ use crate::i18n::TranslationContext;
 use crate::service::events::{self, CreateEventEntity, EventFilters, UpdateEventEntity};
 use crate::validation::validate_name;
 use crate::views::{
-    components::{error::error_message, htmx::htmx_reload_table},
+    components::{
+        error::error_message,
+        htmx::{htmx_reload_table, htmx_reload_table_with_stats},
+    },
     layout::admin_layout,
-    pages::dashboard::dashboard_stats_partial,
     pages::event_detail::event_detail_page,
     pages::events::{event_create_modal, event_edit_modal, event_list_content, events_page},
 };
@@ -196,14 +198,7 @@ pub async fn event_create(
                 .unwrap_or_default();
 
             // Return HTMX response to close modal, reload table, and update dashboard stats
-            use maud::html;
-            Html(
-                html! {
-                    div hx-get="/events/list" hx-target="#events-table" hx-trigger="load" hx-swap="outerHTML" {}
-                    (dashboard_stats_partial(&t, &stats))
-                }
-                .into_string(),
-            )
+            htmx_reload_table_with_stats("/events/list", "events-table", &t, &stats)
         }
         Err(e) => {
             tracing::error!("Failed to create event: {}", e);

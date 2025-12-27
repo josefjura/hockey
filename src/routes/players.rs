@@ -12,9 +12,11 @@ use crate::service::players::{
     self, CreatePlayerEntity, PlayerFilters, SortField, SortOrder, UpdatePlayerEntity,
 };
 use crate::views::{
-    components::{error::error_message, htmx::htmx_reload_table},
+    components::{
+        error::error_message,
+        htmx::{htmx_reload_table, htmx_reload_table_with_stats},
+    },
     layout::admin_layout,
-    pages::dashboard::dashboard_stats_partial,
     pages::player_detail::player_detail_page,
     pages::players::{player_create_modal, player_edit_modal, player_list_content, players_page},
 };
@@ -256,14 +258,7 @@ pub async fn player_create(
                 .unwrap_or_default();
 
             // Return HTMX response to close modal, reload table, and update dashboard stats
-            use maud::html;
-            Html(
-                html! {
-                    div hx-get="/players/list" hx-target="#players-table" hx-trigger="load" hx-swap="outerHTML" {}
-                    (dashboard_stats_partial(&t, &stats))
-                }
-                .into_string(),
-            )
+            htmx_reload_table_with_stats("/players/list", "players-table", &t, &stats)
         }
         Err(e) => {
             tracing::error!("Failed to create player: {}", e);

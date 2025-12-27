@@ -10,7 +10,7 @@ use crate::app_state::AppState;
 use crate::i18n::TranslationContext;
 use crate::service::matches::{self, CreateMatchEntity, UpdateMatchEntity};
 use crate::views::{
-    pages::dashboard::dashboard_stats_partial,
+    components::htmx::htmx_reload_table_with_stats,
     pages::matches::{match_create_modal, match_edit_modal},
 };
 
@@ -149,14 +149,7 @@ pub async fn match_create(
                 .unwrap_or_default();
 
             // Return HTMX response to close modal, reload table, and update dashboard stats
-            use maud::html;
-            Html(
-                html! {
-                    div hx-get="/matches/list" hx-target="#matches-table" hx-trigger="load" hx-swap="outerHTML" {}
-                    (dashboard_stats_partial(&t, &stats))
-                }
-                .into_string(),
-            )
+            htmx_reload_table_with_stats("/matches/list", "matches-table", &t, &stats)
         }
         Err(e) => {
             tracing::error!("Failed to create match: {}", e);
