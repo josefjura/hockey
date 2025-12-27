@@ -89,12 +89,17 @@ pub async fn create_player(
     db: &SqlitePool,
     player: CreatePlayerEntity,
 ) -> Result<i64, sqlx::Error> {
-    let result = sqlx::query("INSERT INTO player (name, country_id, photo_path) VALUES (?, ?, ?)")
-        .bind(player.name)
-        .bind(player.country_id)
-        .bind(player.photo_path)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"
+        INSERT INTO player (name, country_id, photo_path)
+        VALUES (?, ?, ?)
+        "#,
+        player.name,
+        player.country_id,
+        player.photo_path
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.last_insert_rowid())
 }
@@ -158,24 +163,26 @@ pub async fn get_player_by_id(
     db: &SqlitePool,
     id: i64,
 ) -> Result<Option<PlayerEntity>, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT p.id, p.name, p.country_id, p.photo_path, c.name as country_name, c.iso2Code as country_iso2_code
-         FROM player p
-         INNER JOIN country c ON p.country_id = c.id
-         WHERE p.id = ?",
+    let row = sqlx::query_as!(
+        PlayerEntity,
+        r#"
+        SELECT
+            p.id,
+            p.name as "name!",
+            p.country_id,
+            p.photo_path,
+            c.name as "country_name!",
+            c.iso2Code as "country_iso2_code!"
+        FROM player p
+        INNER JOIN country c ON p.country_id = c.id
+        WHERE p.id = ?
+        "#,
+        id
     )
-    .bind(id)
     .fetch_optional(db)
     .await?;
 
-    Ok(row.map(|row| PlayerEntity {
-        id: row.get("id"),
-        name: row.get("name"),
-        country_id: row.get("country_id"),
-        country_name: row.get("country_name"),
-        country_iso2_code: row.get("country_iso2_code"),
-        photo_path: row.get("photo_path"),
-    }))
+    Ok(row)
 }
 
 /// Update a player
@@ -184,24 +191,34 @@ pub async fn update_player(
     id: i64,
     player: UpdatePlayerEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result =
-        sqlx::query("UPDATE player SET name = ?, country_id = ?, photo_path = ? WHERE id = ?")
-            .bind(player.name)
-            .bind(player.country_id)
-            .bind(player.photo_path)
-            .bind(id)
-            .execute(db)
-            .await?;
+    let result = sqlx::query!(
+        r#"
+        UPDATE player
+        SET name = ?, country_id = ?, photo_path = ?
+        WHERE id = ?
+        "#,
+        player.name,
+        player.country_id,
+        player.photo_path,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
 
 /// Delete a player
 pub async fn delete_player(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM player WHERE id = ?")
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"
+        DELETE FROM player
+        WHERE id = ?
+        "#,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
@@ -242,15 +259,17 @@ pub async fn get_player_detail(
     };
 
     // Get all contracts with team, season, and event info
-    let rows = sqlx::query(
-        "SELECT
+    let contracts = sqlx::query_as!(
+        PlayerContractWithTeamEntity,
+        r#"
+        SELECT
             t.id as team_id,
-            t.name as team_name,
+            t.name as "team_name!",
             tc.iso2Code as team_country_iso2_code,
             s.id as season_id,
             s.year as season_year,
             s.display_name as season_display_name,
-            e.name as event_name
+            e.name as "event_name!"
         FROM player_contract pc
         INNER JOIN team_participation tp ON pc.team_participation_id = tp.id
         INNER JOIN team t ON tp.team_id = t.id
@@ -258,24 +277,12 @@ pub async fn get_player_detail(
         INNER JOIN season s ON tp.season_id = s.id
         INNER JOIN event e ON s.event_id = e.id
         WHERE pc.player_id = ?
-        ORDER BY s.year DESC, e.name ASC",
+        ORDER BY s.year DESC, e.name ASC
+        "#,
+        id
     )
-    .bind(id)
     .fetch_all(db)
     .await?;
-
-    let contracts = rows
-        .into_iter()
-        .map(|row| PlayerContractWithTeamEntity {
-            team_id: row.get("team_id"),
-            team_name: row.get("team_name"),
-            team_country_iso2_code: row.get("team_country_iso2_code"),
-            season_id: row.get("season_id"),
-            season_year: row.get("season_year"),
-            season_display_name: row.get("season_display_name"),
-            event_name: row.get("event_name"),
-        })
-        .collect();
 
     Ok(Some(PlayerDetailEntity {
         player_info,

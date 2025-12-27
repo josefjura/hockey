@@ -1,4 +1,4 @@
-use sqlx::{Row, SqlitePool};
+use sqlx::SqlitePool;
 
 /// Player in a roster with additional details
 #[derive(Debug, Clone)]
@@ -35,35 +35,37 @@ pub async fn get_roster(
     db: &SqlitePool,
     team_participation_id: i64,
 ) -> Result<Vec<PlayerInRoster>, sqlx::Error> {
-    let rows = sqlx::query(
-        "SELECT
+    let rows = sqlx::query!(
+        r#"
+        SELECT
             pc.id as player_contract_id,
             p.id as player_id,
-            p.name as player_name,
+            p.name as "player_name!: String",
             p.photo_path,
             c.id as country_id,
-            c.name as country_name,
-            c.iso2Code as country_iso2_code
+            c.name as "country_name!: String",
+            c.iso2Code as "country_iso2_code!: String"
         FROM player_contract pc
         INNER JOIN player p ON pc.player_id = p.id
         INNER JOIN country c ON p.country_id = c.id
         WHERE pc.team_participation_id = ?
-        ORDER BY p.name ASC",
+        ORDER BY p.name ASC
+        "#,
+        team_participation_id
     )
-    .bind(team_participation_id)
     .fetch_all(db)
     .await?;
 
     let players = rows
         .into_iter()
         .map(|row| PlayerInRoster {
-            player_contract_id: row.get("player_contract_id"),
-            player_id: row.get("player_id"),
-            player_name: row.get("player_name"),
-            country_id: row.get("country_id"),
-            country_name: row.get("country_name"),
-            country_iso2_code: row.get("country_iso2_code"),
-            photo_path: row.get("photo_path"),
+            player_contract_id: row.player_contract_id,
+            player_id: row.player_id,
+            player_name: row.player_name,
+            country_id: row.country_id,
+            country_name: row.country_name,
+            country_iso2_code: row.country_iso2_code,
+            photo_path: row.photo_path,
         })
         .collect();
 
@@ -75,39 +77,32 @@ pub async fn get_team_participation_context(
     db: &SqlitePool,
     team_participation_id: i64,
 ) -> Result<Option<TeamParticipationContext>, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT
+    let row = sqlx::query_as!(
+        TeamParticipationContext,
+        r#"
+        SELECT
             tp.id as team_participation_id,
             t.id as team_id,
-            t.name as team_name,
+            t.name as "team_name!: String",
             c.iso2Code as country_iso2_code,
             s.id as season_id,
             s.year as season_year,
             s.display_name as season_display_name,
             e.id as event_id,
-            e.name as event_name
+            e.name as "event_name!: String"
         FROM team_participation tp
         INNER JOIN team t ON tp.team_id = t.id
         LEFT JOIN country c ON t.country_id = c.id
         INNER JOIN season s ON tp.season_id = s.id
         INNER JOIN event e ON s.event_id = e.id
-        WHERE tp.id = ?",
+        WHERE tp.id = ?
+        "#,
+        team_participation_id
     )
-    .bind(team_participation_id)
     .fetch_optional(db)
     .await?;
 
-    Ok(row.map(|row| TeamParticipationContext {
-        team_participation_id: row.get("team_participation_id"),
-        team_id: row.get("team_id"),
-        team_name: row.get("team_name"),
-        country_iso2_code: row.get("country_iso2_code"),
-        season_id: row.get("season_id"),
-        season_year: row.get("season_year"),
-        season_display_name: row.get("season_display_name"),
-        event_id: row.get("event_id"),
-        event_name: row.get("event_name"),
-    }))
+    Ok(row)
 }
 
 /// Get players not yet in the roster (available to add)
@@ -115,28 +110,24 @@ pub async fn get_available_players(
     db: &SqlitePool,
     team_participation_id: i64,
 ) -> Result<Vec<(i64, String, String)>, sqlx::Error> {
-    let rows = sqlx::query(
-        "SELECT p.id, p.name, c.name as country_name
+    let rows = sqlx::query!(
+        r#"
+        SELECT p.id, p.name, c.name as country_name
         FROM player p
         INNER JOIN country c ON p.country_id = c.id
         WHERE p.id NOT IN (
             SELECT player_id FROM player_contract WHERE team_participation_id = ?
         )
-        ORDER BY p.name ASC",
+        ORDER BY p.name ASC
+        "#,
+        team_participation_id
     )
-    .bind(team_participation_id)
     .fetch_all(db)
     .await?;
 
     Ok(rows
         .into_iter()
-        .map(|row| {
-            (
-                row.get("id"),
-                row.get("name"),
-                row.get::<String, _>("country_name"),
-            )
-        })
+        .map(|row| (row.id, row.name, row.country_name))
         .collect())
 }
 
@@ -146,18 +137,19 @@ pub async fn is_player_in_roster(
     team_participation_id: i64,
     player_id: i64,
 ) -> Result<bool, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT COUNT(*) as count
+    let row = sqlx::query!(
+        r#"
+        SELECT COUNT(*) as count
         FROM player_contract
-        WHERE team_participation_id = ? AND player_id = ?",
+        WHERE team_participation_id = ? AND player_id = ?
+        "#,
+        team_participation_id,
+        player_id
     )
-    .bind(team_participation_id)
-    .bind(player_id)
     .fetch_one(db)
     .await?;
 
-    let count: i64 = row.get("count");
-    Ok(count > 0)
+    Ok(row.count > 0)
 }
 
 /// Add a player to a roster (create player_contract)
@@ -166,12 +158,13 @@ pub async fn add_player_to_roster(
     team_participation_id: i64,
     player_id: i64,
 ) -> Result<i64, sqlx::Error> {
-    let result =
-        sqlx::query("INSERT INTO player_contract (team_participation_id, player_id) VALUES (?, ?)")
-            .bind(team_participation_id)
-            .bind(player_id)
-            .execute(db)
-            .await?;
+    let result = sqlx::query!(
+        "INSERT INTO player_contract (team_participation_id, player_id) VALUES (?, ?)",
+        team_participation_id,
+        player_id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.last_insert_rowid())
 }
@@ -181,8 +174,7 @@ pub async fn remove_player_from_roster(
     db: &SqlitePool,
     player_contract_id: i64,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM player_contract WHERE id = ?")
-        .bind(player_contract_id)
+    let result = sqlx::query!("DELETE FROM player_contract WHERE id = ?", player_contract_id)
         .execute(db)
         .await?;
 
@@ -194,10 +186,16 @@ pub async fn get_team_participation_id_for_contract(
     db: &SqlitePool,
     player_contract_id: i64,
 ) -> Result<Option<i64>, sqlx::Error> {
-    let row = sqlx::query("SELECT team_participation_id FROM player_contract WHERE id = ?")
-        .bind(player_contract_id)
-        .fetch_optional(db)
-        .await?;
+    let row = sqlx::query!(
+        r#"
+        SELECT team_participation_id
+        FROM player_contract
+        WHERE id = ?
+        "#,
+        player_contract_id
+    )
+    .fetch_optional(db)
+    .await?;
 
-    Ok(row.map(|r| r.get("team_participation_id")))
+    Ok(row.map(|r| r.team_participation_id))
 }

@@ -118,11 +118,16 @@ impl SortOrder {
 
 /// Create a new team
 pub async fn create_team(db: &SqlitePool, team: CreateTeamEntity) -> Result<i64, sqlx::Error> {
-    let result = sqlx::query("INSERT INTO team (name, country_id) VALUES (?, ?)")
-        .bind(team.name)
-        .bind(team.country_id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"
+        INSERT INTO team (name, country_id)
+        VALUES (?, ?)
+        "#,
+        team.name,
+        team.country_id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.last_insert_rowid())
 }
@@ -183,23 +188,25 @@ pub async fn get_teams(
 
 /// Get a single team by ID
 pub async fn get_team_by_id(db: &SqlitePool, id: i64) -> Result<Option<TeamEntity>, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT t.id, t.name, t.country_id, c.name as country_name, c.iso2Code as country_iso2_code
-         FROM team t
-         LEFT JOIN country c ON t.country_id = c.id
-         WHERE t.id = ?",
+    let row = sqlx::query_as!(
+        TeamEntity,
+        r#"
+        SELECT
+            t.id,
+            t.name as "name!",
+            t.country_id,
+            c.name as country_name,
+            c.iso2Code as country_iso2_code
+        FROM team t
+        LEFT JOIN country c ON t.country_id = c.id
+        WHERE t.id = ?
+        "#,
+        id
     )
-    .bind(id)
     .fetch_optional(db)
     .await?;
 
-    Ok(row.map(|row| TeamEntity {
-        id: row.get("id"),
-        name: row.get("name"),
-        country_id: row.get("country_id"),
-        country_name: row.get("country_name"),
-        country_iso2_code: row.get("country_iso2_code"),
-    }))
+    Ok(row)
 }
 
 /// Update a team
@@ -208,22 +215,33 @@ pub async fn update_team(
     id: i64,
     team: UpdateTeamEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("UPDATE team SET name = ?, country_id = ? WHERE id = ?")
-        .bind(team.name)
-        .bind(team.country_id)
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"
+        UPDATE team
+        SET name = ?, country_id = ?
+        WHERE id = ?
+        "#,
+        team.name,
+        team.country_id,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
 
 /// Delete a team
 pub async fn delete_team(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM team WHERE id = ?")
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"
+        DELETE FROM team
+        WHERE id = ?
+        "#,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
@@ -264,13 +282,15 @@ pub async fn get_team_detail(
     };
 
     // Get all participations with season and event info
-    let rows = sqlx::query(
-        "SELECT
+    let rows = sqlx::query_as!(
+        TeamParticipationWithSeasonEntity,
+        r#"
+        SELECT
             tp.id,
             tp.season_id,
             s.year as season_year,
             s.display_name as season_display_name,
-            e.name as event_name,
+            e.name as "event_name!",
             COALESCE(
                 (SELECT COUNT(*) FROM player_contract pc WHERE pc.team_participation_id = tp.id),
                 0
@@ -279,23 +299,14 @@ pub async fn get_team_detail(
         INNER JOIN season s ON tp.season_id = s.id
         INNER JOIN event e ON s.event_id = e.id
         WHERE tp.team_id = ?
-        ORDER BY s.year DESC, e.name ASC",
+        ORDER BY s.year DESC, e.name ASC
+        "#,
+        id
     )
-    .bind(id)
     .fetch_all(db)
     .await?;
 
-    let participations = rows
-        .into_iter()
-        .map(|row| TeamParticipationWithSeasonEntity {
-            id: row.get("id"),
-            season_id: row.get("season_id"),
-            season_year: row.get("season_year"),
-            season_display_name: row.get("season_display_name"),
-            event_name: row.get("event_name"),
-            player_count: row.get("player_count"),
-        })
-        .collect();
+    let participations = rows;
 
     Ok(Some(TeamDetailEntity {
         team_info,

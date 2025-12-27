@@ -80,12 +80,14 @@ pub async fn create_season(
     db: &SqlitePool,
     season: CreateSeasonEntity,
 ) -> Result<i64, sqlx::Error> {
-    let result = sqlx::query("INSERT INTO season (year, display_name, event_id) VALUES (?, ?, ?)")
-        .bind(season.year)
-        .bind(season.display_name)
-        .bind(season.event_id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        "INSERT INTO season (year, display_name, event_id) VALUES (?, ?, ?)",
+        season.year,
+        season.display_name,
+        season.event_id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.last_insert_rowid())
 }
@@ -148,23 +150,25 @@ pub async fn get_season_by_id(
     db: &SqlitePool,
     id: i64,
 ) -> Result<Option<SeasonEntity>, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT s.id, s.year, s.display_name, s.event_id, e.name as event_name
-         FROM season s
-         INNER JOIN event e ON s.event_id = e.id
-         WHERE s.id = ?",
+    let row = sqlx::query_as!(
+        SeasonEntity,
+        r#"
+        SELECT
+            s.id,
+            s.year,
+            s.display_name,
+            s.event_id,
+            e.name as "event_name!: String"
+        FROM season s
+        INNER JOIN event e ON s.event_id = e.id
+        WHERE s.id = ?
+        "#,
+        id
     )
-    .bind(id)
     .fetch_optional(db)
     .await?;
 
-    Ok(row.map(|row| SeasonEntity {
-        id: row.get("id"),
-        year: row.get("year"),
-        display_name: row.get("display_name"),
-        event_id: row.get("event_id"),
-        event_name: row.get("event_name"),
-    }))
+    Ok(row)
 }
 
 /// Get season detail with all participating teams
@@ -193,22 +197,22 @@ pub async fn update_season(
     id: i64,
     season: UpdateSeasonEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result =
-        sqlx::query("UPDATE season SET year = ?, display_name = ?, event_id = ? WHERE id = ?")
-            .bind(season.year)
-            .bind(season.display_name)
-            .bind(season.event_id)
-            .bind(id)
-            .execute(db)
-            .await?;
+    let result = sqlx::query!(
+        "UPDATE season SET year = ?, display_name = ?, event_id = ? WHERE id = ?",
+        season.year,
+        season.display_name,
+        season.event_id,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
 
 /// Delete a season
 pub async fn delete_season(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM season WHERE id = ?")
-        .bind(id)
+    let result = sqlx::query!("DELETE FROM season WHERE id = ?", id)
         .execute(db)
         .await?;
 
@@ -231,12 +235,15 @@ fn apply_filters<'a>(
 
 /// Get all events for dropdowns
 pub async fn get_events(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query("SELECT id, name FROM event ORDER BY name")
-        .fetch_all(db)
-        .await?;
+    let rows = sqlx::query!(
+        r#"
+        SELECT id, name
+        FROM event
+        ORDER BY name
+        "#
+    )
+    .fetch_all(db)
+    .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect())
+    Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }

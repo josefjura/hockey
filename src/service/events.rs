@@ -58,11 +58,16 @@ impl<T> PagedResult<T> {
 
 /// Create a new event
 pub async fn create_event(db: &SqlitePool, event: CreateEventEntity) -> Result<i64, sqlx::Error> {
-    let result = sqlx::query("INSERT INTO event (name, country_id) VALUES (?, ?)")
-        .bind(event.name)
-        .bind(event.country_id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"
+        INSERT INTO event (name, country_id)
+        VALUES (?, ?)
+        "#,
+        event.name,
+        event.country_id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.last_insert_rowid())
 }
@@ -115,23 +120,25 @@ pub async fn get_events(
 
 /// Get a single event by ID
 pub async fn get_event_by_id(db: &SqlitePool, id: i64) -> Result<Option<EventEntity>, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT e.id, e.name, e.country_id, c.name as country_name, c.iso2Code as country_iso2_code
-         FROM event e
-         LEFT JOIN country c ON e.country_id = c.id
-         WHERE e.id = ?",
+    let row = sqlx::query_as!(
+        EventEntity,
+        r#"
+        SELECT
+            e.id,
+            e.name as "name!",
+            e.country_id,
+            c.name as country_name,
+            c.iso2Code as country_iso2_code
+        FROM event e
+        LEFT JOIN country c ON e.country_id = c.id
+        WHERE e.id = ?
+        "#,
+        id
     )
-    .bind(id)
     .fetch_optional(db)
     .await?;
 
-    Ok(row.map(|row| EventEntity {
-        id: row.get("id"),
-        name: row.get("name"),
-        country_id: row.get("country_id"),
-        country_name: row.get("country_name"),
-        country_iso2_code: row.get("country_iso2_code"),
-    }))
+    Ok(row)
 }
 
 #[derive(Debug, Clone)]
@@ -159,24 +166,18 @@ pub async fn get_event_detail(
     };
 
     // Get seasons for this event
-    let rows = sqlx::query(
-        "SELECT id, year, display_name
-         FROM season
-         WHERE event_id = ?
-         ORDER BY year DESC",
+    let seasons = sqlx::query_as!(
+        SeasonEntity,
+        r#"
+        SELECT id, year, display_name
+        FROM season
+        WHERE event_id = ?
+        ORDER BY year DESC
+        "#,
+        event_id
     )
-    .bind(event_id)
     .fetch_all(db)
     .await?;
-
-    let seasons = rows
-        .into_iter()
-        .map(|row| SeasonEntity {
-            id: row.get("id"),
-            year: row.get("year"),
-            display_name: row.get("display_name"),
-        })
-        .collect();
 
     Ok(Some(EventDetailEntity {
         event_info,
@@ -190,22 +191,33 @@ pub async fn update_event(
     id: i64,
     event: UpdateEventEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("UPDATE event SET name = ?, country_id = ? WHERE id = ?")
-        .bind(event.name)
-        .bind(event.country_id)
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"
+        UPDATE event
+        SET name = ?, country_id = ?
+        WHERE id = ?
+        "#,
+        event.name,
+        event.country_id,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
 
 /// Delete an event
 pub async fn delete_event(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM event WHERE id = ?")
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"
+        DELETE FROM event
+        WHERE id = ?
+        "#,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }

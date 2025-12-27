@@ -1,4 +1,4 @@
-use sqlx::{Row, SqlitePool};
+use sqlx::SqlitePool;
 
 /// Dashboard statistics
 #[derive(Debug, Clone, Default)]
@@ -21,30 +21,30 @@ pub struct RecentActivity {
 
 /// Get dashboard statistics (counts of all entities)
 pub async fn get_dashboard_stats(db: &SqlitePool) -> Result<DashboardStats, sqlx::Error> {
-    let teams_count: i64 = sqlx::query("SELECT COUNT(*) as count FROM team")
+    let teams_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM team")
         .fetch_one(db)
         .await?
-        .get("count");
+        .count;
 
-    let players_count: i64 = sqlx::query("SELECT COUNT(*) as count FROM player")
+    let players_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM player")
         .fetch_one(db)
         .await?
-        .get("count");
+        .count;
 
-    let events_count: i64 = sqlx::query("SELECT COUNT(*) as count FROM event")
+    let events_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM event")
         .fetch_one(db)
         .await?
-        .get("count");
+        .count;
 
-    let seasons_count: i64 = sqlx::query("SELECT COUNT(*) as count FROM season")
+    let seasons_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM season")
         .fetch_one(db)
         .await?
-        .get("count");
+        .count;
 
-    let matches_count: i64 = sqlx::query("SELECT COUNT(*) as count FROM match")
+    let matches_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM match")
         .fetch_one(db)
         .await?
-        .get("count");
+        .count;
 
     Ok(DashboardStats {
         teams_count,
@@ -59,7 +59,8 @@ pub async fn get_dashboard_stats(db: &SqlitePool) -> Result<DashboardStats, sqlx
 pub async fn get_recent_activity(db: &SqlitePool) -> Result<Vec<RecentActivity>, sqlx::Error> {
     // Query to get recent updates from various tables
     // We'll use UNION ALL to combine recent items from different tables
-    let query = r#"
+    let rows = sqlx::query!(
+        r#"
         SELECT 'Team' as entity_type, name as entity_name, 'updated' as action, updated_at as timestamp
         FROM team WHERE updated_at IS NOT NULL
         UNION ALL
@@ -69,30 +70,31 @@ pub async fn get_recent_activity(db: &SqlitePool) -> Result<Vec<RecentActivity>,
         SELECT 'Event' as entity_type, name as entity_name, 'updated' as action, updated_at as timestamp
         FROM event WHERE updated_at IS NOT NULL
         UNION ALL
-        SELECT 'Season' as entity_type, 
-               COALESCE(display_name, 'Season ' || year) as entity_name, 
-               'updated' as action, 
+        SELECT 'Season' as entity_type,
+               COALESCE(display_name, 'Season ' || year) as entity_name,
+               'updated' as action,
                updated_at as timestamp
         FROM season WHERE updated_at IS NOT NULL
         UNION ALL
-        SELECT 'Match' as entity_type, 
-               'Match #' || id as entity_name, 
-               'updated' as action, 
+        SELECT 'Match' as entity_type,
+               'Match #' || id as entity_name,
+               'updated' as action,
                updated_at as timestamp
         FROM match WHERE updated_at IS NOT NULL
         ORDER BY timestamp DESC
         LIMIT 10
-    "#;
-
-    let rows = sqlx::query(query).fetch_all(db).await?;
+        "#
+    )
+    .fetch_all(db)
+    .await?;
 
     let activities = rows
         .into_iter()
         .map(|row| RecentActivity {
-            entity_type: row.get("entity_type"),
-            entity_name: row.get("entity_name"),
-            action: row.get("action"),
-            timestamp: row.get("timestamp"),
+            entity_type: row.entity_type,
+            entity_name: row.entity_name.unwrap_or_else(|| String::from("")),
+            action: row.action,
+            timestamp: row.timestamp.unwrap_or_else(|| String::from("")),
         })
         .collect();
 

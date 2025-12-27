@@ -94,23 +94,23 @@ impl SortField {
 
 /// Get a single match by ID with all related details
 pub async fn get_match_by_id(db: &SqlitePool, id: i64) -> Result<Option<MatchEntity>, sqlx::Error> {
-    let row = sqlx::query(
+    let row = sqlx::query!(
         r#"
         SELECT
-            m.id,
-            m.season_id,
+            m.id as "id!: i64",
+            m.season_id as "season_id!: i64",
             COALESCE(s.display_name, CAST(s.year AS TEXT)) as season_name,
             e.name as event_name,
-            m.home_team_id,
-            ht.name as home_team_name,
+            m.home_team_id as "home_team_id!: i64",
+            ht.name as "home_team_name!: String",
             hc.iso2Code as home_team_country_iso2,
-            m.away_team_id,
-            at.name as away_team_name,
+            m.away_team_id as "away_team_id!: i64",
+            at.name as "away_team_name!: String",
             ac.iso2Code as away_team_country_iso2,
-            m.home_score_unidentified,
-            m.away_score_unidentified,
+            m.home_score_unidentified as "home_score_unidentified!: i32",
+            m.away_score_unidentified as "away_score_unidentified!: i32",
             m.match_date,
-            m.status,
+            m.status as "status!: String",
             m.venue
         FROM match m
         INNER JOIN team ht ON m.home_team_id = ht.id
@@ -121,27 +121,27 @@ pub async fn get_match_by_id(db: &SqlitePool, id: i64) -> Result<Option<MatchEnt
         LEFT JOIN event e ON s.event_id = e.id
         WHERE m.id = ?
         "#,
+        id
     )
-    .bind(id)
     .fetch_optional(db)
     .await?;
 
     Ok(row.map(|row| MatchEntity {
-        id: row.get("id"),
-        season_id: row.get("season_id"),
-        season_name: row.get("season_name"),
-        event_name: row.get("event_name"),
-        home_team_id: row.get("home_team_id"),
-        home_team_name: row.get("home_team_name"),
-        home_team_country_iso2: row.get("home_team_country_iso2"),
-        away_team_id: row.get("away_team_id"),
-        away_team_name: row.get("away_team_name"),
-        away_team_country_iso2: row.get("away_team_country_iso2"),
-        home_score_unidentified: row.get("home_score_unidentified"),
-        away_score_unidentified: row.get("away_score_unidentified"),
-        match_date: row.get("match_date"),
-        status: row.get("status"),
-        venue: row.get("venue"),
+        id: row.id,
+        season_id: row.season_id,
+        season_name: row.season_name,
+        event_name: row.event_name,
+        home_team_id: row.home_team_id,
+        home_team_name: row.home_team_name,
+        home_team_country_iso2: row.home_team_country_iso2,
+        away_team_id: row.away_team_id,
+        away_team_name: row.away_team_name,
+        away_team_country_iso2: row.away_team_country_iso2,
+        home_score_unidentified: row.home_score_unidentified,
+        away_score_unidentified: row.away_score_unidentified,
+        match_date: row.match_date,
+        status: row.status,
+        venue: row.venue,
     }))
 }
 
@@ -150,22 +150,22 @@ pub async fn get_score_events(
     db: &SqlitePool,
     match_id: i64,
 ) -> Result<Vec<ScoreEventEntity>, sqlx::Error> {
-    let rows = sqlx::query(
+    let rows = sqlx::query!(
         r#"
         SELECT
-            se.id,
-            se.match_id,
-            se.team_id,
-            t.name as team_name,
+            se.id as "id!: i64",
+            se.match_id as "match_id!: i64",
+            se.team_id as "team_id!: i64",
+            t.name as "team_name!: String",
             se.scorer_id,
             scorer.name as scorer_name,
             se.assist1_id,
             assist1.name as assist1_name,
             se.assist2_id,
             assist2.name as assist2_name,
-            se.period,
-            se.time_minutes,
-            se.time_seconds,
+            se.period as "period!: i32",
+            se.time_minutes as "time_minutes: i32",
+            se.time_seconds as "time_seconds: i32",
             se.goal_type
         FROM score_event se
         INNER JOIN team t ON se.team_id = t.id
@@ -175,28 +175,28 @@ pub async fn get_score_events(
         WHERE se.match_id = ?
         ORDER BY se.period ASC, se.time_minutes ASC, se.time_seconds ASC
         "#,
+        match_id
     )
-    .bind(match_id)
     .fetch_all(db)
     .await?;
 
     Ok(rows
         .into_iter()
         .map(|row| ScoreEventEntity {
-            id: row.get("id"),
-            match_id: row.get("match_id"),
-            team_id: row.get("team_id"),
-            team_name: row.get("team_name"),
-            scorer_id: row.get("scorer_id"),
-            scorer_name: row.get("scorer_name"),
-            assist1_id: row.get("assist1_id"),
-            assist1_name: row.get("assist1_name"),
-            assist2_id: row.get("assist2_id"),
-            assist2_name: row.get("assist2_name"),
-            period: row.get("period"),
-            time_minutes: row.get("time_minutes"),
-            time_seconds: row.get("time_seconds"),
-            goal_type: row.get("goal_type"),
+            id: row.id,
+            match_id: row.match_id,
+            team_id: row.team_id,
+            team_name: row.team_name,
+            scorer_id: row.scorer_id,
+            scorer_name: Some(row.scorer_name),
+            assist1_id: row.assist1_id,
+            assist1_name: Some(row.assist1_name),
+            assist2_id: row.assist2_id,
+            assist2_name: Some(row.assist2_name),
+            period: row.period,
+            time_minutes: row.time_minutes,
+            time_seconds: row.time_seconds,
+            goal_type: row.goal_type,
         })
         .collect())
 }
@@ -358,34 +358,32 @@ pub async fn get_matches(
 
 /// Get all seasons for filter dropdown
 pub async fn get_seasons(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query(
-        "SELECT s.id, COALESCE(s.display_name, CAST(s.year AS TEXT)) as name \
-         FROM season s \
-         ORDER BY s.year DESC",
+    let rows = sqlx::query!(
+        r#"
+        SELECT s.id, COALESCE(s.display_name, CAST(s.year AS TEXT)) as name
+        FROM season s
+        ORDER BY s.year DESC
+        "#
     )
     .fetch_all(db)
     .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect())
+    Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }
 
 /// Get all teams for filter dropdown
 pub async fn get_teams(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query(
-        "SELECT t.id, t.name \
-         FROM team t \
-         ORDER BY t.name ASC",
+    let rows = sqlx::query!(
+        r#"
+        SELECT t.id, t.name as "name!: String"
+        FROM team t
+        ORDER BY t.name ASC
+        "#
     )
     .fetch_all(db)
     .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect())
+    Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }
 
 /// Get teams participating in a specific season (for match creation/editing)
@@ -393,21 +391,20 @@ pub async fn get_teams_for_season(
     db: &SqlitePool,
     season_id: i64,
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query(
-        "SELECT DISTINCT t.id, t.name \
-         FROM team t \
-         INNER JOIN team_participation tp ON t.id = tp.team_id \
-         WHERE tp.season_id = ? \
-         ORDER BY t.name ASC",
+    let rows = sqlx::query!(
+        r#"
+        SELECT DISTINCT t.id, t.name as "name!: String"
+        FROM team t
+        INNER JOIN team_participation tp ON t.id = tp.team_id
+        WHERE tp.season_id = ?
+        ORDER BY t.name ASC
+        "#,
+        season_id
     )
-    .bind(season_id)
     .fetch_all(db)
     .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect())
+    Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }
 
 /// Check if both teams participate in the given season (for validation)
@@ -417,20 +414,21 @@ pub async fn validate_teams_in_season(
     home_team_id: i64,
     away_team_id: i64,
 ) -> Result<bool, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT COUNT(*) as count \
-         FROM team_participation \
-         WHERE season_id = ? AND (team_id = ? OR team_id = ?)",
+    let row = sqlx::query!(
+        r#"
+        SELECT COUNT(*) as count
+        FROM team_participation
+        WHERE season_id = ? AND (team_id = ? OR team_id = ?)
+        "#,
+        season_id,
+        home_team_id,
+        away_team_id
     )
-    .bind(season_id)
-    .bind(home_team_id)
-    .bind(away_team_id)
     .fetch_one(db)
     .await?;
 
-    let count: i64 = row.get("count");
     // Should be exactly 2 if both teams participate
-    Ok(count == 2)
+    Ok(row.count == 2)
 }
 
 #[derive(Debug, Clone)]
@@ -459,18 +457,18 @@ pub struct UpdateMatchEntity {
 
 /// Create a new match
 pub async fn create_match(db: &SqlitePool, entity: CreateMatchEntity) -> Result<i64, sqlx::Error> {
-    let result = sqlx::query(
+    let result = sqlx::query!(
         "INSERT INTO match (season_id, home_team_id, away_team_id, home_score_unidentified, away_score_unidentified, match_date, status, venue) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        entity.season_id,
+        entity.home_team_id,
+        entity.away_team_id,
+        entity.home_score_unidentified,
+        entity.away_score_unidentified,
+        entity.match_date,
+        entity.status,
+        entity.venue
     )
-    .bind(entity.season_id)
-    .bind(entity.home_team_id)
-    .bind(entity.away_team_id)
-    .bind(entity.home_score_unidentified)
-    .bind(entity.away_score_unidentified)
-    .bind(entity.match_date)
-    .bind(entity.status)
-    .bind(entity.venue)
     .execute(db)
     .await?;
 
@@ -483,23 +481,23 @@ pub async fn update_match(
     id: i64,
     entity: UpdateMatchEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
+    let result = sqlx::query!(
         "UPDATE match \
          SET season_id = ?, home_team_id = ?, away_team_id = ?, \
              home_score_unidentified = ?, away_score_unidentified = ?, \
              match_date = ?, status = ?, venue = ?, \
              updated_at = CURRENT_TIMESTAMP \
          WHERE id = ?",
+        entity.season_id,
+        entity.home_team_id,
+        entity.away_team_id,
+        entity.home_score_unidentified,
+        entity.away_score_unidentified,
+        entity.match_date,
+        entity.status,
+        entity.venue,
+        id
     )
-    .bind(entity.season_id)
-    .bind(entity.home_team_id)
-    .bind(entity.away_team_id)
-    .bind(entity.home_score_unidentified)
-    .bind(entity.away_score_unidentified)
-    .bind(entity.match_date)
-    .bind(entity.status)
-    .bind(entity.venue)
-    .bind(id)
     .execute(db)
     .await?;
 
@@ -538,22 +536,22 @@ pub async fn get_score_event_by_id(
     db: &SqlitePool,
     id: i64,
 ) -> Result<Option<ScoreEventEntity>, sqlx::Error> {
-    let row = sqlx::query(
+    let row = sqlx::query!(
         r#"
         SELECT
-            se.id,
-            se.match_id,
-            se.team_id,
-            t.name as team_name,
+            se.id as "id!: i64",
+            se.match_id as "match_id!: i64",
+            se.team_id as "team_id!: i64",
+            t.name as "team_name!: String",
             se.scorer_id,
             scorer.name as scorer_name,
             se.assist1_id,
             assist1.name as assist1_name,
             se.assist2_id,
             assist2.name as assist2_name,
-            se.period,
-            se.time_minutes,
-            se.time_seconds,
+            se.period as "period!: i32",
+            se.time_minutes as "time_minutes: i32",
+            se.time_seconds as "time_seconds: i32",
             se.goal_type
         FROM score_event se
         INNER JOIN team t ON se.team_id = t.id
@@ -562,26 +560,26 @@ pub async fn get_score_event_by_id(
         LEFT JOIN player assist2 ON se.assist2_id = assist2.id
         WHERE se.id = ?
         "#,
+        id
     )
-    .bind(id)
     .fetch_optional(db)
     .await?;
 
     Ok(row.map(|row| ScoreEventEntity {
-        id: row.get("id"),
-        match_id: row.get("match_id"),
-        team_id: row.get("team_id"),
-        team_name: row.get("team_name"),
-        scorer_id: row.get("scorer_id"),
-        scorer_name: row.get("scorer_name"),
-        assist1_id: row.get("assist1_id"),
-        assist1_name: row.get("assist1_name"),
-        assist2_id: row.get("assist2_id"),
-        assist2_name: row.get("assist2_name"),
-        period: row.get("period"),
-        time_minutes: row.get("time_minutes"),
-        time_seconds: row.get("time_seconds"),
-        goal_type: row.get("goal_type"),
+        id: row.id,
+        match_id: row.match_id,
+        team_id: row.team_id,
+        team_name: row.team_name,
+        scorer_id: row.scorer_id,
+        scorer_name: row.scorer_name,
+        assist1_id: row.assist1_id,
+        assist1_name: row.assist1_name,
+        assist2_id: row.assist2_id,
+        assist2_name: row.assist2_name,
+        period: row.period,
+        time_minutes: row.time_minutes,
+        time_seconds: row.time_seconds,
+        goal_type: row.goal_type,
     }))
 }
 
@@ -594,47 +592,49 @@ pub async fn create_score_event(
     let mut tx = db.begin().await?;
 
     // Insert the score event
-    let result = sqlx::query(
+    let result = sqlx::query!(
         "INSERT INTO score_event (match_id, team_id, scorer_id, assist1_id, assist2_id, period, time_minutes, time_seconds, goal_type) \
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        entity.match_id,
+        entity.team_id,
+        entity.scorer_id,
+        entity.assist1_id,
+        entity.assist2_id,
+        entity.period,
+        entity.time_minutes,
+        entity.time_seconds,
+        entity.goal_type
     )
-    .bind(entity.match_id)
-    .bind(entity.team_id)
-    .bind(entity.scorer_id)
-    .bind(entity.assist1_id)
-    .bind(entity.assist2_id)
-    .bind(entity.period)
-    .bind(entity.time_minutes)
-    .bind(entity.time_seconds)
-    .bind(entity.goal_type)
     .execute(&mut *tx)
     .await?;
 
     let score_event_id = result.last_insert_rowid();
 
     // Get the match to determine home/away team
-    let match_row = sqlx::query("SELECT home_team_id, away_team_id, home_score_unidentified, away_score_unidentified FROM match WHERE id = ?")
-        .bind(entity.match_id)
-        .fetch_one(&mut *tx)
-        .await?;
+    let match_row = sqlx::query!(
+        "SELECT home_team_id, away_team_id, home_score_unidentified as \"home_score_unidentified!: i32\", away_score_unidentified as \"away_score_unidentified!: i32\" FROM match WHERE id = ?",
+        entity.match_id
+    )
+    .fetch_one(&mut *tx)
+    .await?;
 
-    let home_team_id: i64 = match_row.get("home_team_id");
-    let home_score_unidentified: i32 = match_row.get("home_score_unidentified");
-    let away_score_unidentified: i32 = match_row.get("away_score_unidentified");
+    let home_team_id: i64 = match_row.home_team_id;
+    let home_score_unidentified: i32 = match_row.home_score_unidentified;
+    let away_score_unidentified: i32 = match_row.away_score_unidentified;
 
     // Decrement the appropriate unidentified score if it's greater than 0
     if entity.team_id == home_team_id && home_score_unidentified > 0 {
-        sqlx::query(
+        sqlx::query!(
             "UPDATE match SET home_score_unidentified = home_score_unidentified - 1 WHERE id = ?",
+            entity.match_id
         )
-        .bind(entity.match_id)
         .execute(&mut *tx)
         .await?;
     } else if entity.team_id != home_team_id && away_score_unidentified > 0 {
-        sqlx::query(
+        sqlx::query!(
             "UPDATE match SET away_score_unidentified = away_score_unidentified - 1 WHERE id = ?",
+            entity.match_id
         )
-        .bind(entity.match_id)
         .execute(&mut *tx)
         .await?;
     }
@@ -651,21 +651,21 @@ pub async fn update_score_event(
     id: i64,
     entity: UpdateScoreEventEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
+    let result = sqlx::query!(
         "UPDATE score_event \
          SET team_id = ?, scorer_id = ?, assist1_id = ?, assist2_id = ?, \
              period = ?, time_minutes = ?, time_seconds = ?, goal_type = ? \
          WHERE id = ?",
+        entity.team_id,
+        entity.scorer_id,
+        entity.assist1_id,
+        entity.assist2_id,
+        entity.period,
+        entity.time_minutes,
+        entity.time_seconds,
+        entity.goal_type,
+        id
     )
-    .bind(entity.team_id)
-    .bind(entity.scorer_id)
-    .bind(entity.assist1_id)
-    .bind(entity.assist2_id)
-    .bind(entity.period)
-    .bind(entity.time_minutes)
-    .bind(entity.time_seconds)
-    .bind(entity.goal_type)
-    .bind(id)
     .execute(db)
     .await?;
 
@@ -678,19 +678,20 @@ pub async fn delete_score_event(db: &SqlitePool, id: i64) -> Result<bool, sqlx::
     let mut tx = db.begin().await?;
 
     // Get the score event to determine match and team
-    let score_event_row = sqlx::query("SELECT match_id, team_id FROM score_event WHERE id = ?")
-        .bind(id)
-        .fetch_optional(&mut *tx)
-        .await?;
+    let score_event_row = sqlx::query!(
+        "SELECT match_id, team_id FROM score_event WHERE id = ?",
+        id
+    )
+    .fetch_optional(&mut *tx)
+    .await?;
 
     let (match_id, team_id) = match score_event_row {
-        Some(row) => (row.get::<i64, _>("match_id"), row.get::<i64, _>("team_id")),
+        Some(row) => (row.match_id, row.team_id),
         None => return Ok(false), // Score event not found
     };
 
     // Delete the score event
-    let result = sqlx::query("DELETE FROM score_event WHERE id = ?")
-        .bind(id)
+    let result = sqlx::query!("DELETE FROM score_event WHERE id = ?", id)
         .execute(&mut *tx)
         .await?;
 
@@ -699,26 +700,25 @@ pub async fn delete_score_event(db: &SqlitePool, id: i64) -> Result<bool, sqlx::
     }
 
     // Get the match to determine home/away team
-    let match_row = sqlx::query("SELECT home_team_id FROM match WHERE id = ?")
-        .bind(match_id)
+    let match_row = sqlx::query!("SELECT home_team_id FROM match WHERE id = ?", match_id)
         .fetch_one(&mut *tx)
         .await?;
 
-    let home_team_id: i64 = match_row.get("home_team_id");
+    let home_team_id: i64 = match_row.home_team_id;
 
     // Increment the appropriate unidentified score
     if team_id == home_team_id {
-        sqlx::query(
+        sqlx::query!(
             "UPDATE match SET home_score_unidentified = home_score_unidentified + 1 WHERE id = ?",
+            match_id
         )
-        .bind(match_id)
         .execute(&mut *tx)
         .await?;
     } else {
-        sqlx::query(
+        sqlx::query!(
             "UPDATE match SET away_score_unidentified = away_score_unidentified + 1 WHERE id = ?",
+            match_id
         )
-        .bind(match_id)
         .execute(&mut *tx)
         .await?;
     }
@@ -734,28 +734,26 @@ pub async fn get_players_for_team(
     db: &SqlitePool,
     team_id: i64,
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query(
-        "SELECT DISTINCT p.id, p.name \
-         FROM player p \
-         INNER JOIN player_contract pc ON p.id = pc.player_id \
-         INNER JOIN team_participation tp ON pc.team_participation_id = tp.id \
-         WHERE tp.team_id = ? \
-         ORDER BY p.name ASC",
+    let rows = sqlx::query!(
+        r#"
+        SELECT DISTINCT p.id, p.name
+        FROM player p
+        INNER JOIN player_contract pc ON p.id = pc.player_id
+        INNER JOIN team_participation tp ON pc.team_participation_id = tp.id
+        WHERE tp.team_id = ?
+        ORDER BY p.name ASC
+        "#,
+        team_id
     )
-    .bind(team_id)
     .fetch_all(db)
     .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect())
+    Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }
 
 /// Delete a match (cascades to score events)
 pub async fn delete_match(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM match WHERE id = ?")
-        .bind(id)
+    let result = sqlx::query!("DELETE FROM match WHERE id = ?", id)
         .execute(db)
         .await?;
 
