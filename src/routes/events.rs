@@ -196,7 +196,10 @@ pub async fn event_create(
             let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!("Failed to fetch dashboard stats after event creation: {}", e);
+                    tracing::warn!(
+                        "Failed to fetch dashboard stats after event creation: {}",
+                        e
+                    );
                     crate::service::dashboard::DashboardStats::default()
                 });
 

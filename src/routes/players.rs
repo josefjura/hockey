@@ -256,7 +256,10 @@ pub async fn player_create(
             let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
                 .await
                 .unwrap_or_else(|e| {
-                    tracing::warn!("Failed to fetch dashboard stats after player creation: {}", e);
+                    tracing::warn!(
+                        "Failed to fetch dashboard stats after player creation: {}",
+                        e
+                    );
                     crate::service::dashboard::DashboardStats::default()
                 });
 
