@@ -267,7 +267,10 @@ pub async fn season_create(
             // Fetch updated dashboard stats
             let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
                 .await
-                .unwrap_or_default();
+                .unwrap_or_else(|e| {
+                    tracing::warn!("Failed to fetch dashboard stats after season creation: {}", e);
+                    crate::service::dashboard::DashboardStats::default()
+                });
 
             // Return HTMX response based on context
             if let Some(return_url) = &form.return_url {

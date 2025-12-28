@@ -186,7 +186,10 @@ pub async fn team_create(
             // Fetch updated dashboard stats
             let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
                 .await
-                .unwrap_or_default();
+                .unwrap_or_else(|e| {
+                    tracing::warn!("Failed to fetch dashboard stats after team creation: {}", e);
+                    crate::service::dashboard::DashboardStats::default()
+                });
 
             // Return HTMX response to close modal, reload table, and update dashboard stats
             htmx_reload_table_with_stats("/teams/list", "teams-table", &t, &stats)

@@ -195,7 +195,10 @@ pub async fn event_create(
             // Fetch updated dashboard stats
             let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
                 .await
-                .unwrap_or_default();
+                .unwrap_or_else(|e| {
+                    tracing::warn!("Failed to fetch dashboard stats after event creation: {}", e);
+                    crate::service::dashboard::DashboardStats::default()
+                });
 
             // Return HTMX response to close modal, reload table, and update dashboard stats
             htmx_reload_table_with_stats("/events/list", "events-table", &t, &stats)
