@@ -24,6 +24,12 @@ pub fn player_detail_page(t: &TranslationContext, detail: &PlayerDetailEntity) -
                     }
                 }
                 div style="display: flex; gap: 0.5rem;" {
+                    a
+                        href=(format!("/players/{}/scoring", player.id))
+                        class="btn btn-primary"
+                    {
+                        (t.messages.player_view_scoring())
+                    }
                     button
                         class="btn btn-primary"
                         hx-get=(format!("/players/{}/edit", player.id))
