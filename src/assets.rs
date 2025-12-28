@@ -200,7 +200,7 @@ mod tests {
                 let content_type = response
                     .headers()
                     .get(header::CONTENT_TYPE)
-                    .expect(&format!("Content-Type header missing for {}", path));
+                    .unwrap_or_else(|| panic!("Content-Type header missing for {}", path));
                 assert!(
                     content_type.to_str().unwrap().contains(expected_mime),
                     "Expected {} for {}, got {:?}",

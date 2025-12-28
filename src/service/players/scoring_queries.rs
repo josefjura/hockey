@@ -2,7 +2,7 @@ use crate::common::pagination::{PagedResult, SortOrder};
 use sqlx::{QueryBuilder, Row, SqlitePool};
 
 use super::scoring_entities::{
-    PlayerSeasonStats, PlayerScoringEventEntity, PlayerScoringFilters, ScoringEventSortField,
+    PlayerScoringEventEntity, PlayerScoringFilters, PlayerSeasonStats, ScoringEventSortField,
 };
 
 /// Get player statistics grouped by season
@@ -91,7 +91,7 @@ pub async fn get_player_scoring_events(
          INNER JOIN match m ON pe.match_id = m.id
          INNER JOIN season s ON m.season_id = s.id
          INNER JOIN event e ON s.event_id = e.id
-         WHERE 1=1"
+         WHERE 1=1",
     );
 
     // Bind player_id for CTE (6 times for the WHERE clause)
@@ -151,7 +151,7 @@ pub async fn get_player_scoring_events(
         LEFT JOIN player assist1 ON pe.assist1_id = assist1.id
         LEFT JOIN player assist2 ON pe.assist2_id = assist2.id
         WHERE 1=1
-        "#
+        "#,
     );
 
     // Bind player_id for CTE (6 times)
@@ -233,7 +233,9 @@ fn apply_filters<'a>(
                 query.push(" AND pe.event_type = 'goal'");
             }
             "assists" => {
-                query.push(" AND (pe.event_type = 'assist_primary' OR pe.event_type = 'assist_secondary')");
+                query.push(
+                    " AND (pe.event_type = 'assist_primary' OR pe.event_type = 'assist_secondary')",
+                );
             }
             _ => {} // "all" - no filter
         }

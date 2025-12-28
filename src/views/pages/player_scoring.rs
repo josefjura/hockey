@@ -3,12 +3,13 @@ use maud::{html, Markup};
 use crate::common::pagination::{PagedResult, SortOrder};
 use crate::i18n::TranslationContext;
 use crate::service::players::{
-    PlayerSeasonStats, PlayerEntity, PlayerScoringEventEntity, PlayerScoringFilters,
+    PlayerEntity, PlayerScoringEventEntity, PlayerScoringFilters, PlayerSeasonStats,
     ScoringEventSortField,
 };
 use crate::views::components::crud::{empty_state_i18n, pagination};
 
 /// Main player scoring page with stats and table
+#[allow(clippy::too_many_arguments)] // View functions commonly need many template parameters
 pub fn player_scoring_page(
     t: &TranslationContext,
     player: &PlayerEntity,
@@ -470,9 +471,18 @@ fn sortable_header(
 /// Event type badge
 fn event_type_badge(event_type: &str, t: &TranslationContext) -> Markup {
     let (label, color) = match event_type {
-        "goal" => (t.messages.player_scoring_goal().to_string(), "var(--primary-color)"),
-        "assist_primary" => (t.messages.player_scoring_assist_primary().to_string(), "#10b981"),
-        "assist_secondary" => (t.messages.player_scoring_assist_secondary().to_string(), "#6366f1"),
+        "goal" => (
+            t.messages.player_scoring_goal().to_string(),
+            "var(--primary-color)",
+        ),
+        "assist_primary" => (
+            t.messages.player_scoring_assist_primary().to_string(),
+            "#10b981",
+        ),
+        "assist_secondary" => (
+            t.messages.player_scoring_assist_secondary().to_string(),
+            "#6366f1",
+        ),
         _ => ("Unknown".to_string(), "var(--gray-500)"),
     };
 

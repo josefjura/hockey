@@ -1,9 +1,9 @@
 // Players routes module
-mod players;
+mod handlers;
 mod scoring;
 
-// Re-export all route handlers from players module
-pub use players::{
+// Re-export all route handlers from handlers module
+pub use handlers::{
     player_create, player_create_form, player_delete, player_detail, player_edit_form,
     player_update, players_get, players_list_partial,
 };

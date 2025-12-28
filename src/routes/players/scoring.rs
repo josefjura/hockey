@@ -9,9 +9,7 @@ use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::common::pagination::SortOrder;
 use crate::i18n::TranslationContext;
-use crate::service::players::{
-    self, PlayerScoringFilters, ScoringEventSortField,
-};
+use crate::service::players::{self, PlayerScoringFilters, ScoringEventSortField};
 use crate::views::{
     components::error::error_message,
     layout::admin_layout,

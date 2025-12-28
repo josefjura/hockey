@@ -1,5 +1,6 @@
 /// Represents a player's scoring event with full match context
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Fields used in Maud templates
 pub struct PlayerScoringEventEntity {
     pub score_event_id: i64,
     pub match_id: i64,
@@ -14,10 +15,10 @@ pub struct PlayerScoringEventEntity {
     pub away_team_id: i64,
     pub away_team_name: String,
     pub away_team_iso2: Option<String>,
-    pub team_id: i64,          // Team the goal was scored for
+    pub team_id: i64, // Team the goal was scored for
     pub team_name: String,
     pub team_iso2: Option<String>,
-    pub event_type: String,    // "goal", "assist_primary", "assist_secondary"
+    pub event_type: String, // "goal", "assist_primary", "assist_secondary"
     pub period: i32,
     pub time_minutes: Option<i32>,
     pub time_seconds: Option<i32>,
@@ -33,7 +34,7 @@ pub struct PlayerScoringEventEntity {
 /// Filters for player scoring events
 #[derive(Debug, Clone, Default)]
 pub struct PlayerScoringFilters {
-    pub event_type: Option<String>,  // "goals", "assists", "all"
+    pub event_type: Option<String>, // "goals", "assists", "all"
     pub season_id: Option<i64>,
     pub team_id: Option<i64>,
     pub date_from: Option<String>,
@@ -80,6 +81,7 @@ impl ScoringEventSortField {
 
 /// Player season statistics summary (stats for one season/event)
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Fields used in Maud templates
 pub struct PlayerSeasonStats {
     pub season_id: i64,
     pub season_year: i64,
