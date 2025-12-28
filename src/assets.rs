@@ -141,15 +141,35 @@ mod tests {
 
     #[tokio::test]
     async fn test_serve_existing_asset() {
-        // This test will only work if there are actual files in static/
-        // In development with debug-embed, it reads from filesystem
-        let response = serve_static_asset("js/components/badge.js")
-            .await
-            .into_response();
+        // Test with CSS file that exists in the repository
+        let response = serve_static_asset("css/theme.css").await.into_response();
 
-        // Should return OK if file exists
-        // In test environment without files, this might be 404
-        assert!(response.status() == StatusCode::OK || response.status() == StatusCode::NOT_FOUND);
+        // Verify file is served successfully
+        assert_eq!(
+            response.status(),
+            StatusCode::OK,
+            "Expected OK status for existing asset css/theme.css"
+        );
+
+        // Verify Content-Type header is set correctly for CSS
+        let content_type = response
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .expect("Content-Type header should be present");
+        assert!(
+            content_type.to_str().unwrap().contains("text/css"),
+            "Content-Type should be text/css for CSS files"
+        );
+
+        // Verify Cache-Control header is set for browser caching
+        let cache_control = response
+            .headers()
+            .get(header::CACHE_CONTROL)
+            .expect("Cache-Control header should be present");
+        assert!(
+            cache_control.to_str().unwrap().contains("max-age"),
+            "Cache-Control should include max-age directive"
+        );
     }
 
     #[tokio::test]
@@ -157,6 +177,38 @@ mod tests {
         let response = serve_static_asset("nonexistent/file.js")
             .await
             .into_response();
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert_eq!(
+            response.status(),
+            StatusCode::NOT_FOUND,
+            "Expected NOT_FOUND status for missing asset"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_mime_type_detection() {
+        // Test that different file types get correct MIME types
+        let test_cases = vec![
+            ("css/theme.css", "text/css"),
+            ("css/components.css", "text/css"),
+        ];
+
+        for (path, expected_mime) in test_cases {
+            let response = serve_static_asset(path).await.into_response();
+
+            // Only test MIME type if file exists
+            if response.status() == StatusCode::OK {
+                let content_type = response
+                    .headers()
+                    .get(header::CONTENT_TYPE)
+                    .expect(&format!("Content-Type header missing for {}", path));
+                assert!(
+                    content_type.to_str().unwrap().contains(expected_mime),
+                    "Expected {} for {}, got {:?}",
+                    expected_mime,
+                    path,
+                    content_type
+                );
+            }
+        }
     }
 }
