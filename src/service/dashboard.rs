@@ -21,37 +21,27 @@ pub struct RecentActivity {
 
 /// Get dashboard statistics (counts of all entities)
 pub async fn get_dashboard_stats(db: &SqlitePool) -> Result<DashboardStats, sqlx::Error> {
-    let teams_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM team")
-        .fetch_one(db)
-        .await?
-        .count;
-
-    let players_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM player")
-        .fetch_one(db)
-        .await?
-        .count;
-
-    let events_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM event")
-        .fetch_one(db)
-        .await?
-        .count;
-
-    let seasons_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM season")
-        .fetch_one(db)
-        .await?
-        .count;
-
-    let matches_count: i64 = sqlx::query!("SELECT COUNT(*) as count FROM match")
-        .fetch_one(db)
-        .await?
-        .count;
+    // Optimize: Single query with subqueries instead of 5 separate queries
+    // Reduces database round trips from 5 to 1
+    let row = sqlx::query!(
+        r#"
+        SELECT
+            (SELECT COUNT(*) FROM team) as teams_count,
+            (SELECT COUNT(*) FROM player) as players_count,
+            (SELECT COUNT(*) FROM event) as events_count,
+            (SELECT COUNT(*) FROM season) as seasons_count,
+            (SELECT COUNT(*) FROM match) as matches_count
+        "#
+    )
+    .fetch_one(db)
+    .await?;
 
     Ok(DashboardStats {
-        teams_count,
-        players_count,
-        events_count,
-        seasons_count,
-        matches_count,
+        teams_count: row.teams_count,
+        players_count: row.players_count,
+        events_count: row.events_count,
+        seasons_count: row.seasons_count,
+        matches_count: row.matches_count,
     })
 }
 
