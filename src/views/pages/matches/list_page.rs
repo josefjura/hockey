@@ -246,19 +246,23 @@ pub fn match_list_content(
                                             @if let Some(iso2) = &match_item.home_team_country_iso2 {
                                                 flag-icon
                                                     country-code=(iso2.to_lowercase())
-                                                    country-name=(match_item.home_team_name)
-                                                    size="sm";
+                                                    country-name=(&match_item.home_team_name)
+                                                    size="sm" {}
+                                                span { (&match_item.home_team_name) }
+                                            } @else {
+                                                span { (&match_item.home_team_name) }
                                             }
-                                            span { (match_item.home_team_name) }
                                         }
                                         div style="display: flex; align-items: center; gap: 0.5rem;" {
                                             @if let Some(iso2) = &match_item.away_team_country_iso2 {
                                                 flag-icon
                                                     country-code=(iso2.to_lowercase())
-                                                    country-name=(match_item.away_team_name)
-                                                    size="sm";
+                                                    country-name=(&match_item.away_team_name)
+                                                    size="sm" {}
+                                                span { (&match_item.away_team_name) }
+                                            } @else {
+                                                span { (&match_item.away_team_name) }
                                             }
-                                            span { (match_item.away_team_name) }
                                         }
                                     }
                                 }
