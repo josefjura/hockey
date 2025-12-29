@@ -196,29 +196,8 @@ mod tests {
     use super::*;
     use sqlx::SqlitePool;
 
-    async fn setup_test_db() -> SqlitePool {
-        let pool = SqlitePool::connect(":memory:").await.unwrap();
-
-        // Run migrations
-        sqlx::migrate!("./migrations").run(&pool).await.unwrap();
-
-        // Create a test user for foreign key constraint
-        sqlx::query!(
-            r#"
-            INSERT INTO users (id, email, name, password_hash)
-            VALUES (1, 'test@example.com', 'Test User', 'hash')
-            "#
-        )
-        .execute(&pool)
-        .await
-        .unwrap();
-
-        pool
-    }
-
-    #[tokio::test]
-    async fn test_session_creation() {
-        let pool = setup_test_db().await;
+    #[sqlx::test(migrations = "./migrations", fixtures("users"))]
+    async fn test_session_creation(pool: SqlitePool) {
         let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
@@ -229,9 +208,8 @@ mod tests {
         assert!(!session.is_expired());
     }
 
-    #[tokio::test]
-    async fn test_session_retrieval() {
-        let pool = setup_test_db().await;
+    #[sqlx::test(migrations = "./migrations", fixtures("users"))]
+    async fn test_session_retrieval(pool: SqlitePool) {
         let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
@@ -242,9 +220,8 @@ mod tests {
         assert_eq!(retrieved.unwrap().user_id, 1);
     }
 
-    #[tokio::test]
-    async fn test_session_deletion() {
-        let pool = setup_test_db().await;
+    #[sqlx::test(migrations = "./migrations", fixtures("users"))]
+    async fn test_session_deletion(pool: SqlitePool) {
         let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
@@ -255,9 +232,8 @@ mod tests {
         assert_eq!(store.session_count().await, 0);
     }
 
-    #[tokio::test]
-    async fn test_session_validation() {
-        let pool = setup_test_db().await;
+    #[sqlx::test(migrations = "./migrations", fixtures("users"))]
+    async fn test_session_validation(pool: SqlitePool) {
         let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
