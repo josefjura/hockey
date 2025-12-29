@@ -7,10 +7,11 @@ const config: StorybookConfig = {
     name: '@storybook/web-components-vite',
     options: {},
   },
-  staticDirs: [
-    // Serve flag images from the parent static directory
-    { from: '../../static/flags', to: '/static/flags' },
-  ],
+  // staticDirs: [
+  //   // Serve flag images from the parent static directory
+  //   // Disabled: directory is currently empty and causes CI failures
+  //   { from: '../../static/flags', to: '/static/flags' },
+  // ],
   viteFinal: async (config) => {
     return {
       ...config,
