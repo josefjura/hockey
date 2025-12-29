@@ -18,23 +18,13 @@ async function globalSetup(config: FullConfig) {
   console.log('Running migrations...');
   execSync('sqlx migrate run', { stdio: 'inherit', env: { ...process.env, DATABASE_URL: dbUrl } });
 
-  // Create admin user for tests (skip if already exists)
-  console.log('Creating test admin user...');
-  try {
-    execSync('cargo run --bin create_admin --quiet -- admin@example.com "Test Admin" admin', {
-      stdio: 'pipe',
-      env: { ...process.env, DATABASE_URL: dbUrl }
-    });
-    console.log('✅ Test admin user created');
-  } catch (error) {
-    // User already exists - this is fine
-    if (error instanceof Error && error.message.includes('UNIQUE constraint')) {
-      console.log('ℹ️  Test admin user already exists (skipped)');
-    } else {
-      // Re-throw other errors
-      throw error;
-    }
-  }
+  // Ensure test admin user exists with correct password
+  console.log('Setting up test admin user...');
+  execSync('cargo run --bin create_admin --quiet -- admin@example.com "Test Admin" admin --force', {
+    stdio: 'pipe',
+    env: { ...process.env, DATABASE_URL: dbUrl }
+  });
+  console.log('✅ Test admin user ready (admin@example.com / admin)');
 
   console.log('E2E test environment ready!');
 }
