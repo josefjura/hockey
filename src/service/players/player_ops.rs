@@ -11,6 +11,12 @@ pub struct PlayerEntity {
     pub country_name: String,
     pub country_iso2_code: String,
     pub photo_path: Option<String>,
+    pub birth_date: Option<String>,
+    pub birth_place: Option<String>,
+    pub height_cm: Option<i64>,
+    pub weight_kg: Option<i64>,
+    pub position: Option<String>,
+    pub shoots: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -35,6 +41,12 @@ pub struct CreatePlayerEntity {
     pub name: String,
     pub country_id: i64,
     pub photo_path: Option<String>,
+    pub birth_date: Option<String>,
+    pub birth_place: Option<String>,
+    pub height_cm: Option<i64>,
+    pub weight_kg: Option<i64>,
+    pub position: Option<String>,
+    pub shoots: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -42,6 +54,12 @@ pub struct UpdatePlayerEntity {
     pub name: String,
     pub country_id: i64,
     pub photo_path: Option<String>,
+    pub birth_date: Option<String>,
+    pub birth_place: Option<String>,
+    pub height_cm: Option<i64>,
+    pub weight_kg: Option<i64>,
+    pub position: Option<String>,
+    pub shoots: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -91,12 +109,18 @@ pub async fn create_player(
 ) -> Result<i64, sqlx::Error> {
     let result = sqlx::query!(
         r#"
-        INSERT INTO player (name, country_id, photo_path)
-        VALUES (?, ?, ?)
+        INSERT INTO player (name, country_id, photo_path, birth_date, birth_place, height_cm, weight_kg, position, shoots)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         player.name,
         player.country_id,
-        player.photo_path
+        player.photo_path,
+        player.birth_date,
+        player.birth_place,
+        player.height_cm,
+        player.weight_kg,
+        player.position,
+        player.shoots
     )
     .execute(db)
     .await?;
@@ -123,7 +147,8 @@ pub async fn get_players(
 
     // Build data query
     let mut data_query = sqlx::QueryBuilder::new(
-        "SELECT p.id, p.name, p.country_id, p.photo_path, c.name as country_name, c.iso2Code as country_iso2_code
+        "SELECT p.id, p.name, p.country_id, p.photo_path, p.birth_date, p.birth_place, p.height_cm, p.weight_kg, p.position, p.shoots,
+         c.name as country_name, c.iso2Code as country_iso2_code
          FROM player p
          INNER JOIN country c ON p.country_id = c.id
          WHERE 1=1",
@@ -152,6 +177,12 @@ pub async fn get_players(
             country_name: row.get("country_name"),
             country_iso2_code: row.get("country_iso2_code"),
             photo_path: row.get("photo_path"),
+            birth_date: row.get("birth_date"),
+            birth_place: row.get("birth_place"),
+            height_cm: row.get("height_cm"),
+            weight_kg: row.get("weight_kg"),
+            position: row.get("position"),
+            shoots: row.get("shoots"),
         })
         .collect();
 
@@ -171,6 +202,12 @@ pub async fn get_player_by_id(
             p.name as "name!",
             p.country_id,
             p.photo_path,
+            p.birth_date,
+            p.birth_place,
+            p.height_cm,
+            p.weight_kg,
+            p.position,
+            p.shoots,
             c.name as "country_name!",
             c.iso2Code as "country_iso2_code!"
         FROM player p
@@ -194,12 +231,19 @@ pub async fn update_player(
     let result = sqlx::query!(
         r#"
         UPDATE player
-        SET name = ?, country_id = ?, photo_path = ?
+        SET name = ?, country_id = ?, photo_path = ?, birth_date = ?, birth_place = ?,
+            height_cm = ?, weight_kg = ?, position = ?, shoots = ?
         WHERE id = ?
         "#,
         player.name,
         player.country_id,
         player.photo_path,
+        player.birth_date,
+        player.birth_place,
+        player.height_cm,
+        player.weight_kg,
+        player.position,
+        player.shoots,
         id
     )
     .execute(db)

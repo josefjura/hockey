@@ -165,6 +165,12 @@ pub async fn player_create(
     let mut country_id: Option<i64> = None;
     let mut photo_path: Option<String> = None;
     let mut photo_url: Option<String> = None;
+    let mut birth_date: Option<String> = None;
+    let mut birth_place: Option<String> = None;
+    let mut height_cm: Option<i64> = None;
+    let mut weight_kg: Option<i64> = None;
+    let mut position: Option<String> = None;
+    let mut shoots: Option<String> = None;
 
     while let Ok(Some(field)) = multipart.next_field().await {
         let field_name = field.name().unwrap_or("").to_string();
@@ -179,6 +185,30 @@ pub async fn player_create(
             }
             "photo_url" => {
                 photo_url = Some(field.text().await.unwrap_or_default());
+            }
+            "birth_date" => {
+                let text = field.text().await.unwrap_or_default();
+                birth_date = if text.trim().is_empty() { None } else { Some(text) };
+            }
+            "birth_place" => {
+                let text = field.text().await.unwrap_or_default();
+                birth_place = if text.trim().is_empty() { None } else { Some(text) };
+            }
+            "height_cm" => {
+                let text = field.text().await.unwrap_or_default();
+                height_cm = text.parse().ok();
+            }
+            "weight_kg" => {
+                let text = field.text().await.unwrap_or_default();
+                weight_kg = text.parse().ok();
+            }
+            "position" => {
+                let text = field.text().await.unwrap_or_default();
+                position = if text.trim().is_empty() { None } else { Some(text) };
+            }
+            "shoots" => {
+                let text = field.text().await.unwrap_or_default();
+                shoots = if text.trim().is_empty() { None } else { Some(text) };
             }
             "photo_file" => {
                 // Handle file upload
@@ -247,6 +277,12 @@ pub async fn player_create(
             name: name.to_string(),
             country_id,
             photo_path: final_photo_path,
+            birth_date,
+            birth_place,
+            height_cm,
+            weight_kg,
+            position,
+            shoots,
         },
     )
     .await
@@ -327,6 +363,12 @@ pub async fn player_update(
     let mut photo_path: Option<String> = current_player.photo_path.clone();
     let mut photo_url: Option<String> = None;
     let mut new_photo_uploaded = false;
+    let mut birth_date: Option<String> = current_player.birth_date.clone();
+    let mut birth_place: Option<String> = current_player.birth_place.clone();
+    let mut height_cm: Option<i64> = current_player.height_cm;
+    let mut weight_kg: Option<i64> = current_player.weight_kg;
+    let mut position: Option<String> = current_player.position.clone();
+    let mut shoots: Option<String> = current_player.shoots.clone();
 
     while let Ok(Some(field)) = multipart.next_field().await {
         let field_name = field.name().unwrap_or("").to_string();
@@ -341,6 +383,30 @@ pub async fn player_update(
             }
             "photo_url" => {
                 photo_url = Some(field.text().await.unwrap_or_default());
+            }
+            "birth_date" => {
+                let text = field.text().await.unwrap_or_default();
+                birth_date = if text.trim().is_empty() { None } else { Some(text) };
+            }
+            "birth_place" => {
+                let text = field.text().await.unwrap_or_default();
+                birth_place = if text.trim().is_empty() { None } else { Some(text) };
+            }
+            "height_cm" => {
+                let text = field.text().await.unwrap_or_default();
+                height_cm = if text.trim().is_empty() { None } else { text.parse().ok() };
+            }
+            "weight_kg" => {
+                let text = field.text().await.unwrap_or_default();
+                weight_kg = if text.trim().is_empty() { None } else { text.parse().ok() };
+            }
+            "position" => {
+                let text = field.text().await.unwrap_or_default();
+                position = if text.trim().is_empty() { None } else { Some(text) };
+            }
+            "shoots" => {
+                let text = field.text().await.unwrap_or_default();
+                shoots = if text.trim().is_empty() { None } else { Some(text) };
             }
             "photo_file" => {
                 // Handle file upload
@@ -438,6 +504,12 @@ pub async fn player_update(
             name: name.to_string(),
             country_id,
             photo_path: final_photo_path,
+            birth_date,
+            birth_place,
+            height_cm,
+            weight_kg,
+            position,
+            shoots,
         },
     )
     .await
