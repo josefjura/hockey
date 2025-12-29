@@ -62,6 +62,11 @@ jobs:
           sqlx database create
           sqlx migrate run
 
+      - name: Create admin user for E2E tests
+        run: cargo run --bin create_admin -- admin@example.com "Test Admin" admin
+        env:
+          DATABASE_URL: sqlite:./ci_test.db
+
       - name: Check formatting
         run: cargo fmt --check
 

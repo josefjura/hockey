@@ -24,24 +24,39 @@ async fn main() -> Result<()> {
 
     println!("Connected successfully!\n");
 
-    // Get user input
-    print!("Enter admin email: ");
-    io::stdout().flush()?;
-    let mut email = String::new();
-    io::stdin().read_line(&mut email)?;
-    let email = email.trim();
+    // Check for command-line arguments (non-interactive mode)
+    let args: Vec<String> = std::env::args().collect();
+    let (email, name, password) = if args.len() >= 4 {
+        // Non-interactive mode: use command-line arguments
+        // Usage: create_admin <email> <name> <password>
+        println!("Using non-interactive mode with provided arguments\n");
+        (args[1].as_str(), args[2].as_str(), args[3].as_str())
+    } else {
+        // Interactive mode: prompt for input
+        print!("Enter admin email: ");
+        io::stdout().flush()?;
+        let mut email = String::new();
+        io::stdin().read_line(&mut email)?;
+        let email = email.trim().to_string();
 
-    print!("Enter admin name: ");
-    io::stdout().flush()?;
-    let mut name = String::new();
-    io::stdin().read_line(&mut name)?;
-    let name = name.trim();
+        print!("Enter admin name: ");
+        io::stdout().flush()?;
+        let mut name = String::new();
+        io::stdin().read_line(&mut name)?;
+        let name = name.trim().to_string();
 
-    print!("Enter admin password: ");
-    io::stdout().flush()?;
-    let mut password = String::new();
-    io::stdin().read_line(&mut password)?;
-    let password = password.trim();
+        print!("Enter admin password: ");
+        io::stdout().flush()?;
+        let mut password = String::new();
+        io::stdin().read_line(&mut password)?;
+        let password = password.trim().to_string();
+
+        (
+            Box::leak(email.into_boxed_str()) as &str,
+            Box::leak(name.into_boxed_str()) as &str,
+            Box::leak(password.into_boxed_str()) as &str,
+        )
+    };
 
     // Hash password
     println!("\nHashing password...");
