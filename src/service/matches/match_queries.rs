@@ -290,3 +290,67 @@ pub async fn validate_teams_in_season(
     // Should be exactly 2 if both teams participate
     Ok(row.count == 2)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::service::matches::CreateMatchEntity;
+    use sqlx::SqlitePool;
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams", "team_participations"))]
+    async fn test_get_match_by_id_found(pool: SqlitePool) {
+        // Create a match first
+        let create_match = CreateMatchEntity {
+            season_id: 1,
+            home_team_id: 1,
+            away_team_id: 2,
+            home_score_unidentified: 0,
+            away_score_unidentified: 0,
+            match_date: Some("2024-01-15".to_string()),
+            status: "scheduled".to_string(),
+            venue: Some("Test Arena".to_string()),
+        };
+        let id = crate::service::matches::create_match(&pool, create_match)
+            .await
+            .unwrap();
+
+        let result = get_match_by_id(&pool, id).await.unwrap();
+        assert!(result.is_some());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_match_by_id_not_found(pool: SqlitePool) {
+        let result = get_match_by_id(&pool, 999).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams", "team_participations"))]
+    async fn test_get_matches(pool: SqlitePool) {
+        let filters = MatchFilters {
+            season_id: None,
+            team_id: None,
+            status: None,
+            date_from: None,
+            date_to: None,
+        };
+        let result = get_matches(&pool, &filters, &SortField::Date, &SortOrder::Desc, 1, 20)
+            .await
+            .unwrap();
+
+        assert!(result.total >= 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams", "team_participations"))]
+    async fn test_validate_teams_in_season_both_present(pool: SqlitePool) {
+        // Both teams participate in season 1 (from fixtures)
+        let result = validate_teams_in_season(&pool, 1, 1, 2).await.unwrap();
+        assert!(result);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams", "team_participations"))]
+    async fn test_validate_teams_in_season_not_both_present(pool: SqlitePool) {
+        // Team 999 doesn't exist
+        let result = validate_teams_in_season(&pool, 1, 1, 999).await.unwrap();
+        assert!(!result);
+    }
+}

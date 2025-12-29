@@ -245,3 +245,96 @@ fn apply_filters<'a>(
 pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
     crate::service::countries::get_countries_simple(db).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_create_event(pool: SqlitePool) {
+        let event = CreateEventEntity {
+            name: "Test Tournament".to_string(),
+            country_id: Some(1), // Canada from migrations
+        };
+
+        let id = create_event(&pool, event).await.unwrap();
+        assert!(id > 0);
+
+        let result = get_event_by_id(&pool, id).await.unwrap();
+        assert!(result.is_some());
+        let event = result.unwrap();
+        assert_eq!(event.name, "Test Tournament");
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events"))]
+    async fn test_get_events_no_filters(pool: SqlitePool) {
+        let filters = EventFilters::default();
+        let result = get_events(&pool, &filters, 1, 20).await.unwrap();
+
+        assert!(result.items.len() >= 3);
+        assert!(result.total >= 3);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events"))]
+    async fn test_get_events_with_name_filter(pool: SqlitePool) {
+        let filters = EventFilters {
+            name: Some("Olympics".to_string()),
+            country_id: None,
+        };
+        let result = get_events(&pool, &filters, 1, 20).await.unwrap();
+
+        assert!(!result.items.is_empty());
+        assert!(result.items.iter().all(|e| e.name.contains("Olympics")));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events"))]
+    async fn test_get_event_by_id_found(pool: SqlitePool) {
+        let result = get_event_by_id(&pool, 1).await.unwrap();
+        assert!(result.is_some());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_event_by_id_not_found(pool: SqlitePool) {
+        let result = get_event_by_id(&pool, 999).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events"))]
+    async fn test_get_event_detail(pool: SqlitePool) {
+        let detail = get_event_detail(&pool, 1).await.unwrap();
+        assert!(detail.is_some());
+        let detail = detail.unwrap();
+        assert_eq!(detail.event_info.id, 1);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events"))]
+    async fn test_update_event(pool: SqlitePool) {
+        let update = UpdateEventEntity {
+            name: "Updated Olympics".to_string(),
+            country_id: Some(1),
+        };
+
+        let success = update_event(&pool, 1, update).await.unwrap();
+        assert!(success);
+
+        let event = get_event_by_id(&pool, 1).await.unwrap().unwrap();
+        assert_eq!(event.name, "Updated Olympics");
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events"))]
+    async fn test_delete_event(pool: SqlitePool) {
+        let success = delete_event(&pool, 1).await.unwrap();
+        assert!(success);
+
+        let result = get_event_by_id(&pool, 1).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_countries_for_event_creation(pool: SqlitePool) {
+        let countries = get_countries(&pool).await.unwrap();
+        assert!(!countries.is_empty());
+        assert!(countries.iter().any(|(_, name)| name == "Canada"));
+    }
+}

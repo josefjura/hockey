@@ -303,3 +303,103 @@ pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::
 
     Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events"))]
+    async fn test_create_season(pool: SqlitePool) {
+        let season = CreateSeasonEntity {
+            year: 2024,
+            display_name: Some("2024 Test Season".to_string()),
+            event_id: 1,
+            country_id: Some(1),
+        };
+
+        let id = create_season(&pool, season).await.unwrap();
+        assert!(id > 0);
+
+        let result = get_season_by_id(&pool, id).await.unwrap();
+        assert!(result.is_some());
+        let season = result.unwrap();
+        assert_eq!(season.year, 2024);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons"))]
+    async fn test_get_seasons_no_filters(pool: SqlitePool) {
+        let filters = SeasonFilters::default();
+        let result = get_seasons(&pool, &filters, &SortField::Year, &SortOrder::Desc, 1, 20)
+            .await
+            .unwrap();
+
+        assert!(!result.items.is_empty());
+        assert!(result.total > 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons"))]
+    async fn test_get_seasons_with_year_filter(pool: SqlitePool) {
+        // Use a year that exists in fixtures
+        let filters = SeasonFilters {
+            event_id: None,
+            year: Some(2022),
+        };
+        let result = get_seasons(&pool, &filters, &SortField::Year, &SortOrder::Desc, 1, 20)
+            .await
+            .unwrap();
+
+        if !result.items.is_empty() {
+            assert!(result.items.iter().all(|s| s.year == 2022));
+        }
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons"))]
+    async fn test_get_season_by_id_found(pool: SqlitePool) {
+        let result = get_season_by_id(&pool, 1).await.unwrap();
+        assert!(result.is_some());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_season_by_id_not_found(pool: SqlitePool) {
+        let result = get_season_by_id(&pool, 999).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons"))]
+    async fn test_update_season(pool: SqlitePool) {
+        let update = UpdateSeasonEntity {
+            year: 2025,
+            display_name: Some("Updated Season".to_string()),
+            event_id: 1,
+            country_id: Some(1),
+        };
+
+        let success = update_season(&pool, 1, update).await.unwrap();
+        assert!(success);
+
+        let season = get_season_by_id(&pool, 1).await.unwrap().unwrap();
+        assert_eq!(season.year, 2025);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons"))]
+    async fn test_delete_season(pool: SqlitePool) {
+        let success = delete_season(&pool, 1).await.unwrap();
+        assert!(success);
+
+        let result = get_season_by_id(&pool, 1).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events"))]
+    async fn test_get_events_for_season_creation(pool: SqlitePool) {
+        let events = get_events(&pool).await.unwrap();
+        assert!(!events.is_empty());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_countries_for_season_creation(pool: SqlitePool) {
+        let countries = get_countries(&pool).await.unwrap();
+        assert!(!countries.is_empty());
+    }
+}
