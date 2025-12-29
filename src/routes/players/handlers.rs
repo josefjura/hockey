@@ -554,6 +554,16 @@ pub async fn player_detail(
         }
     };
 
-    let content = player_detail_page(&t, &detail);
+    // Get season statistics for the player
+    let season_stats = players::get_player_season_stats(&state.db, id)
+        .await
+        .unwrap_or_default();
+
+    // Get event-specific career statistics
+    let event_stats = players::get_player_event_stats(&state.db, id)
+        .await
+        .unwrap_or_default();
+
+    let content = player_detail_page(&t, &detail, &season_stats, &event_stats);
     Html(admin_layout("Player Detail", &session, "/players", &t, content).into_string())
 }

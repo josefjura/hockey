@@ -1,11 +1,19 @@
 use maud::{html, Markup};
 
 use crate::i18n::TranslationContext;
-use crate::service::players::{PlayerContractWithTeamEntity, PlayerDetailEntity, PlayerEntity};
+use crate::service::players::{
+    PlayerContractWithTeamEntity, PlayerDetailEntity, PlayerEntity, PlayerEventStatsEntity,
+    PlayerSeasonStats,
+};
 use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
 
-/// Player detail page with career history
-pub fn player_detail_page(t: &TranslationContext, detail: &PlayerDetailEntity) -> Markup {
+/// Player detail page with career history and scoring
+pub fn player_detail_page(
+    t: &TranslationContext,
+    detail: &PlayerDetailEntity,
+    season_stats: &[PlayerSeasonStats],
+    event_stats: &[PlayerEventStatsEntity],
+) -> Markup {
     let player = &detail.player_info;
 
     html! {
@@ -24,11 +32,13 @@ pub fn player_detail_page(t: &TranslationContext, detail: &PlayerDetailEntity) -
                     }
                 }
                 div style="display: flex; gap: 0.5rem;" {
-                    a
-                        href=(format!("/players/{}/scoring", player.id))
-                        class="btn btn-primary"
-                    {
-                        (t.messages.player_view_scoring())
+                    @if !season_stats.is_empty() {
+                        a
+                            href=(format!("/players/{}/scoring", player.id))
+                            class="btn btn-primary"
+                        {
+                            (t.messages.player_view_scoring())
+                        }
                     }
                     button
                         class="btn btn-primary"
@@ -56,6 +66,9 @@ pub fn player_detail_page(t: &TranslationContext, detail: &PlayerDetailEntity) -
 
             // Player Info Card
             (player_info_card(t, player))
+
+            // Career Statistics Summary by Event
+            (career_stats_by_event(t, player, event_stats))
 
             // Career History Section
             div style="margin-top: 2rem;" {
@@ -189,6 +202,109 @@ fn empty_contracts_state(_t: &TranslationContext) -> Markup {
             }
             p style="font-size: 0.875rem; color: var(--gray-500);" {
                 "This player hasn't been added to any team rosters yet. Add this player to a roster from the roster management page."
+            }
+        }
+    }
+}
+
+/// Career statistics by event (competition-specific totals)
+fn career_stats_by_event(
+    t: &TranslationContext,
+    player: &PlayerEntity,
+    event_stats: &[PlayerEventStatsEntity],
+) -> Markup {
+    html! {
+        @if !event_stats.is_empty() {
+            div style="margin-top: 1.5rem;" {
+                div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;" {
+                    h3 style="font-size: 1.125rem; font-weight: 700;" {
+                        "Career Statistics by Competition"
+                    }
+                    button
+                        class="btn btn-sm btn-secondary"
+                        hx-get=(format!("/players/{}/event-stats/new", player.id))
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML"
+                    {
+                        "+ Add Event Stats"
+                    }
+                }
+
+                div style="display: grid; gap: 1rem;" {
+                    @for stats in event_stats {
+                        div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;" {
+                            div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;" {
+                                h4 style="font-size: 1rem; font-weight: 600; margin: 0;" {
+                                    (&stats.event_name)
+                                }
+                                div style="display: flex; gap: 0.5rem;" {
+                                    button
+                                        class="btn btn-sm"
+                                        style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                        hx-get=(format!("/players/{}/event-stats/{}/edit", player.id, stats.id))
+                                        hx-target="#modal-container"
+                                        hx-swap="innerHTML"
+                                    {
+                                        "Edit"
+                                    }
+                                }
+                            }
+
+                            div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;" {
+                                div style="text-align: center;" {
+                                    div style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 0.5rem;" {
+                                        (t.messages.player_scoring_total_goals())
+                                    }
+                                    div style="font-size: 2rem; font-weight: 700;" {
+                                        (stats.goals_total)
+                                    }
+                                    @if stats.goals_total > 0 {
+                                        div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
+                                            "(" (stats.goals_identified) " identified)"
+                                        }
+                                    }
+                                }
+                                div style="text-align: center;" {
+                                    div style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 0.5rem;" {
+                                        (t.messages.player_scoring_total_assists())
+                                    }
+                                    div style="font-size: 2rem; font-weight: 700;" {
+                                        (stats.assists_total)
+                                    }
+                                    @if stats.assists_total > 0 {
+                                        div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
+                                            "(" (stats.assists_identified) " identified)"
+                                        }
+                                    }
+                                }
+                                div style="text-align: center;" {
+                                    div style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 0.5rem;" {
+                                        (t.messages.player_scoring_total_points())
+                                    }
+                                    div style="font-size: 2rem; font-weight: 700;" {
+                                        (stats.points_total)
+                                    }
+                                    @if stats.points_total > 0 {
+                                        div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
+                                            "(" (stats.points_identified) " identified)"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } @else {
+            div style="margin-top: 1.5rem; text-align: center;" {
+                button
+                    class="btn btn-secondary"
+                    hx-get=(format!("/players/{}/event-stats/new", player.id))
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                {
+                    "+ Add Career Statistics"
+                }
             }
         }
     }

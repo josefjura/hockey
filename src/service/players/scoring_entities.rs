@@ -64,8 +64,8 @@ impl ScoringEventSortField {
         match self {
             Self::Date => "m.match_date",
             Self::Event => "e.name",
-            Self::EventType => "event_type",
-            Self::Period => "se.period",
+            Self::EventType => "pe.event_type",
+            Self::Period => "pe.period",
         }
     }
 

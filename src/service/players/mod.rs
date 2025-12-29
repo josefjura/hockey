@@ -1,4 +1,5 @@
 // Players service module
+mod event_stats;
 mod player_ops;
 mod scoring_entities;
 mod scoring_queries;
@@ -16,4 +17,10 @@ pub use scoring_entities::{
 };
 pub use scoring_queries::{
     get_player_scoring_events, get_player_season_stats, get_player_seasons, get_player_teams,
+};
+
+// Re-export event stats
+pub use event_stats::{
+    delete_player_event_stats, get_all_events, get_or_create_player_event_stats,
+    get_player_event_stats, update_player_event_stats, PlayerEventStatsEntity,
 };

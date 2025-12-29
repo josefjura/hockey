@@ -132,6 +132,26 @@ async fn main() -> Result<(), anyhow::Error> {
             "/players/:id/scoring/list",
             get(routes::players::player_scoring_list_partial),
         )
+        .route(
+            "/players/:id/event-stats/new",
+            get(routes::players::event_stats_create_form),
+        )
+        .route(
+            "/players/:id/event-stats",
+            post(routes::players::event_stats_create),
+        )
+        .route(
+            "/players/:player_id/event-stats/:id/edit",
+            get(routes::players::event_stats_edit_form),
+        )
+        .route(
+            "/players/:player_id/event-stats/:id",
+            post(routes::players::event_stats_update),
+        )
+        .route(
+            "/players/:player_id/event-stats/:id/delete",
+            post(routes::players::event_stats_delete),
+        )
         .route("/seasons", get(routes::seasons::seasons_get))
         .route("/seasons/list", get(routes::seasons::seasons_list_partial))
         .route("/seasons/new", get(routes::seasons::season_create_form))

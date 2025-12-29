@@ -1,4 +1,5 @@
 // Players routes module
+mod event_stats_handlers;
 mod handlers;
 mod scoring;
 
@@ -10,3 +11,9 @@ pub use handlers::{
 
 // Re-export scoring route handlers
 pub use scoring::{player_scoring_get, player_scoring_list_partial};
+
+// Re-export event stats handlers
+pub use event_stats_handlers::{
+    event_stats_create, event_stats_create_form, event_stats_delete, event_stats_edit_form,
+    event_stats_update,
+};

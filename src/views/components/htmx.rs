@@ -59,3 +59,16 @@ pub fn htmx_reload_table_with_stats(
         .into_string(),
     )
 }
+
+/// Helper function to reload the entire page
+///
+/// Returns an HTML div that triggers a full page reload.
+/// This is commonly used after successful form submissions that should refresh the entire page.
+///
+/// # Example
+/// ```rust
+/// htmx_reload_page()
+/// ```
+pub fn htmx_reload_page() -> Html<String> {
+    Html("<div hx-get=\"\" hx-target=\"body\" hx-trigger=\"load\" hx-swap=\"outerHTML\" hx-push-url=\"true\"></div>".to_string())
+}

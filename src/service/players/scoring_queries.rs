@@ -59,10 +59,9 @@ pub async fn get_player_scoring_events(
     page: usize,
     page_size: usize,
 ) -> Result<PagedResult<PlayerScoringEventEntity>, sqlx::Error> {
-    // Build the CTE (Common Table Expression) to get all scoring events for player
-    // This handles goals, primary assists, and secondary assists
-    let base_cte = r#"
-        WITH player_events AS (
+    // Build the count query with CTE
+    let mut count_query = QueryBuilder::new(
+        "WITH player_events AS (
             SELECT
                 se.id as score_event_id,
                 se.match_id,
@@ -75,29 +74,29 @@ pub async fn get_player_scoring_events(
                 se.assist1_id,
                 se.assist2_id,
                 CASE
-                    WHEN se.scorer_id = ? THEN 'goal'
-                    WHEN se.assist1_id = ? THEN 'assist_primary'
-                    WHEN se.assist2_id = ? THEN 'assist_secondary'
-                END as event_type
-            FROM score_event se
-            WHERE se.scorer_id = ? OR se.assist1_id = ? OR se.assist2_id = ?
-        )
-    "#;
-
-    // Count query
-    let mut count_query = QueryBuilder::new(base_cte);
+                    WHEN se.scorer_id = ",
+    );
+    count_query.push_bind(player_id);
+    count_query.push(" THEN 'goal' WHEN se.assist1_id = ");
+    count_query.push_bind(player_id);
+    count_query.push(" THEN 'assist_primary' WHEN se.assist2_id = ");
+    count_query.push_bind(player_id);
     count_query.push(
-        " SELECT COUNT(*) as total FROM player_events pe
+        " THEN 'assist_secondary' END as event_type FROM score_event se WHERE se.scorer_id = ",
+    );
+    count_query.push_bind(player_id);
+    count_query.push(" OR se.assist1_id = ");
+    count_query.push_bind(player_id);
+    count_query.push(" OR se.assist2_id = ");
+    count_query.push_bind(player_id);
+    count_query.push(
+        " )
+         SELECT COUNT(*) as total FROM player_events pe
          INNER JOIN match m ON pe.match_id = m.id
          INNER JOIN season s ON m.season_id = s.id
          INNER JOIN event e ON s.event_id = e.id
          WHERE 1=1",
     );
-
-    // Bind player_id for CTE (6 times for the WHERE clause)
-    for _ in 0..6 {
-        count_query.push_bind(player_id);
-    }
 
     // Apply filters to count query
     apply_filters(&mut count_query, filters);
@@ -106,9 +105,37 @@ pub async fn get_player_scoring_events(
     let total: i64 = count_row.get("total");
 
     // Data query with full joins
-    let mut data_query = QueryBuilder::new(base_cte);
+    let mut data_query = QueryBuilder::new(
+        "WITH player_events AS (
+            SELECT
+                se.id as score_event_id,
+                se.match_id,
+                se.team_id,
+                se.period,
+                se.time_minutes,
+                se.time_seconds,
+                se.goal_type,
+                se.scorer_id,
+                se.assist1_id,
+                se.assist2_id,
+                CASE
+                    WHEN se.scorer_id = ",
+    );
+    data_query.push_bind(player_id);
+    data_query.push(" THEN 'goal' WHEN se.assist1_id = ");
+    data_query.push_bind(player_id);
+    data_query.push(" THEN 'assist_primary' WHEN se.assist2_id = ");
+    data_query.push_bind(player_id);
     data_query.push(
-        r#"
+        " THEN 'assist_secondary' END as event_type FROM score_event se WHERE se.scorer_id = ",
+    );
+    data_query.push_bind(player_id);
+    data_query.push(" OR se.assist1_id = ");
+    data_query.push_bind(player_id);
+    data_query.push(" OR se.assist2_id = ");
+    data_query.push_bind(player_id);
+    data_query.push(
+        " )
         SELECT
             pe.score_event_id,
             pe.match_id,
@@ -150,14 +177,8 @@ pub async fn get_player_scoring_events(
         LEFT JOIN player scorer ON pe.scorer_id = scorer.id
         LEFT JOIN player assist1 ON pe.assist1_id = assist1.id
         LEFT JOIN player assist2 ON pe.assist2_id = assist2.id
-        WHERE 1=1
-        "#,
+        WHERE 1=1",
     );
-
-    // Bind player_id for CTE (6 times)
-    for _ in 0..6 {
-        data_query.push_bind(player_id);
-    }
 
     // Apply filters to data query
     apply_filters(&mut data_query, filters);
