@@ -91,7 +91,24 @@ export const Default: Story = {
       </button>
     </div>
   `,
-	// TODO: Play function removed - see issue #152 for fixing test compatibility
+	play: async ({ canvasElement }) => {
+		const container = canvasElement.querySelector('hockey-toast-container') as ToastContainer;
+
+		// Verify container exists
+		await expect(container).toBeTruthy();
+
+		// Call the success method directly instead of clicking button
+		container.success('Operation completed successfully!');
+
+		// Wait for toast to be added to the toasts array (exposed for testing)
+		await waitFor(() => {
+			return expect(container.toasts.length).toBeGreaterThan(0);
+		}, { timeout: 3000 });
+
+		// Verify toast was created with correct properties
+		await expect(container.toasts[0].message).toBe('Operation completed successfully!');
+		await expect(container.toasts[0].variant).toBe('success');
+	},
 };
 
 // All variants
@@ -151,7 +168,27 @@ export const MultipleToasts: Story = {
       Show Multiple Toasts
     </button>
   `,
-	// TODO: Play function removed - see issue #152 for fixing test compatibility
+	play: async ({ canvasElement }) => {
+		const container = canvasElement.querySelector('hockey-toast-container') as ToastContainer;
+
+		// Show multiple toasts with delays
+		container.success('First notification');
+		setTimeout(() => container.info('Second notification'), 300);
+		setTimeout(() => container.warning('Third notification'), 600);
+
+		// Wait for all 3 toasts to appear in the toasts array (exposed for testing)
+		await waitFor(() => {
+			return expect(container.toasts.length).toBe(3);
+		}, { timeout: 3000 });
+
+		// Verify toast messages and variants
+		await expect(container.toasts[0].message).toBe('First notification');
+		await expect(container.toasts[0].variant).toBe('success');
+		await expect(container.toasts[1].message).toBe('Second notification');
+		await expect(container.toasts[1].variant).toBe('info');
+		await expect(container.toasts[2].message).toBe('Third notification');
+		await expect(container.toasts[2].variant).toBe('warning');
+	},
 };
 
 // Custom duration
@@ -194,7 +231,33 @@ export const CustomDuration: Story = {
       </button>
     </div>
   `,
-	// TODO: Play function removed - see issue #152 for fixing test compatibility
+	play: async ({ canvasElement }) => {
+		const container = canvasElement.querySelector('hockey-toast-container') as ToastContainer;
+
+		// Show a quick toast with 2s duration
+		container.show({ message: 'Quick toast (2s)', variant: 'info', duration: 2000 });
+
+		// Wait for toast to be added to toasts array (exposed for testing)
+		await waitFor(() => {
+			return expect(container.toasts.length).toBeGreaterThan(0);
+		}, { timeout: 3000 });
+
+		// Verify toast has correct duration
+		await expect(container.toasts[0].message).toBe('Quick toast (2s)');
+		await expect(container.toasts[0].duration).toBe(2000);
+
+		// Show a persistent toast (duration: 0)
+		container.show({ message: 'Persistent toast', variant: 'warning', duration: 0 });
+
+		// Wait for both toasts to be in the array
+		await waitFor(() => {
+			return expect(container.toasts.length).toBe(2);
+		}, { timeout: 3000 });
+
+		// Verify persistent toast has duration 0
+		await expect(container.toasts[1].message).toBe('Persistent toast');
+		await expect(container.toasts[1].duration).toBe(0);
+	},
 };
 
 // Different positions

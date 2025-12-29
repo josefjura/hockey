@@ -348,5 +348,35 @@ export const WithEventHandling: Story = {
       </div>
     `;
   },
-  // TODO: Play function removed - see issue #152 for fixing test compatibility
+  play: async ({ canvasElement }) => {
+    const selector = canvasElement.querySelector('country-selector');
+
+    // Wait for countries to load
+    await waitFor(() => expect(selector!.countries.length).toBeGreaterThan(0), { timeout: 3000 });
+
+    // Verify initial state
+    const output = canvasElement.querySelector('#selection-output');
+    await expect(output!.textContent).toContain('No country selected');
+
+    // Set value and manually dispatch change event (like the component does when user selects)
+    const czechRepublic = selector!.countries.find(c => c.id === 1)!;
+    selector!.value = czechRepublic.id;
+
+    // Dispatch the change event manually (simulating what the component does on user selection)
+    selector!.dispatchEvent(new CustomEvent('change', {
+      detail: { id: czechRepublic.id, name: czechRepublic.name },
+      bubbles: true,
+      composed: true
+    }));
+
+    // Wait for the change event handler to update the output element
+    await waitFor(() => {
+      const outputText = output!.textContent;
+      return outputText && expect(outputText).toContain('Czech Republic');
+    }, { timeout: 3000 });
+
+    // Verify the output shows the selected country details
+    await expect(output!.textContent).toContain('ID: 1');
+    await expect(output!.textContent).toContain('Selected: Czech Republic');
+  },
 };

@@ -257,8 +257,22 @@ export const Empty: Story = {
   render: () => createTableElement('/api/users-empty', simpleColumns, {
     emptyMessage: 'No users found. Try adding some!'
   }),
-  // TODO: Play function removed - see issue #152 for fixing test compatibility
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector('client-data-table') as any;
 
+    // Wait for data to load (empty array)
+    await waitFor(() => expect(table.data).toBeDefined(), { timeout: 3000 });
+
+    // Verify empty data
+    await expect(table.data.length).toBe(0);
+
+    // Verify empty message is displayed in shadow DOM
+    const shadowRoot = table.shadowRoot!;
+    await waitFor(() => {
+      const emptyText = shadowRoot.textContent;
+      return expect(emptyText).toContain('No users found');
+    }, { timeout: 3000 });
+  },
 };
 
 export const Error: Story = {
@@ -393,8 +407,37 @@ export const Filtering: Story = {
     container.appendChild(createTableElement('/api/users-filter', simpleColumns, { pageSize: 10 }));
     return container;
   },
-  // TODO: Play function removed - see issue #152 for fixing test compatibility
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector('client-data-table') as any;
 
+    // Wait for data to load (30 rows from mock)
+    await waitFor(() => expect(table.data.length).toBe(30), { timeout: 3000 });
+
+    const shadowRoot = table.shadowRoot!;
+
+    // Verify initial page shows 10 rows (page size)
+    const initialRows = shadowRoot.querySelectorAll('tbody tr');
+    await expect(initialRows.length).toBe(10);
+
+    // Find the search input (type="text" with class "search-input")
+    const searchInput = shadowRoot.querySelector('.search-input') as HTMLInputElement;
+    await expect(searchInput).toBeTruthy();
+
+    // Type "Admin" in the search box
+    await userEvent.type(searchInput, 'Admin');
+
+    // Wait for filtering to take effect (debounced)
+    await waitFor(() => {
+      const visibleRows = shadowRoot.querySelectorAll('tbody tr');
+      // Should show Admin role users only (10 users with Admin role from 30 total)
+      return expect(visibleRows.length).toBeGreaterThan(0) && expect(visibleRows.length).toBeLessThanOrEqual(10);
+    }, { timeout: 3000 });
+
+    // Verify filtered rows contain "Admin"
+    const filteredRows = shadowRoot.querySelectorAll('tbody tr');
+    const firstRow = filteredRows[0];
+    await expect(firstRow.textContent).toContain('Admin');
+  },
 };
 
 export const ColumnAlignment: Story = {

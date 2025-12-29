@@ -96,8 +96,16 @@ export class ToastContainer extends LitElement {
 	@property({ type: Number })
 	defaultDuration = 4000;
 
-	@state()
-	private toasts: ToastItem[] = [];
+	/**
+	 * Active toasts (exposed for observability in tests)
+	 *
+	 * Note: This is intentionally a @property instead of @state to allow
+	 * tests to observe toast state. This follows Lit's recommended pattern
+	 * for testing components with encapsulated shadow DOM.
+	 * @readonly - Should not be modified directly by consumers
+	 */
+	@property({ type: Array })
+	toasts: ToastItem[] = [];
 
 	private toastCounter = 0;
 
