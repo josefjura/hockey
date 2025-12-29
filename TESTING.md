@@ -289,18 +289,19 @@ test.describe('Main Pages', () => {
 ### Running E2E Tests
 
 **Prerequisites:**
-```bash
-# Create test user (if not already created)
-cargo run --bin create_admin
-# Use credentials: admin@example.com / admin
-```
+- Server running on port 8080
+- `sqlx` CLI installed (for database setup)
+
+**Setup is automatic!** The Playwright global setup (`tests/e2e/global-setup.ts`) handles:
+- Database creation and migrations
+- Test admin user creation (`admin@example.com` / `admin`)
 
 **Run tests:**
 ```bash
 # Start server first (Terminal 1)
 cargo run --bin hockey
 
-# Run tests (Terminal 2)
+# Run tests (Terminal 2) - setup runs automatically
 yarn test:e2e
 
 # UI mode (interactive)
