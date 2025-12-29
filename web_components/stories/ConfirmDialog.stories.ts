@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/web-components-vite';
 import { html } from 'lit';
+import { expect, userEvent, within, waitFor } from '@storybook/test';
 import '../confirm-dialog.js';
 import type { ConfirmDialog } from '../confirm-dialog.js';
 
@@ -98,6 +99,50 @@ export const Danger: Story = {
       Delete Item
     </button>
   `,
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const dialog = canvasElement.querySelector('hockey-confirm-dialog') as ConfirmDialog;
+
+		// Verify dialog exists
+		await expect(dialog).toBeInTheDocument();
+
+		// Initially, dialog should not be visible
+		const shadowRoot = dialog.shadowRoot!;
+		let dialogElement = shadowRoot.querySelector('dialog') as HTMLDialogElement;
+		await expect(dialogElement.open).toBe(false);
+
+		// Click the "Delete Item" button to open dialog
+		const triggerButton = canvas.getByText('Delete Item');
+		await userEvent.click(triggerButton);
+
+		// Wait for dialog to open
+		await waitFor(() => {
+			dialogElement = shadowRoot.querySelector('dialog') as HTMLDialogElement;
+			return expect(dialogElement.open).toBe(true);
+		});
+
+		// Verify dialog content
+		const title = within(shadowRoot).getByText('Delete Item');
+		await expect(title).toBeInTheDocument();
+
+		const message = within(shadowRoot).getByText(/This action cannot be undone/i);
+		await expect(message).toBeInTheDocument();
+
+		// Verify buttons exist
+		const confirmButton = within(shadowRoot).getByText('Delete');
+		const cancelButton = within(shadowRoot).getByText('Cancel');
+		await expect(confirmButton).toBeInTheDocument();
+		await expect(cancelButton).toBeInTheDocument();
+
+		// Click confirm button
+		await userEvent.click(confirmButton);
+
+		// Wait for dialog to close
+		await waitFor(() => {
+			dialogElement = shadowRoot.querySelector('dialog') as HTMLDialogElement;
+			return expect(dialogElement.open).toBe(false);
+		});
+	},
 };
 
 // Warning confirmation
@@ -124,6 +169,43 @@ export const Warning: Story = {
       Discard Changes
     </button>
   `,
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const dialog = canvasElement.querySelector('hockey-confirm-dialog') as ConfirmDialog;
+
+		// Click the "Discard Changes" button to open dialog
+		const triggerButton = canvas.getByText('Discard Changes');
+		await userEvent.click(triggerButton);
+
+		// Wait for dialog to open
+		const shadowRoot = dialog.shadowRoot!;
+		await waitFor(() => {
+			const dialogElement = shadowRoot.querySelector('dialog') as HTMLDialogElement;
+			return expect(dialogElement.open).toBe(true);
+		});
+
+		// Verify warning variant content
+		const title = within(shadowRoot).getByText('Discard Changes');
+		await expect(title).toBeInTheDocument();
+
+		const message = within(shadowRoot).getByText(/unsaved changes/i);
+		await expect(message).toBeInTheDocument();
+
+		// Verify custom button text
+		const discardButton = within(shadowRoot).getByText('Discard');
+		const stayButton = within(shadowRoot).getByText('Stay');
+		await expect(discardButton).toBeInTheDocument();
+		await expect(stayButton).toBeInTheDocument();
+
+		// Click cancel button (Stay)
+		await userEvent.click(stayButton);
+
+		// Wait for dialog to close
+		await waitFor(() => {
+			const dialogElement = shadowRoot.querySelector('dialog') as HTMLDialogElement;
+			return expect(dialogElement.open).toBe(false);
+		});
+	},
 };
 
 // Info confirmation
@@ -150,6 +232,43 @@ export const Info: Story = {
       Enable Notifications
     </button>
   `,
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const dialog = canvasElement.querySelector('hockey-confirm-dialog') as ConfirmDialog;
+
+		// Click the "Enable Notifications" button to open dialog
+		const triggerButton = canvas.getByText('Enable Notifications');
+		await userEvent.click(triggerButton);
+
+		// Wait for dialog to open
+		const shadowRoot = dialog.shadowRoot!;
+		await waitFor(() => {
+			const dialogElement = shadowRoot.querySelector('dialog') as HTMLDialogElement;
+			return expect(dialogElement.open).toBe(true);
+		});
+
+		// Verify info variant content
+		const title = within(shadowRoot).getByText('Enable Notifications');
+		await expect(title).toBeInTheDocument();
+
+		const message = within(shadowRoot).getByText(/email notifications/i);
+		await expect(message).toBeInTheDocument();
+
+		// Verify custom button text for info variant
+		const enableButton = within(shadowRoot).getByText('Enable');
+		const notNowButton = within(shadowRoot).getByText('Not now');
+		await expect(enableButton).toBeInTheDocument();
+		await expect(notNowButton).toBeInTheDocument();
+
+		// Click confirm button
+		await userEvent.click(enableButton);
+
+		// Wait for dialog to close
+		await waitFor(() => {
+			const dialogElement = shadowRoot.querySelector('dialog') as HTMLDialogElement;
+			return expect(dialogElement.open).toBe(false);
+		});
+	},
 };
 
 // All variants

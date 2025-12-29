@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/web-components-vite';
 import { html } from 'lit';
+import { expect, userEvent, within, waitFor } from '@storybook/test';
 import '../toast.js';
 import type { ToastContainer } from '../toast.js';
 
@@ -90,6 +91,56 @@ export const Default: Story = {
       </button>
     </div>
   `,
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const container = canvasElement.querySelector('hockey-toast-container') as ToastContainer;
+
+		// Verify container exists
+		await expect(container).toBeInTheDocument();
+
+		const shadowRoot = container.shadowRoot!;
+
+		// Initially, no toasts should be visible
+		let toasts = shadowRoot.querySelectorAll('.toast');
+		await expect(toasts.length).toBe(0);
+
+		// Click "Show Success" button
+		const successButton = canvas.getByText('Show Success');
+		await userEvent.click(successButton);
+
+		// Wait for toast to appear
+		await waitFor(() => {
+			toasts = shadowRoot.querySelectorAll('.toast');
+			return expect(toasts.length).toBe(1);
+		});
+
+		// Verify success toast content
+		const successToast = toasts[0];
+		await expect(successToast.textContent).toContain('Operation completed successfully!');
+
+		// Wait for toast to auto-dismiss (default duration should be ~3-5 seconds)
+		await waitFor(
+			() => {
+				toasts = shadowRoot.querySelectorAll('.toast');
+				return expect(toasts.length).toBe(0);
+			},
+			{ timeout: 6000 }
+		);
+
+		// Click "Show Error" button to test another variant
+		const errorButton = canvas.getByText('Show Error');
+		await userEvent.click(errorButton);
+
+		// Wait for error toast to appear
+		await waitFor(() => {
+			toasts = shadowRoot.querySelectorAll('.toast');
+			return expect(toasts.length).toBe(1);
+		});
+
+		// Verify error toast content
+		const errorToast = toasts[0];
+		await expect(errorToast.textContent).toContain('Something went wrong');
+	},
 };
 
 // All variants
@@ -149,6 +200,70 @@ export const MultipleToasts: Story = {
       Show Multiple Toasts
     </button>
   `,
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const container = canvasElement.querySelector('hockey-toast-container') as ToastContainer;
+		const shadowRoot = container.shadowRoot!;
+
+		// Initially, no toasts should be visible
+		let toasts = shadowRoot.querySelectorAll('.toast');
+		await expect(toasts.length).toBe(0);
+
+		// Click "Show Multiple Toasts" button
+		const button = canvas.getByText('Show Multiple Toasts');
+		await userEvent.click(button);
+
+		// Wait for first toast to appear
+		await waitFor(() => {
+			toasts = shadowRoot.querySelectorAll('.toast');
+			return expect(toasts.length).toBeGreaterThan(0);
+		});
+
+		// Verify first toast
+		toasts = shadowRoot.querySelectorAll('.toast');
+		await expect(toasts[0].textContent).toContain('First notification');
+
+		// Wait for second toast (staggered by 300ms)
+		await waitFor(
+			() => {
+				toasts = shadowRoot.querySelectorAll('.toast');
+				return expect(toasts.length).toBeGreaterThanOrEqual(2);
+			},
+			{ timeout: 1000 }
+		);
+
+		// Verify second toast appears
+		toasts = shadowRoot.querySelectorAll('.toast');
+		const hasSecondToast = Array.from(toasts).some((toast) =>
+			toast.textContent?.includes('Second notification')
+		);
+		await expect(hasSecondToast).toBe(true);
+
+		// Wait for third toast (staggered by 600ms total)
+		await waitFor(
+			() => {
+				toasts = shadowRoot.querySelectorAll('.toast');
+				return expect(toasts.length).toBe(3);
+			},
+			{ timeout: 1000 }
+		);
+
+		// Verify all three toasts are visible
+		toasts = shadowRoot.querySelectorAll('.toast');
+		const toastTexts = Array.from(toasts).map((t) => t.textContent);
+		await expect(toastTexts.some((t) => t?.includes('First notification'))).toBe(true);
+		await expect(toastTexts.some((t) => t?.includes('Second notification'))).toBe(true);
+		await expect(toastTexts.some((t) => t?.includes('Third notification'))).toBe(true);
+
+		// Wait for toasts to auto-dismiss
+		await waitFor(
+			() => {
+				toasts = shadowRoot.querySelectorAll('.toast');
+				return expect(toasts.length).toBe(0);
+			},
+			{ timeout: 6000 }
+		);
+	},
 };
 
 // Custom duration
@@ -191,6 +306,64 @@ export const CustomDuration: Story = {
       </button>
     </div>
   `,
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const container = canvasElement.querySelector('hockey-toast-container') as ToastContainer;
+		const shadowRoot = container.shadowRoot!;
+
+		// Click "2 Second Toast" button
+		const quickButton = canvas.getByText('2 Second Toast');
+		await userEvent.click(quickButton);
+
+		// Wait for toast to appear
+		await waitFor(() => {
+			const toasts = shadowRoot.querySelectorAll('.toast');
+			return expect(toasts.length).toBe(1);
+		});
+
+		// Verify quick toast content
+		let toasts = shadowRoot.querySelectorAll('.toast');
+		await expect(toasts[0].textContent).toContain('Quick toast (2s)');
+
+		// Wait for 2-second toast to auto-dismiss
+		await waitFor(
+			() => {
+				toasts = shadowRoot.querySelectorAll('.toast');
+				return expect(toasts.length).toBe(0);
+			},
+			{ timeout: 3000 }
+		);
+
+		// Click "Persistent Toast" button
+		const persistentButton = canvas.getByText('Persistent Toast');
+		await userEvent.click(persistentButton);
+
+		// Wait for persistent toast to appear
+		await waitFor(() => {
+			toasts = shadowRoot.querySelectorAll('.toast');
+			return expect(toasts.length).toBe(1);
+		});
+
+		// Verify persistent toast content
+		await expect(toasts[0].textContent).toContain('Persistent toast');
+
+		// Wait a few seconds to ensure it doesn't auto-dismiss
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+
+		// Toast should still be visible
+		toasts = shadowRoot.querySelectorAll('.toast');
+		await expect(toasts.length).toBe(1);
+
+		// Find and click the dismiss button (typically an X or close button)
+		const dismissButton = within(shadowRoot).getByRole('button', { name: /close|dismiss/i });
+		await userEvent.click(dismissButton);
+
+		// Wait for toast to be dismissed
+		await waitFor(() => {
+			toasts = shadowRoot.querySelectorAll('.toast');
+			return expect(toasts.length).toBe(0);
+		});
+	},
 };
 
 // Different positions

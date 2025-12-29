@@ -111,12 +111,61 @@ src/
 
 ## Testing
 
-- Unit tests in `src/*/tests.rs` or `#[cfg(test)]` modules
-- Integration tests in `tests/` directory
-- Run with `cargo test`
-- Prefer `#[sqlx::test]` for database tests (automatic setup/teardown)
-- Linting with `cargo clippy`
-- Formatting with `cargo fmt --check`
+This project uses a hybrid testing strategy for Rust backend and Lit frontend components.
+
+See **[TESTING.md](./TESTING.md)** for comprehensive testing documentation.
+
+### Quick Commands
+
+```bash
+# Run all tests (Rust + Storybook + E2E)
+make test-all
+
+# Run specific test suites
+make test              # Rust tests only
+make test-storybook    # Storybook component tests
+make test-e2e          # E2E smoke tests (requires server on :8080)
+
+# Pre-commit checks (format, clippy, Rust tests)
+make precommit
+```
+
+### Test Architecture
+
+- **Backend tests** (Rust): Service layer with `#[sqlx::test]` + route handlers with `axum-test` (~100 tests target)
+- **Component tests** (Storybook): Interaction testing with `play` functions + MSW mocking (~70 tests target)
+- **E2E tests** (Playwright): Minimal smoke tests for critical paths (12 tests)
+
+### Key Patterns
+
+**Backend service test:**
+```rust
+#[sqlx::test(migrations = "./migrations")]
+async fn test_get_countries(pool: SqlitePool) {
+    let countries = get_countries(&pool, &filters).await.unwrap();
+    assert!(countries.len() > 0);
+}
+```
+
+**Storybook play function:**
+```typescript
+play: async ({ canvasElement }) => {
+  const component = canvasElement.querySelector('my-component');
+  await waitFor(() => expect(component.data).toBeDefined());
+  const button = within(component.shadowRoot!).getByText('Click');
+  await userEvent.click(button);
+}
+```
+
+**E2E smoke test:**
+```typescript
+test('page loads', async ({ page }) => {
+  await page.goto('/teams');
+  await expect(page.locator('h1')).toContainText(/teams/i);
+});
+```
+
+See [TESTING.md](./TESTING.md) for detailed patterns, best practices, and troubleshooting.
 
 ## Domain Model
 

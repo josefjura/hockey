@@ -8,9 +8,17 @@
 
 # Node.js
 /web_components/node_modules/
+/node_modules/
+yarn.lock
+package-lock.json
 
 # Built web components (built during Docker build)
 /static/js/components/
+
+# Playwright
+/playwright-report/
+/test-results/
+/playwright/.cache/
 
 # Archived code
 /backup/

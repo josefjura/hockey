@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/web-components-vite';
 import { html, render } from 'lit';
 import { http, HttpResponse, delay } from 'msw';
+import { expect, userEvent, within, waitFor } from '@storybook/test';
 import '../client-data-table.js';
 import type { Column } from '../shared/types.js';
 
@@ -191,6 +192,29 @@ export const Default: Story = {
     msw: { handlers: defaultHandlers },
   },
   render: () => createTableElement('/api/users', simpleColumns, { pageSize: 10 }),
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector('client-data-table') as any;
+
+    // Wait for data to load
+    await waitFor(() => expect(table.data.length).toBeGreaterThan(0), { timeout: 3000 });
+
+    // Verify 5 rows loaded from mock
+    await expect(table.data.length).toBe(5);
+
+    // Verify table is rendered in shadow DOM
+    const shadowRoot = table.shadowRoot!;
+    const tableElement = within(shadowRoot).getByRole('table');
+    await expect(tableElement).toBeInTheDocument();
+
+    // Verify correct number of data rows (excluding header)
+    const rows = shadowRoot.querySelectorAll('tbody tr');
+    await expect(rows.length).toBe(5);
+
+    // Verify first row contains expected data
+    const firstRow = rows[0];
+    await expect(firstRow.textContent).toContain('John Doe');
+    await expect(firstRow.textContent).toContain('john@example.com');
+  },
 };
 
 export const Loading: Story = {
@@ -230,9 +254,32 @@ export const Empty: Story = {
       ],
     },
   },
-  render: () => createTableElement('/api/users-empty', simpleColumns, { 
-    emptyMessage: 'No users found. Try adding some!' 
+  render: () => createTableElement('/api/users-empty', simpleColumns, {
+    emptyMessage: 'No users found. Try adding some!'
   }),
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector('client-data-table') as any;
+
+    // Wait for API call to complete
+    await waitFor(() => expect(table.data).toBeDefined(), { timeout: 3000 });
+
+    // Verify no data was loaded
+    await expect(table.data.length).toBe(0);
+
+    const shadowRoot = table.shadowRoot!;
+
+    // Verify empty message is displayed
+    const emptyMessage = within(shadowRoot).getByText(/No users found/i);
+    await expect(emptyMessage).toBeInTheDocument();
+
+    // Verify no table rows are rendered
+    const rows = shadowRoot.querySelectorAll('tbody tr');
+    await expect(rows.length).toBe(0);
+
+    // Verify table element still exists (structure maintained)
+    const tableElement = shadowRoot.querySelector('table');
+    await expect(tableElement).toBeInTheDocument();
+  },
 };
 
 export const Error: Story = {
@@ -273,6 +320,45 @@ export const WithPagination: Story = {
     },
   },
   render: () => createTableElement('/api/users-many', simpleColumns, { pageSize: 10 }),
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector('client-data-table') as any;
+
+    // Wait for data to load (100 rows)
+    await waitFor(() => expect(table.data.length).toBe(100), { timeout: 3000 });
+
+    const shadowRoot = table.shadowRoot!;
+
+    // Verify we're on page 1 initially
+    await expect(table.currentPage).toBe(1);
+
+    // Verify only 10 rows are displayed (page size)
+    const initialRows = shadowRoot.querySelectorAll('tbody tr');
+    await expect(initialRows.length).toBe(10);
+
+    // Verify first row is "User 1"
+    await expect(initialRows[0].textContent).toContain('User 1');
+
+    // Find and click the "Next" button
+    const nextButton = within(shadowRoot).getByText(/Next/i);
+    await userEvent.click(nextButton);
+
+    // Wait for page to update
+    await waitFor(() => expect(table.currentPage).toBe(2));
+
+    // Verify we're now on page 2 with different data
+    const page2Rows = shadowRoot.querySelectorAll('tbody tr');
+    await expect(page2Rows.length).toBe(10);
+    await expect(page2Rows[0].textContent).toContain('User 11');
+
+    // Find and click page number "3"
+    const page3Button = within(shadowRoot).getByText('3');
+    await userEvent.click(page3Button);
+
+    // Verify we're on page 3
+    await waitFor(() => expect(table.currentPage).toBe(3));
+    const page3Rows = shadowRoot.querySelectorAll('tbody tr');
+    await expect(page3Rows[0].textContent).toContain('User 21');
+  },
 };
 
 export const CustomRenderers: Story = {
@@ -321,6 +407,66 @@ export const Filtering: Story = {
     `;
     container.appendChild(createTableElement('/api/users-filter', simpleColumns, { pageSize: 10 }));
     return container;
+  },
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector('client-data-table') as any;
+
+    // Wait for data to load (30 rows)
+    await waitFor(() => expect(table.data.length).toBe(30), { timeout: 3000 });
+
+    const shadowRoot = table.shadowRoot!;
+
+    // Verify initial state shows 10 rows (page 1)
+    let rows = shadowRoot.querySelectorAll('tbody tr');
+    await expect(rows.length).toBe(10);
+
+    // Find the search input
+    const searchInput = within(shadowRoot).getByPlaceholderText(/search/i) as HTMLInputElement;
+    await expect(searchInput).toBeInTheDocument();
+
+    // Type "Admin" to filter
+    await userEvent.type(searchInput, 'Admin');
+
+    // Wait for debounced search (300ms delay + processing)
+    await waitFor(
+      () => {
+        const filteredRows = shadowRoot.querySelectorAll('tbody tr');
+        return expect(filteredRows.length).toBeLessThan(10);
+      },
+      { timeout: 1000 }
+    );
+
+    // Verify filtered results only contain "Admin" role
+    const filteredRows = shadowRoot.querySelectorAll('tbody tr');
+    filteredRows.forEach((row) => {
+      expect(row.textContent).toContain('Admin');
+    });
+
+    // Clear search
+    await userEvent.clear(searchInput);
+
+    // Wait for results to reset
+    await waitFor(() => {
+      const resetRows = shadowRoot.querySelectorAll('tbody tr');
+      return expect(resetRows.length).toBe(10);
+    });
+
+    // Search for a specific user
+    await userEvent.type(searchInput, 'user10@example.com');
+
+    // Wait for single result
+    await waitFor(
+      () => {
+        const singleResult = shadowRoot.querySelectorAll('tbody tr');
+        return expect(singleResult.length).toBe(1);
+      },
+      { timeout: 1000 }
+    );
+
+    // Verify the single result
+    const singleRow = shadowRoot.querySelector('tbody tr');
+    await expect(singleRow!.textContent).toContain('User 10');
+    await expect(singleRow!.textContent).toContain('user10@example.com');
   },
 };
 

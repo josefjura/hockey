@@ -10,6 +10,9 @@ mod utils;
 mod validation;
 mod views;
 
+#[cfg(test)]
+pub mod test_utils;
+
 use app_state::AppState;
 use axum::{
     extract::{Path, Request, State},

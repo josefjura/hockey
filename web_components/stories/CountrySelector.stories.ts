@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/web-components-vite';
 import { html } from 'lit';
 import { http, HttpResponse, delay } from 'msw';
+import { expect, userEvent, within, waitFor } from '@storybook/test';
 import '../country-selector.js';
 
 // Mock countries data
@@ -118,6 +119,21 @@ export const Default: Story = {
       ></country-selector>
     </div>
   `,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const selector = canvasElement.querySelector('country-selector');
+
+    // Wait for countries to load
+    await waitFor(() => expect(selector!.countries.length).toBeGreaterThan(0), { timeout: 3000 });
+
+    // Verify placeholder is shown
+    const shadowRoot = selector!.shadowRoot!;
+    const placeholder = within(shadowRoot).getByText(/Select a country/i);
+    await expect(placeholder).toBeInTheDocument();
+
+    // Verify all 10 mock countries loaded
+    await expect(selector!.countries.length).toBe(10);
+  },
 };
 
 export const WithPreselectedValue: Story = {
@@ -133,6 +149,21 @@ export const WithPreselectedValue: Story = {
       ></country-selector>
     </div>
   `,
+  play: async ({ canvasElement }) => {
+    const selector = canvasElement.querySelector('country-selector');
+
+    // Wait for data to load and selection to appear
+    await waitFor(() => expect(selector!.selectedCountry).toBeTruthy(), { timeout: 3000 });
+
+    // Verify Czech Republic is selected (ID: 1)
+    await expect(selector!.selectedCountry!.name).toBe('Czech Republic');
+    await expect(selector!.value).toBe(1);
+
+    // Verify it's displayed in the UI
+    const shadowRoot = selector!.shadowRoot!;
+    const display = within(shadowRoot).getByText('Czech Republic');
+    await expect(display).toBeInTheDocument();
+  },
 };
 
 export const IIHFMembersOnly: Story = {
@@ -154,6 +185,24 @@ export const IIHFMembersOnly: Story = {
       ></country-selector>
     </div>
   `,
+  play: async ({ canvasElement }) => {
+    const selector = canvasElement.querySelector('country-selector');
+
+    // Wait for filtered countries to load
+    await waitFor(() => expect(selector!.countries.length).toBeGreaterThan(0), { timeout: 3000 });
+
+    // Verify only IIHF members are loaded (Russia excluded: iihf=false in mock)
+    await expect(selector!.countries.length).toBe(9);
+
+    // Verify all loaded countries are IIHF members
+    selector!.countries.forEach(country => {
+      expect(country.iihf).toBe(true);
+    });
+
+    // Verify Russia is NOT in the list
+    const hasRussia = selector!.countries.some(c => c.name === 'Russia');
+    await expect(hasRussia).toBe(false);
+  },
 };
 
 export const CustomPlaceholder: Story = {
@@ -298,5 +347,34 @@ export const WithEventHandling: Story = {
         </p>
       </div>
     `;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const selector = canvasElement.querySelector('country-selector');
+
+    // Wait for countries to load
+    await waitFor(() => expect(selector!.countries.length).toBeGreaterThan(0), { timeout: 3000 });
+
+    // Open dropdown
+    const shadowRoot = selector!.shadowRoot!;
+    const button = within(shadowRoot).getByRole('button');
+    await userEvent.click(button);
+
+    // Wait for dropdown to open
+    await waitFor(() => {
+      const dropdown = shadowRoot.querySelector('.dropdown');
+      return expect(dropdown).toBeInTheDocument();
+    });
+
+    // Click on first country in the list (Czech Republic)
+    const firstCountryButton = shadowRoot.querySelectorAll('.country-item')[1]; // [0] is "No country", [1] is first actual country
+    await userEvent.click(firstCountryButton as HTMLElement);
+
+    // Verify the output text updated via event handler
+    const output = canvasElement.querySelector('#selection-output');
+    await waitFor(() => {
+      expect(output!.textContent).toContain('Selected: Czech Republic');
+      expect(output!.textContent).toContain('ID: 1');
+    });
   },
 };

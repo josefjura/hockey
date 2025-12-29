@@ -71,6 +71,48 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: 'web_components/yarn.lock'
+
+      - name: Install frontend dependencies
+        run: |
+          cd web_components && yarn install --frozen-lockfile
+          cd .. && yarn install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Storybook
+        run: cd web_components && yarn build-storybook --quiet
+
+      - name: Run Storybook tests
+        run: cd web_components && yarn test-storybook:ci
+
+      - name: Start server for E2E tests
+        run: |
+          cargo build --release
+          ./target/release/hockey &
+          sleep 5
+        env:
+          DATABASE_URL: sqlite:./ci_test.db
+          SESSION_SECRET: test-secret-key-for-ci-only
+          ENVIRONMENT: development
+
+      - name: Run E2E smoke tests
+        run: yarn test:e2e
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest

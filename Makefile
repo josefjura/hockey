@@ -45,9 +45,20 @@ check: ## Run cargo check
 	@echo "$(YELLOW)==> Checking compilation...$(NC)"
 	@cargo check
 
-test: ## Run tests
-	@echo "$(YELLOW)==> Running tests...$(NC)"
+test: ## Run Rust tests
+	@echo "$(YELLOW)==> Running Rust tests...$(NC)"
 	@cargo test
+
+test-storybook: ## Run Storybook component tests
+	@echo "$(YELLOW)==> Running Storybook test-runner...$(NC)"
+	@cd web_components && yarn test-storybook
+
+test-e2e: ## Run E2E smoke tests (requires server running on :8080)
+	@echo "$(YELLOW)==> Running E2E smoke tests...$(NC)"
+	@yarn test:e2e
+
+test-all: test test-storybook test-e2e ## Run all tests (Rust + Storybook + E2E)
+	@echo "$(GREEN)✓ All tests passed!$(NC)"
 
 ##@ Build Commands
 
