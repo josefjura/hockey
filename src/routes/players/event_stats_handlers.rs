@@ -20,6 +20,12 @@ pub struct EventStatsForm {
     assists_total: i32,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct EventStatsUpdateForm {
+    goals_total: i32,
+    assists_total: i32,
+}
+
 /// GET /players/{id}/event-stats/new - Show create modal
 pub async fn event_stats_create_form(
     Extension(t): Extension<TranslationContext>,
@@ -152,7 +158,7 @@ pub async fn event_stats_update(
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path((player_id, stats_id)): Path<(i64, i64)>,
-    Form(form): Form<EventStatsForm>,
+    Form(form): Form<EventStatsUpdateForm>,
 ) -> impl IntoResponse {
     // Validation
     if form.goals_total < 0 || form.assists_total < 0 {

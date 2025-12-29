@@ -87,9 +87,6 @@ pub fn event_stats_edit_modal(
     let title = format!("Edit {} Career - {}", stats.event_name, player.name);
 
     let form_fields = html! {
-        // Hidden field for event_id (required by form struct but not changed)
-        input type="hidden" name="event_id" value=(stats.event_id);
-
         div style="margin-bottom: 1rem; padding: 1rem; background: var(--gray-50); border-radius: 4px;" {
             div style="font-weight: 600; margin-bottom: 0.5rem;" {
                 (stats.event_name)

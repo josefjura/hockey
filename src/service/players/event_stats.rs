@@ -4,6 +4,7 @@ use sqlx::{Row, SqlitePool};
 #[derive(Debug, Clone)]
 pub struct PlayerEventStatsEntity {
     pub id: i64,
+    #[allow(dead_code)] // Loaded from DB but not currently used in views
     pub event_id: i64,
     pub event_name: String,
     pub goals_total: i32,
