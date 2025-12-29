@@ -4,10 +4,11 @@ use axum::{
     Extension, Form,
 };
 use serde::Deserialize;
+use sqlx::SqlitePool;
 
 use crate::app_state::AppState;
 use crate::i18n::TranslationContext;
-use crate::service::players;
+use crate::service::players::{self, PlayerEntity};
 use crate::views::{
     components::{error::error_message, htmx::htmx_reload_page},
     pages::player_event_stats::{event_stats_create_modal, event_stats_edit_modal},
@@ -26,20 +27,27 @@ pub struct EventStatsUpdateForm {
     assists_total: i32,
 }
 
+/// Helper function to fetch player by ID with consistent error handling
+async fn get_player_or_error(db: &SqlitePool, player_id: i64) -> Result<PlayerEntity, Html<String>> {
+    match players::get_player_by_id(db, player_id).await {
+        Ok(Some(player)) => Ok(player),
+        Ok(None) => Err(Html(error_message("Player not found").into_string())),
+        Err(e) => {
+            tracing::error!("Failed to fetch player: {}", e);
+            Err(Html(error_message("Failed to load player").into_string()))
+        }
+    }
+}
+
 /// GET /players/{id}/event-stats/new - Show create modal
 pub async fn event_stats_create_form(
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(player_id): Path<i64>,
 ) -> impl IntoResponse {
-    // Get player info
-    let player = match players::get_player_by_id(&state.db, player_id).await {
-        Ok(Some(p)) => p,
-        Ok(None) => return Html(error_message("Player not found").into_string()),
-        Err(e) => {
-            tracing::error!("Failed to fetch player: {}", e);
-            return Html(error_message("Failed to load player").into_string());
-        }
+    let player = match get_player_or_error(&state.db, player_id).await {
+        Ok(p) => p,
+        Err(err) => return err,
     };
 
     // Get all events for dropdown
@@ -55,14 +63,9 @@ pub async fn event_stats_create(
     Path(player_id): Path<i64>,
     Form(form): Form<EventStatsForm>,
 ) -> impl IntoResponse {
-    // Get player info for error display
-    let player = match players::get_player_by_id(&state.db, player_id).await {
-        Ok(Some(p)) => p,
-        Ok(None) => return Html(error_message("Player not found").into_string()),
-        Err(e) => {
-            tracing::error!("Failed to fetch player: {}", e);
-            return Html(error_message("Failed to load player").into_string());
-        }
+    let player = match get_player_or_error(&state.db, player_id).await {
+        Ok(p) => p,
+        Err(err) => return err,
     };
 
     // Validation
@@ -126,14 +129,9 @@ pub async fn event_stats_edit_form(
     State(state): State<AppState>,
     Path((player_id, stats_id)): Path<(i64, i64)>,
 ) -> impl IntoResponse {
-    // Get player info
-    let player = match players::get_player_by_id(&state.db, player_id).await {
-        Ok(Some(p)) => p,
-        Ok(None) => return Html(error_message("Player not found").into_string()),
-        Err(e) => {
-            tracing::error!("Failed to fetch player: {}", e);
-            return Html(error_message("Failed to load player").into_string());
-        }
+    let player = match get_player_or_error(&state.db, player_id).await {
+        Ok(p) => p,
+        Err(err) => return err,
     };
 
     // Get event stats
@@ -163,10 +161,9 @@ pub async fn event_stats_update(
     // Validation
     if form.goals_total < 0 || form.assists_total < 0 {
         // Get player and stats for error display
-        let player = match players::get_player_by_id(&state.db, player_id).await {
-            Ok(Some(p)) => p,
-            Ok(None) => return Html(error_message("Player not found").into_string()),
-            Err(_) => return Html(error_message("Failed to load player").into_string()),
+        let player = match get_player_or_error(&state.db, player_id).await {
+            Ok(p) => p,
+            Err(err) => return err,
         };
 
         let all_stats = match players::get_player_event_stats(&state.db, player_id).await {
