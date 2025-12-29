@@ -1,4 +1,5 @@
 // Players service module
+mod constants;
 mod event_stats;
 mod player_ops;
 mod scoring_entities;
@@ -23,4 +24,10 @@ pub use scoring_queries::{
 pub use event_stats::{
     delete_player_event_stats, get_all_events, get_or_create_player_event_stats,
     get_player_event_stats, update_player_event_stats, PlayerEventStatsEntity,
+};
+
+// Re-export constants
+pub use constants::{
+    EVENT_TYPE_ASSIST_PRIMARY, EVENT_TYPE_ASSIST_SECONDARY, EVENT_TYPE_GOAL,
+    FILTER_EVENT_TYPE_ASSISTS, FILTER_EVENT_TYPE_GOALS,
 };

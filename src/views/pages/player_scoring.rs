@@ -4,7 +4,8 @@ use crate::common::pagination::{PagedResult, SortOrder};
 use crate::i18n::TranslationContext;
 use crate::service::players::{
     PlayerEntity, PlayerScoringEventEntity, PlayerScoringFilters, PlayerSeasonStats,
-    ScoringEventSortField,
+    ScoringEventSortField, EVENT_TYPE_ASSIST_PRIMARY, EVENT_TYPE_ASSIST_SECONDARY,
+    EVENT_TYPE_GOAL, FILTER_EVENT_TYPE_ASSISTS, FILTER_EVENT_TYPE_GOALS,
 };
 use crate::views::components::crud::{empty_state_i18n, pagination};
 
@@ -143,14 +144,14 @@ fn scoring_filters(
                                 (t.messages.player_scoring_all_events())
                             }
                             option
-                                value="goals"
-                                selected[filters.event_type.as_deref() == Some("goals")]
+                                value=(FILTER_EVENT_TYPE_GOALS)
+                                selected[filters.event_type.as_deref() == Some(FILTER_EVENT_TYPE_GOALS)]
                             {
                                 (t.messages.player_scoring_goals_only())
                             }
                             option
-                                value="assists"
-                                selected[filters.event_type.as_deref() == Some("assists")]
+                                value=(FILTER_EVENT_TYPE_ASSISTS)
+                                selected[filters.event_type.as_deref() == Some(FILTER_EVENT_TYPE_ASSISTS)]
                             {
                                 (t.messages.player_scoring_assists_only())
                             }
@@ -471,15 +472,15 @@ fn sortable_header(
 /// Event type badge
 fn event_type_badge(event_type: &str, t: &TranslationContext) -> Markup {
     let (label, color) = match event_type {
-        "goal" => (
+        EVENT_TYPE_GOAL => (
             t.messages.player_scoring_goal().to_string(),
             "var(--primary-color)",
         ),
-        "assist_primary" => (
+        EVENT_TYPE_ASSIST_PRIMARY => (
             t.messages.player_scoring_assist_primary().to_string(),
             "#10b981",
         ),
-        "assist_secondary" => (
+        EVENT_TYPE_ASSIST_SECONDARY => (
             t.messages.player_scoring_assist_secondary().to_string(),
             "#6366f1",
         ),

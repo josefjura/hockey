@@ -1,6 +1,10 @@
 use crate::common::pagination::{PagedResult, SortOrder};
 use sqlx::{QueryBuilder, Row, SqlitePool};
 
+use super::constants::{
+    EVENT_TYPE_ASSIST_PRIMARY, EVENT_TYPE_ASSIST_SECONDARY, EVENT_TYPE_GOAL,
+    FILTER_EVENT_TYPE_ASSISTS, FILTER_EVENT_TYPE_GOALS,
+};
 use super::scoring_entities::{
     PlayerScoringEventEntity, PlayerScoringFilters, PlayerSeasonStats, ScoringEventSortField,
 };
@@ -77,13 +81,17 @@ pub async fn get_player_scoring_events(
                     WHEN se.scorer_id = ",
     );
     count_query.push_bind(player_id);
-    count_query.push(" THEN 'goal' WHEN se.assist1_id = ");
+    count_query.push(format!(" THEN '{}' WHEN se.assist1_id = ", EVENT_TYPE_GOAL));
     count_query.push_bind(player_id);
-    count_query.push(" THEN 'assist_primary' WHEN se.assist2_id = ");
+    count_query.push(format!(
+        " THEN '{}' WHEN se.assist2_id = ",
+        EVENT_TYPE_ASSIST_PRIMARY
+    ));
     count_query.push_bind(player_id);
-    count_query.push(
-        " THEN 'assist_secondary' END as event_type FROM score_event se WHERE se.scorer_id = ",
-    );
+    count_query.push(format!(
+        " THEN '{}' END as event_type FROM score_event se WHERE se.scorer_id = ",
+        EVENT_TYPE_ASSIST_SECONDARY
+    ));
     count_query.push_bind(player_id);
     count_query.push(" OR se.assist1_id = ");
     count_query.push_bind(player_id);
@@ -122,13 +130,17 @@ pub async fn get_player_scoring_events(
                     WHEN se.scorer_id = ",
     );
     data_query.push_bind(player_id);
-    data_query.push(" THEN 'goal' WHEN se.assist1_id = ");
+    data_query.push(format!(" THEN '{}' WHEN se.assist1_id = ", EVENT_TYPE_GOAL));
     data_query.push_bind(player_id);
-    data_query.push(" THEN 'assist_primary' WHEN se.assist2_id = ");
+    data_query.push(format!(
+        " THEN '{}' WHEN se.assist2_id = ",
+        EVENT_TYPE_ASSIST_PRIMARY
+    ));
     data_query.push_bind(player_id);
-    data_query.push(
-        " THEN 'assist_secondary' END as event_type FROM score_event se WHERE se.scorer_id = ",
-    );
+    data_query.push(format!(
+        " THEN '{}' END as event_type FROM score_event se WHERE se.scorer_id = ",
+        EVENT_TYPE_ASSIST_SECONDARY
+    ));
     data_query.push_bind(player_id);
     data_query.push(" OR se.assist1_id = ");
     data_query.push_bind(player_id);
@@ -250,13 +262,14 @@ fn apply_filters<'a>(
     // Event type filter
     if let Some(event_type) = &filters.event_type {
         match event_type.as_str() {
-            "goals" => {
-                query.push(" AND pe.event_type = 'goal'");
+            FILTER_EVENT_TYPE_GOALS => {
+                query.push(format!(" AND pe.event_type = '{}'", EVENT_TYPE_GOAL));
             }
-            "assists" => {
-                query.push(
-                    " AND (pe.event_type = 'assist_primary' OR pe.event_type = 'assist_secondary')",
-                );
+            FILTER_EVENT_TYPE_ASSISTS => {
+                query.push(format!(
+                    " AND (pe.event_type = '{}' OR pe.event_type = '{}')",
+                    EVENT_TYPE_ASSIST_PRIMARY, EVENT_TYPE_ASSIST_SECONDARY
+                ));
             }
             _ => {} // "all" - no filter
         }
