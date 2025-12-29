@@ -126,6 +126,66 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
                         span { (player.country_name) }
                     }
                 }
+                @if let Some(birth_date) = &player.birth_date {
+                    div {
+                        div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
+                            "Date of Birth"
+                        }
+                        div style="font-weight: 600;" {
+                            (birth_date)
+                        }
+                    }
+                }
+                @if let Some(birth_place) = &player.birth_place {
+                    div {
+                        div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
+                            "Birthplace"
+                        }
+                        div style="font-weight: 600;" {
+                            (birth_place)
+                        }
+                    }
+                }
+                @if let Some(height_cm) = player.height_cm {
+                    div {
+                        div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
+                            "Height"
+                        }
+                        div style="font-weight: 600;" {
+                            (format!("{} cm", height_cm))
+                        }
+                    }
+                }
+                @if let Some(weight_kg) = player.weight_kg {
+                    div {
+                        div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
+                            "Weight"
+                        }
+                        div style="font-weight: 600;" {
+                            (format!("{} kg", weight_kg))
+                        }
+                    }
+                }
+                @if let Some(position) = &player.position {
+                    div {
+                        div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
+                            "Position"
+                        }
+                        div style="font-weight: 600;" {
+                            (position)
+                        }
+                    }
+                }
+                @if let Some(shoots) = &player.shoots {
+                    div {
+                        div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
+                            "Shoots/Catches"
+                        }
+                        div style="font-weight: 600;" {
+                            (shoots)
+                        }
+                    }
+                }
             }
         }
     }

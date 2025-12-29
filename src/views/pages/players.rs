@@ -384,6 +384,88 @@ pub fn player_create_modal(
                 (t.messages.players_photo_url_hint())
             }
         }
+
+        // Biographical Information Section
+        h3 style="margin: 1.5rem 0 1rem; font-size: 1rem; font-weight: 600; color: var(--gray-700);" {
+            "Biographical Information"
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Date of Birth"
+                }
+                input
+                    type="date"
+                    name="birth_date"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Birthplace"
+                }
+                input
+                    type="text"
+                    name="birth_place"
+                    placeholder="City, Country"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Height (cm)"
+                }
+                input
+                    type="number"
+                    name="height_cm"
+                    placeholder="180"
+                    min="0"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Weight (kg)"
+                }
+                input
+                    type="number"
+                    name="weight_kg"
+                    placeholder="80"
+                    min="0"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Position"
+                }
+                select
+                    name="position"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="" { "Select position..." }
+                    option value="Forward" { "Forward" }
+                    option value="Defense" { "Defense" }
+                    option value="Goalie" { "Goalie" }
+                }
+            }
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Shoots/Catches"
+                }
+                select
+                    name="shoots"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="" { "Select..." }
+                    option value="Left" { "Left" }
+                    option value="Right" { "Right" }
+                }
+            }
+        }
     };
 
     modal_form_multipart(
@@ -469,6 +551,92 @@ pub fn player_edit_modal(
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
                 (t.messages.players_photo_url_hint())
+            }
+        }
+
+        // Biographical Information Section
+        h3 style="margin: 1.5rem 0 1rem; font-size: 1rem; font-weight: 600; color: var(--gray-700);" {
+            "Biographical Information"
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Date of Birth"
+                }
+                input
+                    type="date"
+                    name="birth_date"
+                    value=[player.birth_date.as_ref()]
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Birthplace"
+                }
+                input
+                    type="text"
+                    name="birth_place"
+                    value=[player.birth_place.as_ref()]
+                    placeholder="City, Country"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Height (cm)"
+                }
+                input
+                    type="number"
+                    name="height_cm"
+                    value=[player.height_cm]
+                    placeholder="180"
+                    min="0"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Weight (kg)"
+                }
+                input
+                    type="number"
+                    name="weight_kg"
+                    value=[player.weight_kg]
+                    placeholder="80"
+                    min="0"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+            }
+        }
+
+        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Position"
+                }
+                select
+                    name="position"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="" selected[player.position.is_none()] { "Select position..." }
+                    option value="Forward" selected[player.position.as_deref() == Some("Forward")] { "Forward" }
+                    option value="Defense" selected[player.position.as_deref() == Some("Defense")] { "Defense" }
+                    option value="Goalie" selected[player.position.as_deref() == Some("Goalie")] { "Goalie" }
+                }
+            }
+            div {
+                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                    "Shoots/Catches"
+                }
+                select
+                    name="shoots"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                {
+                    option value="" selected[player.shoots.is_none()] { "Select..." }
+                    option value="Left" selected[player.shoots.as_deref() == Some("Left")] { "Left" }
+                    option value="Right" selected[player.shoots.as_deref() == Some("Right")] { "Right" }
+                }
             }
         }
     };
