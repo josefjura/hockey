@@ -15,7 +15,7 @@ test.describe('Authentication', () => {
   test('login page loads', async ({ page }) => {
     await page.goto('/auth/login');
     await expect(page).toHaveURL(/.*login/);
-    await expect(page.locator('h1')).toContainText(/sign in/i);
+    await expect(page.locator('h1').first()).toContainText(/sign in/i);
     await expect(page.locator('input[name="email"]')).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -31,7 +31,7 @@ test.describe('Authentication', () => {
 
     // Should redirect to dashboard
     await expect(page).toHaveURL('http://localhost:8080/');
-    await expect(page.locator('h1')).toContainText(/dashboard/i);
+    await expect(page.locator('h1').first()).toContainText(/dashboard/i);
   });
 
   test('logout works', async ({ page }) => {
@@ -59,13 +59,13 @@ test.describe('Main Pages Load', () => {
   });
 
   test('dashboard loads successfully', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText(/dashboard/i);
+    await expect(page.locator('h1').first()).toContainText(/dashboard/i);
     await expect(page).toHaveURL('http://localhost:8080/');
   });
 
   test('teams page loads and displays table', async ({ page }) => {
     await page.goto('/teams');
-    await expect(page.locator('h1')).toContainText(/teams/i);
+    await expect(page.locator('h1').first()).toContainText(/teams/i);
 
     // Wait for table to load (adjust selector based on your UI)
     await expect(page.locator('table')).toBeVisible();
@@ -73,28 +73,28 @@ test.describe('Main Pages Load', () => {
 
   test('players page loads and displays table', async ({ page }) => {
     await page.goto('/players');
-    await expect(page.locator('h1')).toContainText(/players/i);
+    await expect(page.locator('h1').first()).toContainText(/players/i);
     await expect(page.locator('table')).toBeVisible();
   });
 
   test('events page loads', async ({ page }) => {
     await page.goto('/events');
-    await expect(page.locator('h1')).toContainText(/events/i);
+    await expect(page.locator('h1').first()).toContainText(/events/i);
   });
 
   test('seasons page loads', async ({ page }) => {
     await page.goto('/seasons');
-    await expect(page.locator('h1')).toContainText(/seasons/i);
+    await expect(page.locator('h1').first()).toContainText(/seasons/i);
   });
 
   test('matches page loads', async ({ page }) => {
     await page.goto('/matches');
-    await expect(page.locator('h1')).toContainText(/matches/i);
+    await expect(page.locator('h1').first()).toContainText(/matches/i);
   });
 
   test('management page loads', async ({ page }) => {
     await page.goto('/management');
-    await expect(page.locator('h1')).toContainText(/management/i);
+    await expect(page.locator('h1').first()).toContainText(/management/i);
   });
 });
 
