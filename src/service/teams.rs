@@ -465,7 +465,7 @@ mod tests {
 
         assert!(!countries.is_empty());
         assert!(countries.len() > 50); // Many countries in migrations
-        // Verify format is (id, name)
+                                       // Verify format is (id, name)
         assert!(countries.iter().any(|(_, name)| name == "Canada"));
     }
 
