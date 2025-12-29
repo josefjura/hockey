@@ -313,3 +313,179 @@ pub async fn get_team_detail(
         participations,
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sqlx::SqlitePool;
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_create_team(pool: SqlitePool) {
+        let team = CreateTeamEntity {
+            name: "Test Team".to_string(),
+            country_id: Some(1), // Canada from migrations
+        };
+
+        let id = create_team(&pool, team).await.unwrap();
+        assert!(id > 0);
+
+        // Verify team was created
+        let result = get_team_by_id(&pool, id).await.unwrap();
+        assert!(result.is_some());
+        let team = result.unwrap();
+        assert_eq!(team.name, "Test Team");
+        assert_eq!(team.country_id, Some(1));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_get_teams_no_filters(pool: SqlitePool) {
+        let filters = TeamFilters::default();
+        let result = get_teams(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 20)
+            .await
+            .unwrap();
+
+        assert!(result.items.len() >= 5); // At least the fixture teams
+        assert!(result.total >= 5);
+        assert!(result.items.iter().any(|t| t.name == "Team Canada"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_get_teams_with_name_filter(pool: SqlitePool) {
+        let filters = TeamFilters {
+            name: Some("Canada".to_string()),
+            ..Default::default()
+        };
+        let result = get_teams(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 20)
+            .await
+            .unwrap();
+
+        assert!(!result.items.is_empty());
+        assert!(result.items.iter().all(|t| t.name.contains("Canada")));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_get_teams_with_country_filter(pool: SqlitePool) {
+        let filters = TeamFilters {
+            country_id: Some(1), // Canada
+            ..Default::default()
+        };
+        let result = get_teams(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 20)
+            .await
+            .unwrap();
+
+        assert!(!result.items.is_empty());
+        assert!(result.items.iter().all(|t| t.country_id == Some(1)));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_get_teams_pagination(pool: SqlitePool) {
+        let filters = TeamFilters::default();
+        let result = get_teams(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 2)
+            .await
+            .unwrap();
+
+        assert!(result.items.len() <= 2);
+        assert!(result.total >= 5);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_get_teams_sorting(pool: SqlitePool) {
+        let filters = TeamFilters::default();
+        let result = get_teams(&pool, &filters, &SortField::Name, &SortOrder::Desc, 1, 20)
+            .await
+            .unwrap();
+
+        // Verify descending order
+        for i in 0..result.items.len() - 1 {
+            assert!(result.items[i].name >= result.items[i + 1].name);
+        }
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_get_team_by_id_found(pool: SqlitePool) {
+        let result = get_team_by_id(&pool, 1).await.unwrap();
+
+        assert!(result.is_some());
+        let team = result.unwrap();
+        assert_eq!(team.id, 1);
+        assert_eq!(team.name, "Team Canada");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_team_by_id_not_found(pool: SqlitePool) {
+        let result = get_team_by_id(&pool, 999).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_update_team(pool: SqlitePool) {
+        let update = UpdateTeamEntity {
+            name: "Updated Team Canada".to_string(),
+            country_id: Some(1),
+        };
+
+        let success = update_team(&pool, 1, update).await.unwrap();
+        assert!(success);
+
+        // Verify update
+        let team = get_team_by_id(&pool, 1).await.unwrap().unwrap();
+        assert_eq!(team.name, "Updated Team Canada");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_team_not_found(pool: SqlitePool) {
+        let update = UpdateTeamEntity {
+            name: "Non-existent Team".to_string(),
+            country_id: Some(1),
+        };
+
+        let success = update_team(&pool, 999, update).await.unwrap();
+        assert!(!success);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_delete_team(pool: SqlitePool) {
+        let success = delete_team(&pool, 1).await.unwrap();
+        assert!(success);
+
+        // Verify deletion
+        let result = get_team_by_id(&pool, 1).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_delete_team_not_found(pool: SqlitePool) {
+        let success = delete_team(&pool, 999).await.unwrap();
+        assert!(!success);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_countries_for_team_creation(pool: SqlitePool) {
+        let countries = get_countries(&pool).await.unwrap();
+
+        assert!(!countries.is_empty());
+        assert!(countries.len() > 50); // Many countries in migrations
+        // Verify format is (id, name)
+        assert!(countries.iter().any(|(_, name)| name == "Canada"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
+    async fn test_get_team_detail_basic(pool: SqlitePool) {
+        // Team 1 is "Team Canada" from fixtures
+        let detail = get_team_detail(&pool, 1).await.unwrap();
+
+        assert!(detail.is_some());
+        let detail = detail.unwrap();
+        // Just verify we got team details, don't assume specific country
+        assert_eq!(detail.team_info.id, 1);
+        assert!(!detail.team_info.name.is_empty());
+        // Participations list can be empty for basic team
+        assert_eq!(detail.participations.len(), 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_team_detail_not_found(pool: SqlitePool) {
+        let detail = get_team_detail(&pool, 999).await.unwrap();
+        assert!(detail.is_none());
+    }
+}
