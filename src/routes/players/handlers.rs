@@ -14,7 +14,7 @@ use crate::service::players::{
 use crate::views::{
     components::{
         error::error_message,
-        htmx::{htmx_reload_table, htmx_reload_table_with_stats},
+        htmx::{htmx_reload_page, htmx_reload_table_with_stats},
     },
     layout::admin_layout,
     pages::player_detail::player_detail_page,
@@ -515,8 +515,8 @@ pub async fn player_update(
     .await
     {
         Ok(true) => {
-            // Return HTMX response to close modal and reload table
-            htmx_reload_table("/players/list", "players-table")
+            // Return HTMX response to close modal and reload page to show updated data
+            htmx_reload_page()
         }
         Ok(false) => Html(
             player_edit_modal(&t, &current_player, Some("Player not found"), &countries)
