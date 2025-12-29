@@ -188,11 +188,19 @@ pub async fn player_create(
             }
             "birth_date" => {
                 let text = field.text().await.unwrap_or_default();
-                birth_date = if text.trim().is_empty() { None } else { Some(text) };
+                birth_date = if text.trim().is_empty() {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             "birth_place" => {
                 let text = field.text().await.unwrap_or_default();
-                birth_place = if text.trim().is_empty() { None } else { Some(text) };
+                birth_place = if text.trim().is_empty() {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             "height_cm" => {
                 let text = field.text().await.unwrap_or_default();
@@ -204,11 +212,19 @@ pub async fn player_create(
             }
             "position" => {
                 let text = field.text().await.unwrap_or_default();
-                position = if text.trim().is_empty() { None } else { Some(text) };
+                position = if text.trim().is_empty() {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             "shoots" => {
                 let text = field.text().await.unwrap_or_default();
-                shoots = if text.trim().is_empty() { None } else { Some(text) };
+                shoots = if text.trim().is_empty() {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             "photo_file" => {
                 // Handle file upload
@@ -386,27 +402,51 @@ pub async fn player_update(
             }
             "birth_date" => {
                 let text = field.text().await.unwrap_or_default();
-                birth_date = if text.trim().is_empty() { None } else { Some(text) };
+                birth_date = if text.trim().is_empty() {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             "birth_place" => {
                 let text = field.text().await.unwrap_or_default();
-                birth_place = if text.trim().is_empty() { None } else { Some(text) };
+                birth_place = if text.trim().is_empty() {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             "height_cm" => {
                 let text = field.text().await.unwrap_or_default();
-                height_cm = if text.trim().is_empty() { None } else { text.parse().ok() };
+                height_cm = if text.trim().is_empty() {
+                    None
+                } else {
+                    text.parse().ok()
+                };
             }
             "weight_kg" => {
                 let text = field.text().await.unwrap_or_default();
-                weight_kg = if text.trim().is_empty() { None } else { text.parse().ok() };
+                weight_kg = if text.trim().is_empty() {
+                    None
+                } else {
+                    text.parse().ok()
+                };
             }
             "position" => {
                 let text = field.text().await.unwrap_or_default();
-                position = if text.trim().is_empty() { None } else { Some(text) };
+                position = if text.trim().is_empty() {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             "shoots" => {
                 let text = field.text().await.unwrap_or_default();
-                shoots = if text.trim().is_empty() { None } else { Some(text) };
+                shoots = if text.trim().is_empty() {
+                    None
+                } else {
+                    Some(text)
+                };
             }
             "photo_file" => {
                 // Handle file upload

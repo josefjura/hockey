@@ -13,6 +13,28 @@ pub struct SeasonEntity {
     pub display_name: Option<String>,
     pub event_id: i64,
     pub event_name: String,
+    pub country_id: Option<i64>, // Season's host country (e.g., WC 2024 in Sweden)
+    #[allow(dead_code)]
+    pub event_country_id: Option<i64>, // Event's default country (e.g., Czech Premier League)
+    pub country_name: Option<String>, // Season's host country name
+    pub event_country_name: Option<String>, // Event's default country name
+}
+
+impl SeasonEntity {
+    /// Get the effective country ID for this season
+    /// Falls back to event's country if season doesn't have one
+    #[allow(dead_code)]
+    pub fn effective_country_id(&self) -> Option<i64> {
+        self.country_id.or(self.event_country_id)
+    }
+
+    /// Get the effective country name for this season
+    /// Falls back to event's country name if season doesn't have one
+    pub fn effective_country_name(&self) -> Option<&String> {
+        self.country_name
+            .as_ref()
+            .or(self.event_country_name.as_ref())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -20,6 +42,7 @@ pub struct CreateSeasonEntity {
     pub year: i64,
     pub display_name: Option<String>,
     pub event_id: i64,
+    pub country_id: Option<i64>, // Host country for this season
 }
 
 #[derive(Debug, Clone)]
@@ -27,6 +50,7 @@ pub struct UpdateSeasonEntity {
     pub year: i64,
     pub display_name: Option<String>,
     pub event_id: i64,
+    pub country_id: Option<i64>, // Host country for this season
 }
 
 #[derive(Debug, Clone)]
@@ -81,10 +105,11 @@ pub async fn create_season(
     season: CreateSeasonEntity,
 ) -> Result<i64, sqlx::Error> {
     let result = sqlx::query!(
-        "INSERT INTO season (year, display_name, event_id) VALUES (?, ?, ?)",
+        "INSERT INTO season (year, display_name, event_id, country_id) VALUES (?, ?, ?, ?)",
         season.year,
         season.display_name,
-        season.event_id
+        season.event_id,
+        season.country_id
     )
     .execute(db)
     .await?;
@@ -111,9 +136,13 @@ pub async fn get_seasons(
 
     // Build data query
     let mut data_query = sqlx::QueryBuilder::new(
-        "SELECT s.id, s.year, s.display_name, s.event_id, e.name as event_name
+        "SELECT s.id, s.year, s.display_name, s.event_id, e.name as event_name,
+                s.country_id, e.country_id as event_country_id,
+                c1.name as country_name, c2.name as event_country_name
          FROM season s
          INNER JOIN event e ON s.event_id = e.id
+         LEFT JOIN country c1 ON s.country_id = c1.id
+         LEFT JOIN country c2 ON e.country_id = c2.id
          WHERE 1=1",
     );
     apply_filters(&mut data_query, filters);
@@ -139,6 +168,10 @@ pub async fn get_seasons(
             display_name: row.get("display_name"),
             event_id: row.get("event_id"),
             event_name: row.get("event_name"),
+            country_id: row.get("country_id"),
+            event_country_id: row.get("event_country_id"),
+            country_name: row.get("country_name"),
+            event_country_name: row.get("event_country_name"),
         })
         .collect();
 
@@ -158,9 +191,15 @@ pub async fn get_season_by_id(
             s.year,
             s.display_name,
             s.event_id,
-            e.name as "event_name!: String"
+            e.name as "event_name!: String",
+            s.country_id as "country_id?: i64",
+            e.country_id as "event_country_id?: i64",
+            c1.name as "country_name?: String",
+            c2.name as "event_country_name?: String"
         FROM season s
         INNER JOIN event e ON s.event_id = e.id
+        LEFT JOIN country c1 ON s.country_id = c1.id
+        LEFT JOIN country c2 ON e.country_id = c2.id
         WHERE s.id = ?
         "#,
         id
@@ -198,10 +237,11 @@ pub async fn update_season(
     season: UpdateSeasonEntity,
 ) -> Result<bool, sqlx::Error> {
     let result = sqlx::query!(
-        "UPDATE season SET year = ?, display_name = ?, event_id = ? WHERE id = ?",
+        "UPDATE season SET year = ?, display_name = ?, event_id = ?, country_id = ? WHERE id = ?",
         season.year,
         season.display_name,
         season.event_id,
+        season.country_id,
         id
     )
     .execute(db)
@@ -239,6 +279,22 @@ pub async fn get_events(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Err
         r#"
         SELECT id, name
         FROM event
+        ORDER BY name
+        "#
+    )
+    .fetch_all(db)
+    .await?;
+
+    Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
+}
+
+/// Get all countries for dropdowns (only enabled countries)
+pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"
+        SELECT id, name
+        FROM country
+        WHERE enabled = 1
         ORDER BY name
         "#
     )

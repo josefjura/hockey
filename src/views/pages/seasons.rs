@@ -142,6 +142,7 @@ pub fn season_list_content(
                                     filters,
                                 ))
                             }
+                            th { "Host Country" }
                             th style="text-align: right;" { (t.messages.common_actions()) }
                         }
                     }
@@ -167,6 +168,21 @@ pub fn season_list_content(
                                     }
                                 }
                                 td { (&season.event_name) }
+                                td {
+                                    @if let Some(country_name) = season.effective_country_name() {
+                                        (country_name)
+                                        @if season.country_name.is_some() && season.event_country_name.is_some() {
+                                            " "
+                                            span style="color: var(--gray-500); font-size: 0.85rem;" {
+                                                "(host)"
+                                            }
+                                        }
+                                    } @else {
+                                        span style="color: var(--gray-400); font-style: italic;" {
+                                            "—"
+                                        }
+                                    }
+                                }
                                 (table_actions(
                                     &format!("/seasons/{}/edit", season.id),
                                     &build_delete_url(season.id, filters, sort_field, sort_order),
@@ -321,15 +337,17 @@ pub fn season_create_modal(
     t: &TranslationContext,
     error: Option<&str>,
     events: &[(i64, String)],
+    countries: &[(i64, String)],
     preselected_event_id: Option<i64>,
 ) -> Markup {
-    season_create_modal_with_return(t, error, events, preselected_event_id, None)
+    season_create_modal_with_return(t, error, events, countries, preselected_event_id, None)
 }
 
 pub fn season_create_modal_with_return(
     t: &TranslationContext,
     error: Option<&str>,
     events: &[(i64, String)],
+    countries: &[(i64, String)],
     preselected_event_id: Option<i64>,
     return_url: Option<&str>,
 ) -> Markup {
@@ -390,7 +408,7 @@ pub fn season_create_modal_with_return(
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
 
-        div style="margin-bottom: 1.5rem;" {
+        div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                 (t.messages.seasons_display_name_label())
             }
@@ -401,6 +419,26 @@ pub fn season_create_modal_with_return(
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
                 (t.messages.seasons_display_name_help())
+            }
+        }
+
+        div style="margin-bottom: 1.5rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Host Country"
+            }
+            select
+                name="country_id"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+            {
+                option value="" { "— Default to event country —" }
+                @for (id, name) in countries {
+                    option value=(id) {
+                        (name)
+                    }
+                }
+            }
+            p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
+                "Specify if this season has a different host country (e.g., World Championship 2024 in Sweden)"
             }
         }
     };
@@ -421,6 +459,7 @@ pub fn season_edit_modal(
     season: &SeasonEntity,
     error: Option<&str>,
     events: &[(i64, String)],
+    countries: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
@@ -458,7 +497,7 @@ pub fn season_edit_modal(
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
         }
 
-        div style="margin-bottom: 1.5rem;" {
+        div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                 (t.messages.seasons_display_name_label())
             }
@@ -470,6 +509,26 @@ pub fn season_edit_modal(
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
                 (t.messages.seasons_display_name_help())
+            }
+        }
+
+        div style="margin-bottom: 1.5rem;" {
+            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+                "Host Country"
+            }
+            select
+                name="country_id"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+            {
+                option value="" { "— Default to event country —" }
+                @for (id, name) in countries {
+                    option value=(id) selected[season.country_id == Some(*id)] {
+                        (name)
+                    }
+                }
+            }
+            p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem;" {
+                "Specify if this season has a different host country (e.g., World Championship 2024 in Sweden)"
             }
         }
     };

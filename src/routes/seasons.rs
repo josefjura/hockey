@@ -57,6 +57,8 @@ pub struct CreateSeasonForm {
     year: i64,
     display_name: Option<String>,
     event_id: i64,
+    #[serde(default, deserialize_with = "crate::utils::empty_string_as_none_i64")]
+    country_id: Option<i64>,
     #[serde(default, deserialize_with = "crate::utils::empty_string_as_none")]
     return_url: Option<String>,
 }
@@ -66,6 +68,8 @@ pub struct UpdateSeasonForm {
     year: i64,
     display_name: Option<String>,
     event_id: i64,
+    #[serde(default, deserialize_with = "crate::utils::empty_string_as_none_i64")]
+    country_id: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -168,7 +172,8 @@ pub async fn season_create_form(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
-    Html(season_create_modal(&t, None, &events, None).into_string())
+    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
+    Html(season_create_modal(&t, None, &events, &countries, None).into_string())
 }
 
 /// GET /events/{event_id}/seasons/new - Show create modal for specific event
@@ -195,12 +200,14 @@ pub async fn event_season_create_form(
     };
 
     let events = vec![(event.id, event.name)];
+    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
     let return_url = format!("/events/{}", event_id);
     Html(
         crate::views::pages::seasons::season_create_modal_with_return(
             &t,
             None,
             &events,
+            &countries,
             Some(event_id),
             Some(&return_url),
         )
@@ -214,8 +221,9 @@ pub async fn season_create(
     State(state): State<AppState>,
     Form(form): Form<CreateSeasonForm>,
 ) -> impl IntoResponse {
-    // Get events for form re-render on error
+    // Get events and countries for form re-render on error
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
+    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
 
     // Validation
     if form.year < 1900 || form.year > 2100 {
@@ -224,6 +232,7 @@ pub async fn season_create(
                 &t,
                 Some("Year must be between 1900 and 2100"),
                 &events,
+                &countries,
                 None,
             )
             .into_string(),
@@ -238,6 +247,7 @@ pub async fn season_create(
                     &t,
                     Some("Display name cannot exceed 255 characters"),
                     &events,
+                    &countries,
                     None,
                 )
                 .into_string(),
@@ -259,6 +269,7 @@ pub async fn season_create(
                 }
             }),
             event_id: form.event_id,
+            country_id: form.country_id,
         },
     )
     .await
@@ -295,8 +306,14 @@ pub async fn season_create(
         Err(e) => {
             tracing::error!("Failed to create season: {}", e);
             Html(
-                season_create_modal(&t, Some("Failed to create season"), &events, None)
-                    .into_string(),
+                season_create_modal(
+                    &t,
+                    Some("Failed to create season"),
+                    &events,
+                    &countries,
+                    None,
+                )
+                .into_string(),
             )
         }
     }
@@ -309,6 +326,7 @@ pub async fn season_edit_form(
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
+    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
 
     let season = match seasons::get_season_by_id(&state.db, id).await {
         Ok(Some(season)) => season,
@@ -326,7 +344,7 @@ pub async fn season_edit_form(
         }
     };
 
-    Html(season_edit_modal(&t, &season, None, &events).into_string())
+    Html(season_edit_modal(&t, &season, None, &events, &countries).into_string())
 }
 
 /// POST /seasons/{id} - Update season
@@ -337,6 +355,7 @@ pub async fn season_update(
     Form(form): Form<UpdateSeasonForm>,
 ) -> impl IntoResponse {
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
+    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
 
     // Validation
     if form.year < 1900 || form.year > 2100 {
@@ -353,6 +372,7 @@ pub async fn season_update(
                 &season,
                 Some("Year must be between 1900 and 2100"),
                 &events,
+                &countries,
             )
             .into_string(),
         );
@@ -374,6 +394,7 @@ pub async fn season_update(
                     &season,
                     Some("Display name cannot exceed 255 characters"),
                     &events,
+                    &countries,
                 )
                 .into_string(),
             );
@@ -395,6 +416,7 @@ pub async fn season_update(
                 }
             }),
             event_id: form.event_id,
+            country_id: form.country_id,
         },
     )
     .await
@@ -414,8 +436,14 @@ pub async fn season_update(
                 return Html(error_message("Season not found").into_string());
             };
             Html(
-                season_edit_modal(&t, &season, Some("Failed to update season"), &events)
-                    .into_string(),
+                season_edit_modal(
+                    &t,
+                    &season,
+                    Some("Failed to update season"),
+                    &events,
+                    &countries,
+                )
+                .into_string(),
             )
         }
     }

@@ -4,8 +4,8 @@ use crate::common::pagination::{PagedResult, SortOrder};
 use crate::i18n::TranslationContext;
 use crate::service::players::{
     PlayerEntity, PlayerScoringEventEntity, PlayerScoringFilters, PlayerSeasonStats,
-    ScoringEventSortField, EVENT_TYPE_ASSIST_PRIMARY, EVENT_TYPE_ASSIST_SECONDARY,
-    EVENT_TYPE_GOAL, FILTER_EVENT_TYPE_ASSISTS, FILTER_EVENT_TYPE_GOALS,
+    ScoringEventSortField, EVENT_TYPE_ASSIST_PRIMARY, EVENT_TYPE_ASSIST_SECONDARY, EVENT_TYPE_GOAL,
+    FILTER_EVENT_TYPE_ASSISTS, FILTER_EVENT_TYPE_GOALS,
 };
 use crate::views::components::crud::{empty_state_i18n, pagination};
 

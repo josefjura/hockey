@@ -28,7 +28,10 @@ pub struct EventStatsUpdateForm {
 }
 
 /// Helper function to fetch player by ID with consistent error handling
-async fn get_player_or_error(db: &SqlitePool, player_id: i64) -> Result<PlayerEntity, Html<String>> {
+async fn get_player_or_error(
+    db: &SqlitePool,
+    player_id: i64,
+) -> Result<PlayerEntity, Html<String>> {
     match players::get_player_by_id(db, player_id).await {
         Ok(Some(player)) => Ok(player),
         Ok(None) => Err(Html(error_message("Player not found").into_string())),
