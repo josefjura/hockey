@@ -288,9 +288,17 @@ test.describe('Main Pages', () => {
 
 ### Running E2E Tests
 
+**Prerequisites:**
+```bash
+# Create test user (if not already created)
+cargo run --bin create_admin
+# Use credentials: admin@example.com / admin
+```
+
+**Run tests:**
 ```bash
 # Start server first (Terminal 1)
-cargo run
+cargo run --bin hockey
 
 # Run tests (Terminal 2)
 yarn test:e2e

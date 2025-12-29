@@ -15,7 +15,7 @@ test.describe('Authentication', () => {
   test('login page loads', async ({ page }) => {
     await page.goto('/auth/login');
     await expect(page).toHaveURL(/.*login/);
-    await expect(page.locator('h1')).toContainText(/login/i);
+    await expect(page.locator('h1')).toContainText(/sign in/i);
     await expect(page.locator('input[name="email"]')).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
