@@ -354,7 +354,6 @@ pub async fn team_detail(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::test_utils::{create_test_app, create_test_session, session_cookie};
     use axum_test::TestServer;
     use sqlx::SqlitePool;
@@ -459,10 +458,11 @@ mod tests {
         assert!(body.contains("HX-Trigger") || body.contains("hx-trigger"));
 
         // Verify team was created
-        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM team WHERE name = 'New Team'")
-            .fetch_one(&pool)
-            .await
-            .unwrap();
+        let count =
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM team WHERE name = 'New Team'")
+                .fetch_one(&pool)
+                .await
+                .unwrap();
         assert_eq!(count, 1);
     }
 

@@ -297,7 +297,10 @@ mod tests {
     use crate::service::matches::CreateMatchEntity;
     use sqlx::SqlitePool;
 
-    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams", "team_participations"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
     async fn test_get_match_by_id_found(pool: SqlitePool) {
         // Create a match first
         let create_match = CreateMatchEntity {
@@ -324,7 +327,10 @@ mod tests {
         assert!(result.is_none());
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams", "team_participations"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
     async fn test_get_matches(pool: SqlitePool) {
         let filters = MatchFilters {
             season_id: None,
@@ -337,17 +343,24 @@ mod tests {
             .await
             .unwrap();
 
-        assert!(result.total >= 0);
+        // Just verify the query executes successfully - total is usize so always >= 0
+        assert!(result.items.len() <= result.total);
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams", "team_participations"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
     async fn test_validate_teams_in_season_both_present(pool: SqlitePool) {
         // Both teams participate in season 1 (from fixtures)
         let result = validate_teams_in_season(&pool, 1, 1, 2).await.unwrap();
         assert!(result);
     }
 
-    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams", "team_participations"))]
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
     async fn test_validate_teams_in_season_not_both_present(pool: SqlitePool) {
         // Team 999 doesn't exist
         let result = validate_teams_in_season(&pool, 1, 1, 999).await.unwrap();
