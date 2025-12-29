@@ -8,7 +8,11 @@
 
 use crate::app_state::AppState;
 use crate::auth::{Session, SessionStore};
-use axum::{middleware, routing::{get, post}, Router};
+use axum::{
+    middleware,
+    routing::{get, post},
+    Router,
+};
 use axum_extra::extract::cookie::Cookie;
 use sqlx::SqlitePool;
 
@@ -37,15 +41,33 @@ pub fn create_test_app(pool: SqlitePool) -> Router {
         .route("/teams/:id", post(crate::routes::teams::team_update))
         .route("/teams/:id/delete", post(crate::routes::teams::team_delete))
         .route("/players", get(crate::routes::players::players_get))
-        .route("/players/list", get(crate::routes::players::players_list_partial))
+        .route(
+            "/players/list",
+            get(crate::routes::players::players_list_partial),
+        )
         .route("/events", get(crate::routes::events::events_get))
-        .route("/events/list", get(crate::routes::events::events_list_partial))
+        .route(
+            "/events/list",
+            get(crate::routes::events::events_list_partial),
+        )
         .route("/seasons", get(crate::routes::seasons::seasons_get))
-        .route("/seasons/list", get(crate::routes::seasons::seasons_list_partial))
+        .route(
+            "/seasons/list",
+            get(crate::routes::seasons::seasons_list_partial),
+        )
         .route("/matches", get(crate::routes::matches::matches_get))
-        .route("/matches/list", get(crate::routes::matches::matches_list_partial))
-        .route("/management", get(crate::routes::management::management_get))
-        .layer(middleware::from_fn_with_state(state.clone(), crate::auth::require_auth));
+        .route(
+            "/matches/list",
+            get(crate::routes::matches::matches_list_partial),
+        )
+        .route(
+            "/management",
+            get(crate::routes::management::management_get),
+        )
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            crate::auth::require_auth,
+        ));
 
     // Build the complete application
     Router::new()
@@ -77,7 +99,13 @@ pub async fn create_test_session(pool: &SqlitePool) -> Session {
     .await
     .expect("Failed to create test user");
 
-    store.create_session(user.id, user.email, user.name.unwrap_or_else(|| "Test User".to_string())).await
+    store
+        .create_session(
+            user.id,
+            user.email,
+            user.name.unwrap_or_else(|| "Test User".to_string()),
+        )
+        .await
 }
 
 /// Generate a session cookie from a Session

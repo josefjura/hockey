@@ -157,7 +157,10 @@ mod tests {
         let countries = get_countries(&pool, &filters).await.unwrap();
 
         // Migration seeds ~230 countries
-        assert!(countries.len() > 200, "Should return all countries from migration");
+        assert!(
+            countries.len() > 200,
+            "Should return all countries from migration"
+        );
         assert!(countries.iter().any(|c| c.name == "Canada"));
     }
 
@@ -169,7 +172,10 @@ mod tests {
         };
         let countries = get_countries(&pool, &filters).await.unwrap();
 
-        assert!(countries.iter().all(|c| c.iihf), "All countries should be IIHF members");
+        assert!(
+            countries.iter().all(|c| c.iihf),
+            "All countries should be IIHF members"
+        );
         assert!(countries.len() > 50, "Should have many IIHF members");
     }
 
@@ -181,7 +187,10 @@ mod tests {
         };
         let countries = get_countries(&pool, &filters).await.unwrap();
 
-        assert!(countries.iter().all(|c| c.enabled), "All countries should be enabled");
+        assert!(
+            countries.iter().all(|c| c.enabled),
+            "All countries should be enabled"
+        );
         // Migration enables IIHF members and historical countries
         assert!(countries.len() > 50);
     }
@@ -214,10 +223,15 @@ mod tests {
     #[sqlx::test(migrations = "./migrations")]
     async fn test_get_country_by_id_found(pool: SqlitePool) {
         // Find Canada's ID first
-        let canada_list = get_countries(&pool, &CountryFilters {
-            search: Some("Canada".to_string()),
-            ..Default::default()
-        }).await.unwrap();
+        let canada_list = get_countries(
+            &pool,
+            &CountryFilters {
+                search: Some("Canada".to_string()),
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
 
         assert!(!canada_list.is_empty());
         let canada_id = canada_list[0].id;
@@ -248,10 +262,15 @@ mod tests {
     #[sqlx::test(migrations = "./migrations")]
     async fn test_toggle_country_enabled(pool: SqlitePool) {
         // Find Canada
-        let canada_list = get_countries(&pool, &CountryFilters {
-            search: Some("Canada".to_string()),
-            ..Default::default()
-        }).await.unwrap();
+        let canada_list = get_countries(
+            &pool,
+            &CountryFilters {
+                search: Some("Canada".to_string()),
+                ..Default::default()
+            },
+        )
+        .await
+        .unwrap();
         let canada_id = canada_list[0].id;
 
         // Canada should start as enabled (IIHF member)
