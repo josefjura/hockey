@@ -351,3 +351,236 @@ pub async fn team_detail(
     let content = team_detail_page(&t, &detail);
     Html(admin_layout("Team Detail", &session, "/teams", &t, content).into_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::{create_test_app, create_test_session, session_cookie};
+    use axum_test::TestServer;
+    use sqlx::SqlitePool;
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_teams_get_full_page(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .get("/teams")
+            .add_cookie(session_cookie(&session))
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        assert!(body.contains("<html"));
+        assert!(body.contains("Teams"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_teams_get_requires_auth(pool: SqlitePool) {
+        let app = create_test_app(pool);
+        let server = TestServer::new(app).unwrap();
+
+        let response = server.get("/teams").await;
+
+        // Should redirect to login
+        response.assert_status(axum::http::StatusCode::SEE_OTHER);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_teams_list_partial(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .get("/teams/list")
+            .add_cookie(session_cookie(&session))
+            .add_header("HX-Request", "true")
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        // HTMX partials should NOT include full HTML layout
+        assert!(!body.contains("<html"));
+        assert!(!body.contains("<!DOCTYPE"));
+        // Should contain table rows
+        assert!(body.contains("Team Canada") || body.contains("<tr"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_teams_list_partial_with_filters(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .get("/teams/list?name=Canada")
+            .add_cookie(session_cookie(&session))
+            .add_header("HX-Request", "true")
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        assert!(body.contains("Canada"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users"))]
+    async fn test_team_create_form(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .get("/teams/new")
+            .add_cookie(session_cookie(&session))
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        assert!(body.contains("form"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users"))]
+    async fn test_team_create_success(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .post("/teams")
+            .add_cookie(session_cookie(&session))
+            .form(&[("name", "New Team"), ("country_id", "1")])
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        // Should return HTMX response to reload table
+        assert!(body.contains("HX-Trigger") || body.contains("hx-trigger"));
+
+        // Verify team was created
+        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM team WHERE name = 'New Team'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(count, 1);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users"))]
+    async fn test_team_create_validation_fails(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .post("/teams")
+            .add_cookie(session_cookie(&session))
+            .form(&[("name", ""), ("country_id", "1")]) // Empty name should fail
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        // Should return error message
+        assert!(body.contains("error") || body.contains("required"));
+
+        // Verify no team was created
+        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM team")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(count, 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_team_edit_form(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .get("/teams/1/edit")
+            .add_cookie(session_cookie(&session))
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        assert!(body.contains("form"));
+        assert!(body.contains("Team Canada"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_team_update_success(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .post("/teams/1")
+            .add_cookie(session_cookie(&session))
+            .form(&[("name", "Updated Team Canada"), ("country_id", "1")])
+            .await;
+
+        response.assert_status_ok();
+
+        // Verify team was updated
+        let name = sqlx::query_scalar::<_, String>("SELECT name FROM team WHERE id = 1")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(name, "Updated Team Canada");
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_team_delete_success(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .post("/teams/1/delete")
+            .add_cookie(session_cookie(&session))
+            .await;
+
+        response.assert_status_ok();
+
+        // Verify team was deleted
+        let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM team WHERE id = 1")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        assert_eq!(count, 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_team_detail_page(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .get("/teams/1")
+            .add_cookie(session_cookie(&session))
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        assert!(body.contains("Team Canada"));
+        assert!(body.contains("<html"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("users", "teams"))]
+    async fn test_team_detail_not_found(pool: SqlitePool) {
+        let app = create_test_app(pool.clone());
+        let server = TestServer::new(app).unwrap();
+        let session = create_test_session(&pool).await;
+
+        let response = server
+            .get("/teams/999")
+            .add_cookie(session_cookie(&session))
+            .await;
+
+        response.assert_status_ok();
+        let body = response.text();
+        assert!(body.contains("not found") || body.contains("Not found"));
+    }
+}

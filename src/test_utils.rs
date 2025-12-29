@@ -113,7 +113,7 @@ pub async fn create_test_session(pool: &SqlitePool) -> Session {
 /// Creates a Cookie that can be used with axum-test's `add_cookie()` method
 /// to authenticate requests in route tests.
 pub fn session_cookie(session: &Session) -> Cookie<'static> {
-    Cookie::build(("session_id", session.id.clone()))
+    Cookie::build(("hockey_session", session.id.clone()))
         .http_only(true)
         .secure(false) // Not secure in tests
         .same_site(axum_extra::extract::cookie::SameSite::Lax)
@@ -268,7 +268,7 @@ mod tests {
         let session = create_test_session(&pool).await;
         let cookie = session_cookie(&session);
 
-        assert_eq!(cookie.name(), "session_id");
+        assert_eq!(cookie.name(), "hockey_session");
         assert_eq!(cookie.value(), session.id);
         assert!(cookie.http_only().unwrap());
         assert_eq!(cookie.path(), Some("/"));
