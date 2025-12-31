@@ -38,7 +38,11 @@ The database follows a hierarchical structure:
 - Authentication: `users` table with bcrypt password hashing
 
 ## Development Commands
+
+**CRITICAL: Always run `make precommit` before pushing to avoid CI failures!**
+
 ```bash
+make precommit               # REQUIRED before push: format, clippy, test (fixes issues!)
 cargo run                    # Start development server (creates DB from migrations)
 cargo build                  # Build the project
 cargo test                   # Run tests
@@ -177,6 +181,7 @@ Protected routes check session cookie. HTMX endpoints return HTML fragments.
 5. **Web Components**: Edit Lit components in `web_components/`, compile with npm
 6. **Testing**: Write tests for new features (see [TESTING.md](./TESTING.md))
 7. **Authentication**: All protected routes check session cookie
+8. **Before Push**: **ALWAYS run `make precommit`** to avoid CI failures
 
 ## Common Patterns
 

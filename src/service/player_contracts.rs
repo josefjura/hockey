@@ -388,9 +388,7 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn test_get_team_participation_context_not_found(pool: SqlitePool) {
-        let context = get_team_participation_context(&pool, 999)
-            .await
-            .unwrap();
+        let context = get_team_participation_context(&pool, 999).await.unwrap();
         assert!(context.is_none());
     }
 
@@ -605,13 +603,12 @@ mod tests {
         assert!(contract_id > 0);
 
         // Verify it was added
-        let count = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM player_contract WHERE id = ?",
-        )
-        .bind(contract_id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+        let count =
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM player_contract WHERE id = ?")
+                .bind(contract_id)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
         assert_eq!(count, 1);
     }
 
@@ -671,19 +668,16 @@ mod tests {
             .unwrap();
 
         // Remove the player
-        let removed = remove_player_from_roster(&pool, contract_id)
-            .await
-            .unwrap();
+        let removed = remove_player_from_roster(&pool, contract_id).await.unwrap();
         assert!(removed);
 
         // Verify it was removed
-        let count = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM player_contract WHERE id = ?",
-        )
-        .bind(contract_id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+        let count =
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM player_contract WHERE id = ?")
+                .bind(contract_id)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
         assert_eq!(count, 0);
     }
 

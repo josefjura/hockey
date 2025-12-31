@@ -12,8 +12,21 @@ help: ## Show this help message
 
 ##@ Pre-commit Commands
 
-precommit: format-check clippy test ## Run all pre-commit checks (format, clippy, test)
+precommit: ## Run all pre-commit checks and fixes (REQUIRED before push!)
+	@echo "$(YELLOW)==> Running pre-commit checks...$(NC)"
+	@echo "$(YELLOW)==> 1/4: Formatting Rust code...$(NC)"
+	@cargo fmt
+	@echo "$(YELLOW)==> 2/4: Running Clippy...$(NC)"
+	@cargo clippy -- -D warnings
+	@echo "$(YELLOW)==> 3/4: Running Rust tests...$(NC)"
+	@cargo test --quiet
+	@echo "$(YELLOW)==> 4/4: Checking for unstaged changes...$(NC)"
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "$(RED)⚠ Warning: You have unstaged changes (possibly from cargo fmt)$(NC)"; \
+		echo "$(YELLOW)Please review and commit them before pushing.$(NC)"; \
+	fi
 	@echo "$(GREEN)✓ All pre-commit checks passed!$(NC)"
+	@echo "$(GREEN)✓ Ready to commit and push!$(NC)"
 
 ##@ Development Commands
 
