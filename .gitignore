@@ -15,10 +15,11 @@ package-lock.json
 # Built web components (built during Docker build)
 /static/js/components/
 
-# Playwright
+# Playwright & Storybook
 /playwright-report/
 /test-results/
 /playwright/.cache/
+/web_components/storybook-static/
 
 # Archived code
 /backup/
