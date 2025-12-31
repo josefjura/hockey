@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maximum value validation for player event statistics - goals and assists now have a reasonable upper limit of 10,000 (#147)
 
 ### Changed
+- Player event statistics cards now use CSS classes instead of inline styles for better maintainability (#143)
 - Player event statistics UI now displays in both English and Czech languages (#139)
 
 ### Fixed

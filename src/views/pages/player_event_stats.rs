@@ -14,16 +14,12 @@ pub fn event_stats_create_modal(
     let title = format!("Add Career Statistics - {}", player.name);
 
     let form_fields = html! {
-        div style="margin-bottom: 1rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label {
                 (t.messages.players_event_stats_competition())
                 span style="color: red;" { " *" }
             }
-            select
-                name="event_id"
-                required
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-            {
+            select name="event_id" required {
                 option value="" { (t.messages.players_event_stats_select_competition()) }
                 @for (id, name) in events {
                     option value=(id) { (name) }
@@ -35,8 +31,8 @@ pub fn event_stats_create_modal(
         }
 
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label {
                     (t.messages.player_scoring_total_goals())
                 }
                 input
@@ -44,11 +40,10 @@ pub fn event_stats_create_modal(
                     name="goals_total"
                     value="0"
                     min="0"
-                    required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    required;
             }
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label {
                     (t.messages.player_scoring_total_assists())
                 }
                 input
@@ -56,8 +51,7 @@ pub fn event_stats_create_modal(
                     name="assists_total"
                     value="0"
                     min="0"
-                    required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    required;
             }
         }
 
@@ -100,8 +94,8 @@ pub fn event_stats_edit_modal(
         }
 
         div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label {
                     (t.messages.player_scoring_total_goals())
                 }
                 input
@@ -109,11 +103,10 @@ pub fn event_stats_edit_modal(
                     name="goals_total"
                     value=(stats.goals_total)
                     min="0"
-                    required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    required;
             }
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label {
                     (t.messages.player_scoring_total_assists())
                 }
                 input
@@ -121,8 +114,7 @@ pub fn event_stats_edit_modal(
                     name="assists_total"
                     value=(stats.assists_total)
                     min="0"
-                    required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    required;
             }
         }
 

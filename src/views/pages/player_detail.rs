@@ -293,15 +293,14 @@ fn career_stats_by_event(
 
                 div style="display: grid; gap: 1rem;" {
                     @for stats in event_stats {
-                        div style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white;" {
-                            div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;" {
-                                h4 style="font-size: 1rem; font-weight: 600; margin: 0;" {
+                        div class="event-stats-card" {
+                            div class="event-stats-header" {
+                                h4 class="event-stats-title" {
                                     (&stats.event_name)
                                 }
-                                div style="display: flex; gap: 0.5rem;" {
+                                div class="event-stats-actions" {
                                     button
-                                        class="btn btn-sm"
-                                        style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                        class="btn btn-sm event-stats-btn"
                                         hx-get=(format!("/players/{}/event-stats/{}/edit", player.id, stats.id))
                                         hx-target="#modal-container"
                                         hx-swap="innerHTML"
@@ -311,42 +310,42 @@ fn career_stats_by_event(
                                 }
                             }
 
-                            div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;" {
-                                div style="text-align: center;" {
-                                    div style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 0.5rem;" {
+                            div class="event-stats-grid" {
+                                div class="event-stats-item" {
+                                    div class="event-stats-label" {
                                         (t.messages.player_scoring_total_goals())
                                     }
-                                    div style="font-size: 2rem; font-weight: 700;" {
+                                    div class="event-stats-value" {
                                         (stats.goals_total)
                                     }
                                     @if stats.goals_total > 0 {
-                                        div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
+                                        div class="event-stats-detail" {
                                             "(" (stats.goals_identified) " " (t.messages.players_event_stats_identified()) ")"
                                         }
                                     }
                                 }
-                                div style="text-align: center;" {
-                                    div style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 0.5rem;" {
+                                div class="event-stats-item" {
+                                    div class="event-stats-label" {
                                         (t.messages.player_scoring_total_assists())
                                     }
-                                    div style="font-size: 2rem; font-weight: 700;" {
+                                    div class="event-stats-value" {
                                         (stats.assists_total)
                                     }
                                     @if stats.assists_total > 0 {
-                                        div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
+                                        div class="event-stats-detail" {
                                             "(" (stats.assists_identified) " " (t.messages.players_event_stats_identified()) ")"
                                         }
                                     }
                                 }
-                                div style="text-align: center;" {
-                                    div style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 0.5rem;" {
+                                div class="event-stats-item" {
+                                    div class="event-stats-label" {
                                         (t.messages.player_scoring_total_points())
                                     }
-                                    div style="font-size: 2rem; font-weight: 700;" {
+                                    div class="event-stats-value" {
                                         (stats.points_total)
                                     }
                                     @if stats.points_total > 0 {
-                                        div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
+                                        div class="event-stats-detail" {
                                             "(" (stats.points_identified) " " (t.messages.players_event_stats_identified()) ")"
                                         }
                                     }
