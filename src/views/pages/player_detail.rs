@@ -74,7 +74,7 @@ pub fn player_detail_page(
             div style="margin-top: 2rem;" {
                 div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
                     h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;" {
-                        "Career History"
+                        (t.messages.players_career_history())
                     }
                 }
 
@@ -129,7 +129,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
                 @if let Some(birth_date) = &player.birth_date {
                     div {
                         div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
-                            "Date of Birth"
+                            (t.messages.players_date_of_birth())
                         }
                         div style="font-weight: 600;" {
                             (birth_date)
@@ -139,7 +139,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
                 @if let Some(birth_place) = &player.birth_place {
                     div {
                         div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
-                            "Birthplace"
+                            (t.messages.players_birthplace())
                         }
                         div style="font-weight: 600;" {
                             (birth_place)
@@ -149,7 +149,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
                 @if let Some(height_cm) = player.height_cm {
                     div {
                         div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
-                            "Height"
+                            (t.messages.players_height())
                         }
                         div style="font-weight: 600;" {
                             (format!("{} cm", height_cm))
@@ -159,7 +159,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
                 @if let Some(weight_kg) = player.weight_kg {
                     div {
                         div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
-                            "Weight"
+                            (t.messages.players_weight())
                         }
                         div style="font-weight: 600;" {
                             (format!("{} kg", weight_kg))
@@ -169,7 +169,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
                 @if let Some(position) = &player.position {
                     div {
                         div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
-                            "Position"
+                            (t.messages.players_position())
                         }
                         div style="font-weight: 600;" {
                             (position)
@@ -179,7 +179,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
                 @if let Some(shoots) = &player.shoots {
                     div {
                         div style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.25rem;" {
-                            "Shoots/Catches"
+                            (t.messages.players_shoots_catches())
                         }
                         div style="font-weight: 600;" {
                             (shoots)
@@ -192,7 +192,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
 }
 
 /// Contracts list in grid layout showing career history
-fn contracts_list(_t: &TranslationContext, contracts: &[PlayerContractWithTeamEntity]) -> Markup {
+fn contracts_list(t: &TranslationContext, contracts: &[PlayerContractWithTeamEntity]) -> Markup {
     html! {
         div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;" {
             @for contract in contracts {
@@ -223,7 +223,8 @@ fn contracts_list(_t: &TranslationContext, contracts: &[PlayerContractWithTeamEn
                                 (contract.season_year)
                                 ")"
                             } @else {
-                                "Season "
+                                (t.messages.players_season())
+                                " "
                                 (contract.season_year)
                             }
                         }
@@ -234,14 +235,14 @@ fn contracts_list(_t: &TranslationContext, contracts: &[PlayerContractWithTeamEn
                             class="btn btn-sm btn-secondary"
                             style="flex: 1;"
                         {
-                            "View Team"
+                            (t.messages.players_view_team())
                         }
                         a
                             href=(format!("/seasons/{}", contract.season_id))
                             class="btn btn-sm btn-secondary"
                             style="flex: 1;"
                         {
-                            "View Season"
+                            (t.messages.players_view_season())
                         }
                     }
                 }
@@ -251,17 +252,17 @@ fn contracts_list(_t: &TranslationContext, contracts: &[PlayerContractWithTeamEn
 }
 
 /// Empty state when no contracts exist
-fn empty_contracts_state(_t: &TranslationContext) -> Markup {
+fn empty_contracts_state(t: &TranslationContext) -> Markup {
     html! {
         div style="padding: 3rem; text-align: center; background: var(--gray-50); border-radius: 8px; border: 2px dashed var(--gray-300);" {
             div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;" {
                 "🏒"
             }
             p style="color: var(--gray-600); font-size: 1.125rem; margin-bottom: 0.5rem; font-weight: 500;" {
-                "No Career History"
+                (t.messages.players_no_career_history())
             }
             p style="font-size: 0.875rem; color: var(--gray-500);" {
-                "This player hasn't been added to any team rosters yet. Add this player to a roster from the roster management page."
+                (t.messages.players_no_career_history_help())
             }
         }
     }
@@ -278,7 +279,7 @@ fn career_stats_by_event(
             div style="margin-top: 1.5rem;" {
                 div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;" {
                     h3 style="font-size: 1.125rem; font-weight: 700;" {
-                        "Career Statistics by Competition"
+                        (t.messages.players_career_stats_by_competition())
                     }
                     button
                         class="btn btn-sm btn-secondary"
@@ -286,7 +287,7 @@ fn career_stats_by_event(
                         hx-target="#modal-container"
                         hx-swap="innerHTML"
                     {
-                        "+ Add Event Stats"
+                        (t.messages.players_add_event_stats())
                     }
                 }
 
@@ -305,7 +306,7 @@ fn career_stats_by_event(
                                         hx-target="#modal-container"
                                         hx-swap="innerHTML"
                                     {
-                                        "Edit"
+                                        (t.messages.players_event_stats_edit())
                                     }
                                 }
                             }
@@ -320,7 +321,7 @@ fn career_stats_by_event(
                                     }
                                     @if stats.goals_total > 0 {
                                         div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
-                                            "(" (stats.goals_identified) " identified)"
+                                            "(" (stats.goals_identified) " " (t.messages.players_event_stats_identified()) ")"
                                         }
                                     }
                                 }
@@ -333,7 +334,7 @@ fn career_stats_by_event(
                                     }
                                     @if stats.assists_total > 0 {
                                         div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
-                                            "(" (stats.assists_identified) " identified)"
+                                            "(" (stats.assists_identified) " " (t.messages.players_event_stats_identified()) ")"
                                         }
                                     }
                                 }
@@ -346,7 +347,7 @@ fn career_stats_by_event(
                                     }
                                     @if stats.points_total > 0 {
                                         div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem;" {
-                                            "(" (stats.points_identified) " identified)"
+                                            "(" (stats.points_identified) " " (t.messages.players_event_stats_identified()) ")"
                                         }
                                     }
                                 }
@@ -363,7 +364,7 @@ fn career_stats_by_event(
                     hx-target="#modal-container"
                     hx-swap="innerHTML"
                 {
-                    "+ Add Career Statistics"
+                    (t.messages.players_add_career_stats())
                 }
             }
         }

@@ -16,7 +16,7 @@ pub fn event_stats_create_modal(
     let form_fields = html! {
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
-                "Competition/Event"
+                (t.messages.players_event_stats_competition())
                 span style="color: red;" { " *" }
             }
             select
@@ -24,13 +24,13 @@ pub fn event_stats_create_modal(
                 required
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
             {
-                option value="" { "Select competition..." }
+                option value="" { (t.messages.players_event_stats_select_competition()) }
                 @for (id, name) in events {
                     option value=(id) { (name) }
                 }
             }
             p style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.25rem;" {
-                "Select the competition (e.g., NHL, Olympic Games)"
+                (t.messages.players_event_stats_select_help())
             }
         }
 
@@ -62,8 +62,7 @@ pub fn event_stats_create_modal(
         }
 
         p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 1.5rem;" {
-            "Enter the player's total career goals and assists for this competition. "
-            "As you add match data, identified goals/assists will be tracked separately."
+            (t.messages.players_event_stats_form_help())
         }
     };
 
@@ -73,7 +72,7 @@ pub fn event_stats_create_modal(
         error,
         &format!("/players/{}/event-stats", player.id),
         form_fields,
-        "Add Statistics",
+        &t.messages.players_event_stats_add_statistics(),
     )
 }
 
@@ -92,9 +91,11 @@ pub fn event_stats_edit_modal(
                 (stats.event_name)
             }
             div style="font-size: 0.875rem; color: var(--gray-600);" {
-                "Currently: "
-                (stats.goals_identified) " goals, "
-                (stats.assists_identified) " assists identified from tracked matches"
+                (t.messages.players_event_stats_currently())
+                " "
+                (stats.goals_identified) " " (t.messages.players_event_stats_goals())
+                " "
+                (stats.assists_identified) " " (t.messages.players_event_stats_assists())
             }
         }
 
@@ -133,9 +134,9 @@ pub fn event_stats_edit_modal(
                 hx-post=(format!("/players/{}/event-stats/{}/delete", player.id, stats.id))
                 hx-target="#modal-container"
                 hx-swap="innerHTML"
-                hx-confirm="Are you sure you want to delete these statistics?"
+                hx-confirm=(t.messages.players_event_stats_confirm_delete())
             {
-                "Delete Statistics"
+                (t.messages.players_event_stats_delete_statistics())
             }
         }
     };
@@ -146,6 +147,6 @@ pub fn event_stats_edit_modal(
         error,
         &format!("/players/{}/event-stats/{}", player.id, stats.id),
         form_fields,
-        "Save Changes",
+        &t.messages.players_event_stats_save_changes(),
     )
 }

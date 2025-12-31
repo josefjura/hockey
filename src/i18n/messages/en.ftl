@@ -408,3 +408,35 @@ player-scoring-empty-title = No Scoring Events
 player-scoring-empty-message = No scoring events match your filters.
 player-view-scoring = View Scoring History
 players-back-to-detail = Back to Player Detail
+
+# Player Detail
+players-career-history = Career History
+players-date-of-birth = Date of Birth
+players-birthplace = Birthplace
+players-height = Height
+players-weight = Weight
+players-position = Position
+players-shoots-catches = Shoots/Catches
+players-season = Season
+players-view-team = View Team
+players-view-season = View Season
+players-no-career-history = No Career History
+players-no-career-history-help = This player hasn't been added to any team rosters yet. Add this player to a roster from the roster management page.
+
+# Player Event Stats
+players-career-stats-by-competition = Career Statistics by Competition
+players-add-event-stats = + Add Event Stats
+players-add-career-stats = + Add Career Statistics
+players-event-stats-identified = identified
+players-event-stats-edit = Edit
+players-event-stats-competition = Competition/Event
+players-event-stats-select-competition = Select competition...
+players-event-stats-select-help = Select the competition (e.g., NHL, Olympic Games)
+players-event-stats-form-help = Enter the player's total career goals and assists for this competition. As you add match data, identified goals/assists will be tracked separately.
+players-event-stats-add-statistics = Add Statistics
+players-event-stats-currently = Currently:
+players-event-stats-goals = goals,
+players-event-stats-assists = assists identified from tracked matches
+players-event-stats-confirm-delete = Are you sure you want to delete these statistics?
+players-event-stats-delete-statistics = Delete Statistics
+players-event-stats-save-changes = Save Changes

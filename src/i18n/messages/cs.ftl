@@ -408,3 +408,35 @@ player-scoring-empty-title = Žádné události bodování
 player-scoring-empty-message = Žádné události bodování neodpovídají vašim filtrům.
 player-view-scoring = Zobrazit historii bodování
 players-back-to-detail = Zpět na detail hráče
+
+# Player Detail
+players-career-history = Historie kariéry
+players-date-of-birth = Datum narození
+players-birthplace = Místo narození
+players-height = Výška
+players-weight = Hmotnost
+players-position = Pozice
+players-shoots-catches = Střílí/Chytá
+players-season = Sezóna
+players-view-team = Zobrazit tým
+players-view-season = Zobrazit sezónu
+players-no-career-history = Žádná historie kariéry
+players-no-career-history-help = Tento hráč ještě nebyl přidán do žádné soupisky. Přidejte hráče do soupisky na stránce správy soupis.
+
+# Player Event Stats
+players-career-stats-by-competition = Kariérní statistiky podle soutěží
+players-add-event-stats = + Přidat statistiky události
+players-add-career-stats = + Přidat kariérní statistiky
+players-event-stats-identified = identifikováno
+players-event-stats-edit = Upravit
+players-event-stats-competition = Soutěž/Událost
+players-event-stats-select-competition = Vyberte soutěž...
+players-event-stats-select-help = Vyberte soutěž (např. NHL, Olympijské hry)
+players-event-stats-form-help = Zadejte celkový počet gólů a asistencí hráče v této soutěži. Při přidávání dat ze zápasů budou identifikované góly/asistence sledovány odděleně.
+players-event-stats-add-statistics = Přidat statistiky
+players-event-stats-currently = Aktuálně:
+players-event-stats-goals = gólů,
+players-event-stats-assists = asistencí identifikováno ze sledovaných zápasů
+players-event-stats-confirm-delete = Opravdu chcete smazat tyto statistiky?
+players-event-stats-delete-statistics = Smazat statistiky
+players-event-stats-save-changes = Uložit změny
