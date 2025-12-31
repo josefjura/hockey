@@ -181,7 +181,53 @@ Protected routes check session cookie. HTMX endpoints return HTML fragments.
 5. **Web Components**: Edit Lit components in `web_components/`, compile with npm
 6. **Testing**: Write tests for new features (see [TESTING.md](./TESTING.md))
 7. **Authentication**: All protected routes check session cookie
-8. **Before Push**: **ALWAYS run `make precommit`** to avoid CI failures
+8. **Changelog**: **ALWAYS update CHANGELOG.md** when fixing issues or adding features
+9. **Before Push**: **ALWAYS run `make precommit`** to avoid CI failures
+
+## Changelog Maintenance
+
+**CRITICAL: Every closed issue and solved problem MUST be documented in CHANGELOG.md**
+
+### When to Update
+- Fixing a bug (GitHub issue or not)
+- Adding a new feature
+- Changing existing behavior
+- Removing functionality
+- Security fixes
+
+### How to Update
+1. Open `CHANGELOG.md`
+2. Add your change under `## [Unreleased]` in the appropriate category:
+   - **Added** - New features users can use
+   - **Changed** - Changes to existing functionality
+   - **Deprecated** - Features that will be removed soon
+   - **Removed** - Features that have been removed
+   - **Fixed** - Bug fixes
+   - **Security** - Security-related changes
+
+3. Write in **user-facing language**, not technical implementation details
+4. Reference the GitHub issue number if applicable (e.g., `(#146)`)
+
+### Writing Style
+- **Good**: "Player event statistics are now saved reliably without leaving incomplete data if an error occurs (#146)"
+- **Bad**: "Refactored create_or_update_player_event_stats to use UPSERT instead of INSERT+UPDATE"
+
+- **Good**: "Added ability to track player statistics across multiple tournaments"
+- **Bad**: "Implemented new service layer function for player_event_stats table"
+
+Focus on **what changed for the user**, not how it was implemented.
+
+### Example
+```markdown
+## [Unreleased]
+
+### Added
+- Match scheduling calendar view for easier tournament planning
+
+### Fixed
+- Player statistics now save correctly even when network errors occur (#146)
+- Team logos display properly on mobile devices
+```
 
 ## Common Patterns
 
