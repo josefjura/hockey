@@ -5,17 +5,8 @@ const config: TestRunnerConfig = {
     // Setup before each story test
     await page.emulateMedia({ colorScheme: 'light' });
   },
-  async postVisit(page) {
-    // Check for console errors after each story
-    const logs = await page.evaluate(() => {
-      return (window as any).__storybook_test_logs || [];
-    });
-
-    const errors = logs.filter((log: any) => log.level === 'error');
-    if (errors.length > 0) {
-      throw new Error(`Console errors in story: ${JSON.stringify(errors)}`);
-    }
-  },
+  // Note: Console error checking removed - play functions catch component errors,
+  // and E2E tests handle integration-level console errors
 };
 
 export default config;

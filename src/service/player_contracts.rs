@@ -202,3 +202,565 @@ pub async fn get_team_participation_id_for_contract(
 
     Ok(row.map(|r| r.team_participation_id))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_roster_empty(pool: SqlitePool) {
+        // Create minimal test data
+        let country_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO country (name, iihf) VALUES ('Canada', 1) RETURNING id",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let team_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team (name, country_id) VALUES ('Team Canada', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let event_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO event (name, country_id) VALUES ('Olympics', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let season_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO season (year, event_id) VALUES (2024, ?) RETURNING id",
+        )
+        .bind(event_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let participation_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+        )
+        .bind(team_id)
+        .bind(season_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let roster = get_roster(&pool, participation_id).await.unwrap();
+        assert_eq!(roster.len(), 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_roster_with_players(pool: SqlitePool) {
+        // Create test data
+        let country_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO country (name, iihf, iso2Code) VALUES ('Canada', 1, 'CA') RETURNING id",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let team_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team (name, country_id) VALUES ('Team Canada', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let event_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO event (name, country_id) VALUES ('Olympics', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let season_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO season (year, event_id) VALUES (2024, ?) RETURNING id",
+        )
+        .bind(event_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let participation_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+        )
+        .bind(team_id)
+        .bind(season_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        // Add players
+        let player1_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO player (name, country_id) VALUES ('Wayne Gretzky', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let player2_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO player (name, country_id) VALUES ('Mario Lemieux', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        // Add to roster
+        add_player_to_roster(&pool, participation_id, player1_id)
+            .await
+            .unwrap();
+        add_player_to_roster(&pool, participation_id, player2_id)
+            .await
+            .unwrap();
+
+        let roster = get_roster(&pool, participation_id).await.unwrap();
+        assert_eq!(roster.len(), 2);
+        assert_eq!(roster[0].player_name, "Mario Lemieux"); // Sorted alphabetically
+        assert_eq!(roster[1].player_name, "Wayne Gretzky");
+        assert_eq!(roster[0].country_name, "Canada");
+        assert_eq!(roster[0].country_iso2_code, "CA");
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_team_participation_context(pool: SqlitePool) {
+        // Create test data
+        let country_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO country (name, iihf, iso2Code) VALUES ('Canada', 1, 'CA') RETURNING id",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let team_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team (name, country_id) VALUES ('Team Canada', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let event_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO event (name, country_id) VALUES ('Olympics', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let season_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO season (year, event_id, display_name) VALUES (2024, ?, 'Olympics 2024') RETURNING id",
+        )
+        .bind(event_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let participation_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+        )
+        .bind(team_id)
+        .bind(season_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let context = get_team_participation_context(&pool, participation_id)
+            .await
+            .unwrap();
+
+        assert!(context.is_some());
+        let ctx = context.unwrap();
+        assert_eq!(ctx.team_name, "Team Canada");
+        assert_eq!(ctx.event_name, "Olympics");
+        assert_eq!(ctx.season_year, 2024);
+        assert_eq!(ctx.season_display_name, Some("Olympics 2024".to_string()));
+        assert_eq!(ctx.country_iso2_code, Some("CA".to_string()));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_team_participation_context_not_found(pool: SqlitePool) {
+        let context = get_team_participation_context(&pool, 999)
+            .await
+            .unwrap();
+        assert!(context.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_available_players(pool: SqlitePool) {
+        // Create test data
+        let country_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO country (name, iihf) VALUES ('Canada', 1) RETURNING id",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let team_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team (name, country_id) VALUES ('Team Canada', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let event_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO event (name, country_id) VALUES ('Olympics', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let season_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO season (year, event_id) VALUES (2024, ?) RETURNING id",
+        )
+        .bind(event_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let participation_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+        )
+        .bind(team_id)
+        .bind(season_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        // Create 3 players
+        let player1_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO player (name, country_id) VALUES ('Player 1', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query("INSERT INTO player (name, country_id) VALUES ('Player 2', ?)")
+            .bind(country_id)
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        sqlx::query("INSERT INTO player (name, country_id) VALUES ('Player 3', ?)")
+            .bind(country_id)
+            .execute(&pool)
+            .await
+            .unwrap();
+
+        // Add player1 to roster
+        add_player_to_roster(&pool, participation_id, player1_id)
+            .await
+            .unwrap();
+
+        // Get available players (should be 2)
+        let available = get_available_players(&pool, participation_id)
+            .await
+            .unwrap();
+        assert_eq!(available.len(), 2);
+        // Should not include Player 1
+        assert!(!available.iter().any(|(_, name, _)| name == "Player 1"));
+        assert!(available.iter().any(|(_, name, _)| name == "Player 2"));
+        assert!(available.iter().any(|(_, name, _)| name == "Player 3"));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_is_player_in_roster(pool: SqlitePool) {
+        // Create test data
+        let country_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO country (name, iihf) VALUES ('Canada', 1) RETURNING id",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let team_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team (name, country_id) VALUES ('Team Canada', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let event_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO event (name, country_id) VALUES ('Olympics', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let season_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO season (year, event_id) VALUES (2024, ?) RETURNING id",
+        )
+        .bind(event_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let participation_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+        )
+        .bind(team_id)
+        .bind(season_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let player1_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO player (name, country_id) VALUES ('Player 1', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let player2_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO player (name, country_id) VALUES ('Player 2', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        // Add player1 to roster
+        add_player_to_roster(&pool, participation_id, player1_id)
+            .await
+            .unwrap();
+
+        // Check
+        assert!(is_player_in_roster(&pool, participation_id, player1_id)
+            .await
+            .unwrap());
+        assert!(!is_player_in_roster(&pool, participation_id, player2_id)
+            .await
+            .unwrap());
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_add_player_to_roster(pool: SqlitePool) {
+        // Create test data
+        let country_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO country (name, iihf) VALUES ('Canada', 1) RETURNING id",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let team_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team (name, country_id) VALUES ('Team Canada', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let event_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO event (name, country_id) VALUES ('Olympics', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let season_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO season (year, event_id) VALUES (2024, ?) RETURNING id",
+        )
+        .bind(event_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let participation_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+        )
+        .bind(team_id)
+        .bind(season_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let player_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO player (name, country_id) VALUES ('Test Player', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let contract_id = add_player_to_roster(&pool, participation_id, player_id)
+            .await
+            .unwrap();
+
+        assert!(contract_id > 0);
+
+        // Verify it was added
+        let count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM player_contract WHERE id = ?",
+        )
+        .bind(contract_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(count, 1);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_remove_player_from_roster(pool: SqlitePool) {
+        // Create test data
+        let country_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO country (name, iihf) VALUES ('Canada', 1) RETURNING id",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let team_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team (name, country_id) VALUES ('Team Canada', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let event_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO event (name, country_id) VALUES ('Olympics', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let season_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO season (year, event_id) VALUES (2024, ?) RETURNING id",
+        )
+        .bind(event_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let participation_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+        )
+        .bind(team_id)
+        .bind(season_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let player_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO player (name, country_id) VALUES ('Test Player', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let contract_id = add_player_to_roster(&pool, participation_id, player_id)
+            .await
+            .unwrap();
+
+        // Remove the player
+        let removed = remove_player_from_roster(&pool, contract_id)
+            .await
+            .unwrap();
+        assert!(removed);
+
+        // Verify it was removed
+        let count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM player_contract WHERE id = ?",
+        )
+        .bind(contract_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(count, 0);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_remove_player_from_roster_not_found(pool: SqlitePool) {
+        let removed = remove_player_from_roster(&pool, 999).await.unwrap();
+        assert!(!removed);
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_team_participation_id_for_contract(pool: SqlitePool) {
+        // Create test data
+        let country_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO country (name, iihf) VALUES ('Canada', 1) RETURNING id",
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let team_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team (name, country_id) VALUES ('Team Canada', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let event_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO event (name, country_id) VALUES ('Olympics', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let season_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO season (year, event_id) VALUES (2024, ?) RETURNING id",
+        )
+        .bind(event_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let participation_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+        )
+        .bind(team_id)
+        .bind(season_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let player_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO player (name, country_id) VALUES ('Test Player', ?) RETURNING id",
+        )
+        .bind(country_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+        let contract_id = add_player_to_roster(&pool, participation_id, player_id)
+            .await
+            .unwrap();
+
+        // Get participation ID from contract
+        let result = get_team_participation_id_for_contract(&pool, contract_id)
+            .await
+            .unwrap();
+
+        assert_eq!(result, Some(participation_id));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_team_participation_id_for_contract_not_found(pool: SqlitePool) {
+        let result = get_team_participation_id_for_contract(&pool, 999)
+            .await
+            .unwrap();
+        assert!(result.is_none());
+    }
+}

@@ -111,14 +111,15 @@ src/
 
 ## Testing
 
-This project uses a hybrid testing strategy for Rust backend and Lit frontend components.
+**When creating or modifying features, write tests. When creating or updating tests, consult [TESTING.md](./TESTING.md).**
 
-See **[TESTING.md](./TESTING.md)** for comprehensive testing documentation.
-
-### Quick Commands
+This project uses a hybrid testing strategy:
+- **Backend tests** (Rust): Service layer + route handlers
+- **Component tests** (Storybook): Interaction testing with play functions
+- **E2E tests** (Playwright): Minimal smoke tests for critical user flows
 
 ```bash
-# Run all tests (Rust + Storybook + E2E)
+# Run all tests
 make test-all
 
 # Run specific test suites
@@ -130,42 +131,7 @@ make test-e2e          # E2E smoke tests (requires server on :8080)
 make precommit
 ```
 
-### Test Architecture
-
-- **Backend tests** (Rust): Service layer with `#[sqlx::test]` + route handlers with `axum-test` (~100 tests target)
-- **Component tests** (Storybook): Interaction testing with `play` functions + MSW mocking (~70 tests target)
-- **E2E tests** (Playwright): Minimal smoke tests for critical paths (12 tests)
-
-### Key Patterns
-
-**Backend service test:**
-```rust
-#[sqlx::test(migrations = "./migrations")]
-async fn test_get_countries(pool: SqlitePool) {
-    let countries = get_countries(&pool, &filters).await.unwrap();
-    assert!(countries.len() > 0);
-}
-```
-
-**Storybook play function:**
-```typescript
-play: async ({ canvasElement }) => {
-  const component = canvasElement.querySelector('my-component');
-  await waitFor(() => expect(component.data).toBeDefined());
-  const button = within(component.shadowRoot!).getByText('Click');
-  await userEvent.click(button);
-}
-```
-
-**E2E smoke test:**
-```typescript
-test('page loads', async ({ page }) => {
-  await page.goto('/teams');
-  await expect(page.locator('h1')).toContainText(/teams/i);
-});
-```
-
-See [TESTING.md](./TESTING.md) for detailed patterns, best practices, and troubleshooting.
+See **[TESTING.md](./TESTING.md)** for patterns, examples, and best practices.
 
 ## Domain Model
 
@@ -209,7 +175,8 @@ Protected routes check session cookie. HTMX endpoints return HTML fragments.
 3. **Templates**: Edit Maud templates in `src/views/`
 4. **HTMX**: Add HTMX attributes to templates for dynamic behavior
 5. **Web Components**: Edit Lit components in `web_components/`, compile with npm
-6. **Authentication**: All protected routes check session cookie
+6. **Testing**: Write tests for new features (see [TESTING.md](./TESTING.md))
+7. **Authentication**: All protected routes check session cookie
 
 ## Common Patterns
 

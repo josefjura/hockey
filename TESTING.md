@@ -19,24 +19,60 @@ cd web_components && yarn test-storybook  # Storybook
 yarn test:e2e                           # E2E
 ```
 
-## Test Pyramid
+## Testing Philosophy
+
+We follow a **test pyramid** approach:
 
 ```
       ╱ ╲
-     ╱E2E╲      ~12 tests  - Critical user flows only
+     ╱E2E╲      Minimal - Critical user flows only
     ╱─────╲
-   ╱ Story ╲    ~14+ tests - Component interactions
+   ╱ Story ╲    Moderate - Component interactions
   ╱ book   ╲
  ╱───────────╲
-╱  Backend    ╲  ~100 tests - Service layer + routes
+╱  Backend    ╲  Comprehensive - Business logic & data access
 ───────────────
 ```
 
-### Philosophy
+### Guiding Principles
 
-- **Backend tests** (Rust): Comprehensive coverage of business logic, data access, and route handlers
-- **Component tests** (Storybook): Interaction testing for Lit components with MSW mocking
-- **E2E tests** (Playwright): Minimal smoke tests for critical paths (login + page navigation)
+1. **Backend tests** (Rust): Comprehensive coverage of business logic, data access, and route handlers
+   - Test every service function (CRUD operations, filtering, validation)
+   - Test route handlers for authentication, HTML rendering, HTMX partials
+   - Fast, isolated, no external dependencies
+
+2. **Component tests** (Storybook): Interaction testing for Lit components with MSW mocking
+   - Every interactive component story should have a play function
+   - Test user interactions, not implementation details
+   - Mock API calls with MSW
+
+3. **E2E tests** (Playwright): Minimal smoke tests for critical paths
+   - Login/logout works
+   - All main pages load without errors
+   - No JavaScript console errors
+   - **Don't** test business logic or complex interactions
+
+### Quality Standards
+
+Instead of counting tests, follow these quality guidelines:
+
+**Backend:**
+- ✅ Each service module has tests for all public functions
+- ✅ Each route handler has tests for success and error cases
+- ✅ HTMX partials verified to not include full HTML layout
+- ✅ Authentication and authorization tested
+
+**Storybook:**
+- ✅ Each interactive component has at least one play function
+- ✅ Play functions test realistic user interactions
+- ✅ Edge cases (loading, error, empty states) have stories
+- ✅ API interactions mocked with MSW
+
+**E2E:**
+- ✅ Login flow works
+- ✅ All main pages accessible
+- ✅ No console errors on critical paths
+- ✅ Tests complete in < 2 minutes
 
 ## Backend Testing (Rust)
 
@@ -75,16 +111,13 @@ mod tests {
 - No manual setup/teardown needed
 
 **Reference Implementation:**
-- `/home/josef/source/hockey/src/service/countries.rs:150-277` (10 tests)
-
-**Remaining Work:**
-- See issues #148 (session tests), #149 (route tests), #150 (service tests)
+- `src/service/countries.rs:150-277` - Complete service test suite example
 
 ### Route Handler Tests
 
 Route tests use `axum-test` for integration testing of HTTP endpoints.
 
-**Pattern (TODO - see issue #149):**
+**Pattern:**
 ```rust
 use axum_test::TestServer;
 use crate::test_utils::*;
@@ -157,13 +190,14 @@ Storybook test-runner uses Playwright to execute `play` functions in stories, en
 
 ### Why Storybook Instead of Vitest?
 
-- ✅ Leverages existing 68 Storybook stories
+- ✅ Leverages existing Storybook stories for documentation
 - ✅ Documentation + testing in one place
 - ✅ Enforces discipline to add new components to Storybook
 - ✅ Uses Playwright (same as E2E) - no additional tools
 - ✅ MSW mocking already configured
 - ✅ Tests components in isolation
 - ✅ Visual regression testing potential (future)
+- ✅ Shadow DOM works natively
 
 ### Writing Play Functions
 
@@ -203,20 +237,20 @@ export const InteractiveStory: Story = {
 - **MSW mocking**: API calls mocked via MSW handlers in story parameters
 
 **Reference Implementations:**
-- `stories/CountrySelector.stories.ts:102-217` (4 play functions)
-- `stories/ClientDataTable.stories.ts:195-447` (4 play functions)
-- `stories/ConfirmDialog.stories.ts:102-271` (3 play functions)
-- `stories/Toast.stories.ts:94-266` (3 play functions)
+- `stories/CountrySelector.stories.ts:102-382` - Multiple play function patterns
+- `stories/ClientDataTable.stories.ts:195-441` - Pagination and filtering tests
+- `stories/ConfirmDialog.stories.ts:129-226` - Dialog interaction tests
+- `stories/Toast.stories.ts` - Event-driven component tests
 
 ### Testing Checklist
 
-For each interactive component:
+For each interactive component, ensure stories exist for:
 - [ ] Data loading and rendering
 - [ ] User interactions (clicks, typing, selections)
 - [ ] Form validation (if applicable)
 - [ ] Event emission (if applicable)
 - [ ] State changes and UI updates
-- [ ] Empty/error states (if applicable)
+- [ ] Empty/error/loading states
 
 ### Running Storybook Tests
 
@@ -238,9 +272,6 @@ yarn test-storybook:ci
 `.storybook/test-runner.ts` provides pre/post visit hooks:
 - `preVisit`: Setup (e.g., color scheme emulation)
 - `postVisit`: Verification (e.g., console error checking)
-
-**Remaining Work:**
-- See issue #151 for adding play functions to remaining ~54 stories
 
 ## E2E Smoke Tests (Playwright)
 
@@ -284,7 +315,7 @@ test.describe('Main Pages', () => {
 ```
 
 **Reference Implementation:**
-- `tests/e2e/smoke.spec.ts` (12 tests)
+- `tests/e2e/smoke.spec.ts` - Complete E2E test suite example
 
 ### Running E2E Tests
 
@@ -355,26 +386,6 @@ make precommit
 make test-all
 ```
 
-## Test Coverage
-
-### Current Status
-
-- ✅ Backend: 10 service tests (countries.rs), test utilities created
-- ✅ Storybook: 14 play functions across 4 components
-- ✅ E2E: 12 smoke tests
-- ⏳ Backend: Route tests pending (issue #149)
-- ⏳ Backend: Remaining service tests pending (issue #150)
-- ⏳ Backend: Session test refactoring pending (issue #148)
-- ⏳ Storybook: ~54 stories need play functions (issue #151)
-
-### Target
-
-- **~100+ tests** across the stack
-- Service layer: ~50 tests
-- Route handlers: ~40 tests
-- Storybook play functions: ~70 tests (68 stories)
-- E2E smoke tests: ~12 tests
-
 ## Best Practices
 
 ### General
@@ -382,7 +393,7 @@ make test-all
 - **AAA Pattern**: Arrange → Act → Assert
 - **Independence**: Tests should not depend on each other
 - **Clarity**: Test names should describe what they test
-- **Speed**: Keep tests fast (< 5 minutes total in CI)
+- **Speed**: Keep tests fast (CI should complete in < 10 minutes)
 
 ### Backend Tests
 
@@ -466,7 +477,7 @@ When adding new features:
 
 1. **Add service tests** for data access logic
 2. **Add route tests** for HTTP endpoints
-3. **Add component to Storybook** with play functions
-4. **Update E2E tests** only if adding critical new user flow
+3. **Add component to Storybook** with play functions for interactive behavior
+4. **Update E2E tests** only if adding critical new user flow (login, checkout, etc.)
 
-Keep test pyramid balanced: many backend tests, some component tests, few E2E tests.
+Keep the test pyramid balanced: comprehensive backend tests, moderate component tests, minimal E2E tests.
