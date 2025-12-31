@@ -85,29 +85,11 @@ pub async fn event_stats_create(
         );
     }
 
-    // Create or get existing event stats
-    let stats_id = match players::get_or_create_player_event_stats(
+    // Create or update event stats atomically (no orphaned zero-value records on failure)
+    match players::create_or_update_player_event_stats(
         &state.db,
         player_id,
         form.event_id,
-    )
-    .await
-    {
-        Ok(id) => id,
-        Err(e) => {
-            tracing::error!("Failed to create event stats: {}", e);
-            let events = players::get_all_events(&state.db).await.unwrap_or_default();
-            return Html(
-                event_stats_create_modal(&t, &player, &events, Some("Failed to save statistics"))
-                    .into_string(),
-            );
-        }
-    };
-
-    // Update the totals
-    match players::update_player_event_stats(
-        &state.db,
-        stats_id,
         form.goals_total,
         form.assists_total,
     )
@@ -115,8 +97,12 @@ pub async fn event_stats_create(
     {
         Ok(_) => htmx_reload_page(),
         Err(e) => {
-            tracing::error!("Failed to update event stats: {}", e);
-            Html(error_message("Failed to save statistics").into_string())
+            tracing::error!("Failed to save event stats: {}", e);
+            let events = players::get_all_events(&state.db).await.unwrap_or_default();
+            Html(
+                event_stats_create_modal(&t, &player, &events, Some("Failed to save statistics"))
+                    .into_string(),
+            )
         }
     }
 }

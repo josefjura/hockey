@@ -22,7 +22,7 @@ pub use scoring_queries::{
 
 // Re-export event stats
 pub use event_stats::{
-    delete_player_event_stats, get_all_events, get_or_create_player_event_stats,
+    create_or_update_player_event_stats, delete_player_event_stats, get_all_events,
     get_player_event_stats, update_player_event_stats, PlayerEventStatsEntity,
 };
 
