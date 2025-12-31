@@ -9,6 +9,7 @@ use sqlx::SqlitePool;
 use crate::app_state::AppState;
 use crate::i18n::TranslationContext;
 use crate::service::players::{self, PlayerEntity};
+use crate::validation::validate_event_stats;
 use crate::views::{
     components::{error::error_message, htmx::htmx_reload_page},
     pages::player_event_stats::{event_stats_create_modal, event_stats_edit_modal},
@@ -72,17 +73,9 @@ pub async fn event_stats_create(
     };
 
     // Validation
-    if form.goals_total < 0 || form.assists_total < 0 {
+    if let Err(error_msg) = validate_event_stats(form.goals_total, form.assists_total) {
         let events = players::get_all_events(&state.db).await.unwrap_or_default();
-        return Html(
-            event_stats_create_modal(
-                &t,
-                &player,
-                &events,
-                Some("Goals and assists cannot be negative"),
-            )
-            .into_string(),
-        );
+        return Html(event_stats_create_modal(&t, &player, &events, Some(error_msg)).into_string());
     }
 
     // Create or update event stats atomically (no orphaned zero-value records on failure)
@@ -143,7 +136,7 @@ pub async fn event_stats_update(
     Form(form): Form<EventStatsUpdateForm>,
 ) -> impl IntoResponse {
     // Validation
-    if form.goals_total < 0 || form.assists_total < 0 {
+    if let Err(error_msg) = validate_event_stats(form.goals_total, form.assists_total) {
         // Get player and stats for error display
         let player = match get_player_or_error(&state.db, player_id).await {
             Ok(p) => p,
@@ -160,15 +153,7 @@ pub async fn event_stats_update(
             None => return Html(error_message("Statistics not found").into_string()),
         };
 
-        return Html(
-            event_stats_edit_modal(
-                &t,
-                &player,
-                stats,
-                Some("Goals and assists cannot be negative"),
-            )
-            .into_string(),
-        );
+        return Html(event_stats_edit_modal(&t, &player, stats, Some(error_msg)).into_string());
     }
 
     // Update the totals
