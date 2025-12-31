@@ -98,13 +98,8 @@ pub async fn event_stats_create(
             tracing::error!("Failed to create event stats: {}", e);
             let events = players::get_all_events(&state.db).await.unwrap_or_default();
             return Html(
-                event_stats_create_modal(
-                    &t,
-                    &player,
-                    &events,
-                    Some("This event already has stats for this player"),
-                )
-                .into_string(),
+                event_stats_create_modal(&t, &player, &events, Some("Failed to save statistics"))
+                    .into_string(),
             );
         }
     };
