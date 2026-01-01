@@ -8,8 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Full responsive design for mobile and tablet devices with collapsible sidebar navigation (#85)
+- Touch-friendly form inputs with larger touch targets meeting accessibility standards (#85)
+- Mobile-optimized table layouts with card-based display on small screens (#85)
+- Horizontal scroll support for tables on tablet devices (#85)
+- Bottom sheet style modals on mobile for better touch interaction (#85)
 
 ### Changed
+- Navigation sidebar now collapses into a hamburger menu on mobile devices (#85)
+- Form buttons stack vertically on mobile for easier thumb access (#85)
+- Page layouts now adapt to different screen sizes with optimized spacing (#85)
 
 ### Fixed
 

@@ -243,3 +243,133 @@
   font-size: 2rem;
   font-weight: 700;
 }
+
+/* ========== Responsive Pages ========== */
+
+/* Tablet breakpoint */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .management-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  .dashboard-title,
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-subtitle,
+  .page-description {
+    font-size: 0.9375rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-card-value {
+    font-size: 2rem;
+  }
+
+  .dashboard-section {
+    margin-top: 2rem;
+  }
+
+  .section-heading {
+    font-size: 1.125rem;
+  }
+
+  .quick-actions {
+    gap: 0.5rem;
+  }
+
+  .quick-action-btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .page-header-title {
+    font-size: 1.5rem;
+  }
+
+  .management-card,
+  .management-card-disabled {
+    padding: 1rem;
+  }
+
+  .management-card-icon {
+    font-size: 2rem;
+  }
+
+  .management-card-title,
+  .management-card-title-disabled {
+    font-size: 1.125rem;
+  }
+
+  .activity-item {
+    padding: 0.625rem 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .activity-icon {
+    font-size: 1.125rem;
+  }
+
+  .activity-timestamp {
+    align-self: flex-start;
+  }
+}
+
+/* Small mobile breakpoint */
+@media (max-width: 480px) {
+  .dashboard-title,
+  .page-title {
+    font-size: 1.375rem;
+  }
+
+  .stat-card-value {
+    font-size: 1.75rem;
+  }
+
+  .stat-card-title {
+    font-size: 0.8125rem;
+  }
+
+  .quick-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .management-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .management-card-icon {
+    margin-right: 0;
+  }
+}
