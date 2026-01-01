@@ -72,7 +72,11 @@ fn nav_link(item: &NavItem, current_path: &str) -> Markup {
     };
 
     html! {
-        a href=(item.path) class=(active_class) {
+        a
+            href=(item.path)
+            class=(active_class)
+            onclick="document.querySelector('.sidebar')?.classList.remove('active'); document.querySelector('.sidebar-overlay')?.classList.remove('active');"
+        {
             span class="nav-icon" { (item.icon) }
             span class="nav-label" { (item.label) }
         }

@@ -69,3 +69,39 @@
 .gap-2 {
   gap: 0.5rem;
 }
+
+/* ========== Table Actions ========== */
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* ========== Responsive Utilities ========== */
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  .table-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .table-actions .btn,
+  .table-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Better touch targets for mobile devices */
+  button,
+  .btn,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

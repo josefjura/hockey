@@ -80,6 +80,19 @@ pub fn admin_layout(
         title,
         html! {
             div class="app-layout" {
+                // Mobile menu toggle button
+                button
+                    class="mobile-menu-toggle"
+                    onclick="document.querySelector('.sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active');"
+                    aria-label="Toggle navigation menu"
+                {
+                    "☰"
+                }
+                // Sidebar overlay for mobile
+                div
+                    class="sidebar-overlay"
+                    onclick="document.querySelector('.sidebar').classList.remove('active'); this.classList.remove('active');"
+                {}
                 (sidebar(session, current_path, t))
                 main class="main-content" {
                     div class="content-wrapper" {
