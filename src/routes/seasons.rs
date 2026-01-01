@@ -14,7 +14,7 @@ use crate::service::seasons::{
 };
 use crate::service::team_participations::{self, CreateTeamParticipationEntity};
 use crate::views::{
-    components::{error::error_message, htmx::htmx_reload_table_with_stats},
+    components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
     pages::season_detail::{add_team_modal, season_detail_page},
     pages::seasons::{season_create_modal, season_edit_modal, season_list_content, seasons_page},
@@ -236,7 +236,8 @@ pub async fn season_create(
                 None,
             )
             .into_string(),
-        );
+        )
+        .into_response();
     }
 
     if let Some(display_name) = &form.display_name {
@@ -251,7 +252,8 @@ pub async fn season_create(
                     None,
                 )
                 .into_string(),
-            );
+            )
+            .into_response();
         }
     }
 
@@ -275,32 +277,32 @@ pub async fn season_create(
     .await
     {
         Ok(_) => {
-            // Fetch updated dashboard stats
-            let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
-                .await
-                .unwrap_or_else(|e| {
-                    tracing::warn!(
-                        "Failed to fetch dashboard stats after season creation: {}",
-                        e
-                    );
-                    crate::service::dashboard::DashboardStats::default()
-                });
+            use axum::http::header::{HeaderMap, HeaderName};
 
             // Return HTMX response based on context
+            // Trigger entity-created event for dashboard stats update
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-trigger"),
+                "entity-created".parse().unwrap(),
+            );
+
             if let Some(return_url) = &form.return_url {
-                // Redirect to the return URL (e.g., event detail page) and update stats
-                use crate::views::pages::dashboard::dashboard_stats_partial;
+                // Redirect to the return URL (e.g., event detail page)
                 use maud::html;
-                Html(
-                    html! {
-                        div hx-get=(return_url) hx-target="body" hx-push-url="true" hx-trigger="load" hx-swap="innerHTML" {}
-                        (dashboard_stats_partial(&t, &stats))
-                    }
-                    .into_string(),
+                (
+                    headers,
+                    Html(
+                        html! {
+                            div hx-get=(return_url) hx-target="body" hx-push-url="true" hx-trigger="load" hx-swap="innerHTML" {}
+                        }
+                        .into_string(),
+                    ),
                 )
+                .into_response()
             } else {
-                // Reload the seasons table (default behavior) and update stats
-                htmx_reload_table_with_stats("/seasons/list", "seasons-table", &t, &stats)
+                // Reload the seasons table (default behavior)
+                (headers, htmx_reload_table("/seasons/list", "seasons-table")).into_response()
             }
         }
         Err(e) => {
@@ -315,6 +317,7 @@ pub async fn season_create(
                 )
                 .into_string(),
             )
+            .into_response()
         }
     }
 }

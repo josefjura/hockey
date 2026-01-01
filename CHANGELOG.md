@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Navigation sidebar now collapses into a hamburger menu on mobile devices (#85)
 - Form buttons stack vertically on mobile for easier thumb access (#85)
 - Page layouts now adapt to different screen sizes with optimized spacing (#85)
+- Dashboard statistics now update automatically via HTMX events when creating entities from quick actions, improving performance and code organization (#135)
 
 ### Fixed
 

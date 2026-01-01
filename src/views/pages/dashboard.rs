@@ -18,7 +18,11 @@ pub fn dashboard_page(
             }
 
             // Stats cards
-            div id="dashboard-stats" class="stats-grid" {
+            div id="dashboard-stats" class="stats-grid"
+                hx-get="/dashboard/stats"
+                hx-trigger="entity-created from:body"
+                hx-swap="outerHTML"
+            {
                 (stat_card(&t.messages.nav_teams().to_string(), &stats.teams_count.to_string(), "/teams"))
                 (stat_card(&t.messages.nav_players().to_string(), &stats.players_count.to_string(), "/players"))
                 (stat_card(&t.messages.nav_events().to_string(), &stats.events_count.to_string(), "/events"))
@@ -88,10 +92,14 @@ pub fn dashboard_page(
     }
 }
 
-/// Partial template for dashboard stats (for out-of-band updates)
+/// Partial template for dashboard stats (for HTMX event-based updates)
 pub fn dashboard_stats_partial(t: &TranslationContext, stats: &DashboardStats) -> Markup {
     html! {
-        div id="dashboard-stats" class="stats-grid" hx-swap-oob="true" {
+        div id="dashboard-stats" class="stats-grid"
+            hx-get="/dashboard/stats"
+            hx-trigger="entity-created from:body"
+            hx-swap="outerHTML"
+        {
             (stat_card(&t.messages.nav_teams().to_string(), &stats.teams_count.to_string(), "/teams"))
             (stat_card(&t.messages.nav_players().to_string(), &stats.players_count.to_string(), "/players"))
             (stat_card(&t.messages.nav_events().to_string(), &stats.events_count.to_string(), "/events"))

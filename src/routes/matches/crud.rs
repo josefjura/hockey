@@ -10,7 +10,7 @@ use crate::app_state::AppState;
 use crate::i18n::TranslationContext;
 use crate::service::matches::{self, CreateMatchEntity, UpdateMatchEntity};
 use crate::views::{
-    components::htmx::htmx_reload_table_with_stats,
+    components::htmx::htmx_reload_table,
     pages::matches::{match_create_modal, match_edit_modal},
 };
 
@@ -79,14 +79,16 @@ pub async fn match_create(
                 &teams,
             )
             .into_string(),
-        );
+        )
+        .into_response();
     }
 
     if form.home_score_unidentified < 0 || form.away_score_unidentified < 0 {
         return Html(
             match_create_modal(&t, Some("Scores cannot be negative"), &seasons, &teams)
                 .into_string(),
-        );
+        )
+        .into_response();
     }
 
     // Validate that both teams participate in the selected season
@@ -110,7 +112,8 @@ pub async fn match_create(
                     &teams,
                 )
                 .into_string(),
-            );
+            )
+            .into_response();
         }
         Err(e) => {
             tracing::error!("Failed to validate teams in season: {}", e);
@@ -122,7 +125,8 @@ pub async fn match_create(
                     &teams,
                 )
                 .into_string(),
-            );
+            )
+            .into_response();
         }
     }
 
@@ -143,19 +147,16 @@ pub async fn match_create(
     .await
     {
         Ok(_) => {
-            // Fetch updated dashboard stats
-            let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
-                .await
-                .unwrap_or_else(|e| {
-                    tracing::warn!(
-                        "Failed to fetch dashboard stats after match creation: {}",
-                        e
-                    );
-                    crate::service::dashboard::DashboardStats::default()
-                });
+            use axum::http::header::{HeaderMap, HeaderName};
 
-            // Return HTMX response to close modal, reload table, and update dashboard stats
-            htmx_reload_table_with_stats("/matches/list", "matches-table", &t, &stats)
+            // Return HTMX response to close modal and reload table
+            // Trigger entity-created event for dashboard stats update
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-trigger"),
+                "entity-created".parse().unwrap(),
+            );
+            (headers, htmx_reload_table("/matches/list", "matches-table")).into_response()
         }
         Err(e) => {
             tracing::error!("Failed to create match: {}", e);
@@ -163,6 +164,7 @@ pub async fn match_create(
                 match_create_modal(&t, Some("Failed to create match"), &seasons, &teams)
                     .into_string(),
             )
+            .into_response()
         }
     }
 }

@@ -11,10 +11,7 @@ use crate::i18n::TranslationContext;
 use crate::service::events::{self, CreateEventEntity, EventFilters, UpdateEventEntity};
 use crate::validation::validate_name;
 use crate::views::{
-    components::{
-        error::error_message,
-        htmx::{htmx_reload_table, htmx_reload_table_with_stats},
-    },
+    components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
     pages::event_detail::event_detail_page,
     pages::events::{event_create_modal, event_edit_modal, event_list_content, events_page},
@@ -177,7 +174,8 @@ pub async fn event_create(
         Ok(n) => n,
         Err(error) => {
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
-            return Html(event_create_modal(&t, &countries, Some(error)).into_string());
+            return Html(event_create_modal(&t, &countries, Some(error)).into_string())
+                .into_response();
         }
     };
 
@@ -192,24 +190,22 @@ pub async fn event_create(
     .await
     {
         Ok(_) => {
-            // Fetch updated dashboard stats
-            let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
-                .await
-                .unwrap_or_else(|e| {
-                    tracing::warn!(
-                        "Failed to fetch dashboard stats after event creation: {}",
-                        e
-                    );
-                    crate::service::dashboard::DashboardStats::default()
-                });
+            use axum::http::header::{HeaderMap, HeaderName};
 
-            // Return HTMX response to close modal, reload table, and update dashboard stats
-            htmx_reload_table_with_stats("/events/list", "events-table", &t, &stats)
+            // Return HTMX response to close modal and reload table
+            // Trigger entity-created event for dashboard stats update
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-trigger"),
+                "entity-created".parse().unwrap(),
+            );
+            (headers, htmx_reload_table("/events/list", "events-table")).into_response()
         }
         Err(e) => {
             tracing::error!("Failed to create event: {}", e);
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
             Html(event_create_modal(&t, &countries, Some("Failed to create event")).into_string())
+                .into_response()
         }
     }
 }

@@ -13,10 +13,7 @@ use crate::service::teams::{
 };
 use crate::validation::validate_name;
 use crate::views::{
-    components::{
-        error::error_message,
-        htmx::{htmx_reload_table, htmx_reload_table_with_stats},
-    },
+    components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
     pages::team_detail::team_detail_page,
     pages::teams::{team_create_modal, team_edit_modal, team_list_content, teams_page},
@@ -169,7 +166,9 @@ pub async fn team_create(
     // Validation
     let name = match validate_name(&form.name) {
         Ok(n) => n,
-        Err(error) => return Html(team_create_modal(&t, Some(error)).into_string()),
+        Err(error) => {
+            return Html(team_create_modal(&t, Some(error)).into_string()).into_response()
+        }
     };
 
     // Create team
@@ -183,20 +182,20 @@ pub async fn team_create(
     .await
     {
         Ok(_) => {
-            // Fetch updated dashboard stats
-            let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
-                .await
-                .unwrap_or_else(|e| {
-                    tracing::warn!("Failed to fetch dashboard stats after team creation: {}", e);
-                    crate::service::dashboard::DashboardStats::default()
-                });
+            use axum::http::header::{HeaderMap, HeaderName};
 
-            // Return HTMX response to close modal, reload table, and update dashboard stats
-            htmx_reload_table_with_stats("/teams/list", "teams-table", &t, &stats)
+            // Return HTMX response to close modal and reload table
+            // Trigger entity-created event for dashboard stats update
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-trigger"),
+                "entity-created".parse().unwrap(),
+            );
+            (headers, htmx_reload_table("/teams/list", "teams-table")).into_response()
         }
         Err(e) => {
             tracing::error!("Failed to create team: {}", e);
-            Html(team_create_modal(&t, Some("Failed to create team")).into_string())
+            Html(team_create_modal(&t, Some("Failed to create team")).into_string()).into_response()
         }
     }
 }

@@ -14,7 +14,7 @@ use crate::service::players::{
 use crate::views::{
     components::{
         error::error_message,
-        htmx::{htmx_reload_page, htmx_reload_table_with_stats},
+        htmx::{htmx_reload_page, htmx_reload_table},
     },
     layout::admin_layout,
     pages::player_detail::player_detail_page,
@@ -242,7 +242,7 @@ pub async fn player_create(
                         Ok(path) => photo_path = Some(path),
                         Err(e) => {
                             tracing::error!("Failed to save uploaded file: {}", e);
-                            return Html(player_create_modal(&t, Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string());
+                            return Html(player_create_modal(&t, Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string()).into_response();
                         }
                     }
                 }
@@ -256,7 +256,8 @@ pub async fn player_create(
     if name.is_empty() {
         return Html(
             player_create_modal(&t, Some("Player name cannot be empty"), &countries).into_string(),
-        );
+        )
+        .into_response();
     }
 
     if name.len() > 255 {
@@ -267,7 +268,8 @@ pub async fn player_create(
                 &countries,
             )
             .into_string(),
-        );
+        )
+        .into_response();
     }
 
     let country_id = match country_id {
@@ -275,7 +277,8 @@ pub async fn player_create(
         None => {
             return Html(
                 player_create_modal(&t, Some("Please select a country"), &countries).into_string(),
-            );
+            )
+            .into_response();
         }
     };
 
@@ -304,23 +307,21 @@ pub async fn player_create(
     .await
     {
         Ok(_) => {
-            // Fetch updated dashboard stats
-            let stats = crate::service::dashboard::get_dashboard_stats(&state.db)
-                .await
-                .unwrap_or_else(|e| {
-                    tracing::warn!(
-                        "Failed to fetch dashboard stats after player creation: {}",
-                        e
-                    );
-                    crate::service::dashboard::DashboardStats::default()
-                });
+            use axum::http::header::{HeaderMap, HeaderName};
 
-            // Return HTMX response to close modal, reload table, and update dashboard stats
-            htmx_reload_table_with_stats("/players/list", "players-table", &t, &stats)
+            // Return HTMX response to close modal and reload table
+            // Trigger entity-created event for dashboard stats update
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-trigger"),
+                "entity-created".parse().unwrap(),
+            );
+            (headers, htmx_reload_table("/players/list", "players-table")).into_response()
         }
         Err(e) => {
             tracing::error!("Failed to create player: {}", e);
             Html(player_create_modal(&t, Some("Failed to create player"), &countries).into_string())
+                .into_response()
         }
     }
 }

@@ -84,6 +84,7 @@ async fn main() -> Result<(), anyhow::Error> {
     // Protected routes (authentication required)
     let protected_routes = Router::new()
         .route("/", get(root_handler))
+        .route("/dashboard/stats", get(dashboard_stats_get))
         .route("/management", get(routes::management::management_get))
         .route("/countries", get(routes::countries::countries_get))
         .route("/api/countries", get(routes::countries::countries_list_api))
@@ -283,6 +284,18 @@ async fn root_handler(
     let html = admin_layout("Dashboard", &session, "/", &t, content);
 
     Html(html.into_string())
+}
+
+/// GET /dashboard/stats - Returns dashboard stats partial for HTMX updates
+async fn dashboard_stats_get(
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+) -> Html<String> {
+    let stats = service::dashboard::get_dashboard_stats(&state.db)
+        .await
+        .unwrap_or_default();
+
+    Html(views::pages::dashboard::dashboard_stats_partial(&t, &stats).into_string())
 }
 
 async fn health_handler() -> &'static str {
