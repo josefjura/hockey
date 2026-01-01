@@ -67,6 +67,57 @@ pub fn validate_event_stats(goals: i32, assists: i32) -> Result<(), &'static str
     Ok(())
 }
 
+/// Validates score event time fields
+///
+/// # Arguments
+/// * `period` - Hockey period (1-5: regular periods 1-3, overtime 4-5)
+/// * `time_minutes` - Optional minutes value (0-60)
+/// * `time_seconds` - Optional seconds value (0-59)
+///
+/// # Returns
+/// * `Ok(())` - If validation passes
+/// * `Err(&'static str)` - Error message if validation fails
+///
+/// # Validation Rules
+/// * Period must be between 1 and 5 (inclusive)
+/// * Minutes must be between 0 and 60 (inclusive) if provided
+/// * Seconds must be between 0 and 59 (inclusive) if provided
+///
+/// # Examples
+/// ```
+/// let result = validate_score_event_time(1, Some(15), Some(30));
+/// assert!(result.is_ok());
+///
+/// let result = validate_score_event_time(6, Some(15), Some(30));
+/// assert!(result.is_err());
+///
+/// let result = validate_score_event_time(1, Some(61), Some(30));
+/// assert!(result.is_err());
+/// ```
+pub fn validate_score_event_time(
+    period: i32,
+    time_minutes: Option<i32>,
+    time_seconds: Option<i32>,
+) -> Result<(), &'static str> {
+    if !(1..=5).contains(&period) {
+        return Err("Period must be between 1 and 5");
+    }
+
+    if let Some(minutes) = time_minutes {
+        if !(0..=60).contains(&minutes) {
+            return Err("Minutes must be between 0 and 60");
+        }
+    }
+
+    if let Some(seconds) = time_seconds {
+        if !(0..=59).contains(&seconds) {
+            return Err("Seconds must be between 0 and 59");
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -126,6 +177,56 @@ mod tests {
         assert_eq!(
             validate_event_stats(15000, 15000).unwrap_err(),
             "Value exceeds maximum allowed (10,000)"
+        );
+    }
+
+    #[test]
+    fn test_validate_score_event_time_success() {
+        assert!(validate_score_event_time(1, Some(0), Some(0)).is_ok());
+        assert!(validate_score_event_time(3, Some(15), Some(30)).is_ok());
+        assert!(validate_score_event_time(5, Some(60), Some(59)).is_ok());
+        assert!(validate_score_event_time(1, None, None).is_ok());
+        assert!(validate_score_event_time(2, Some(20), None).is_ok());
+        assert!(validate_score_event_time(4, None, Some(45)).is_ok());
+    }
+
+    #[test]
+    fn test_validate_score_event_time_invalid_period() {
+        assert_eq!(
+            validate_score_event_time(0, Some(15), Some(30)).unwrap_err(),
+            "Period must be between 1 and 5"
+        );
+        assert_eq!(
+            validate_score_event_time(6, Some(15), Some(30)).unwrap_err(),
+            "Period must be between 1 and 5"
+        );
+        assert_eq!(
+            validate_score_event_time(-1, Some(15), Some(30)).unwrap_err(),
+            "Period must be between 1 and 5"
+        );
+    }
+
+    #[test]
+    fn test_validate_score_event_time_invalid_minutes() {
+        assert_eq!(
+            validate_score_event_time(1, Some(-1), Some(30)).unwrap_err(),
+            "Minutes must be between 0 and 60"
+        );
+        assert_eq!(
+            validate_score_event_time(1, Some(61), Some(30)).unwrap_err(),
+            "Minutes must be between 0 and 60"
+        );
+    }
+
+    #[test]
+    fn test_validate_score_event_time_invalid_seconds() {
+        assert_eq!(
+            validate_score_event_time(1, Some(15), Some(-1)).unwrap_err(),
+            "Seconds must be between 0 and 59"
+        );
+        assert_eq!(
+            validate_score_event_time(1, Some(15), Some(60)).unwrap_err(),
+            "Seconds must be between 0 and 59"
         );
     }
 }

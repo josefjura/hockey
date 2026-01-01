@@ -111,50 +111,16 @@ pub async fn score_event_create(
         .unwrap_or_default();
 
     // Validation
-    if form.period < 1 || form.period > 5 {
+    if let Err(error) = crate::validation::validate_score_event_time(
+        form.period,
+        form.time_minutes,
+        form.time_seconds,
+    ) {
         return Html(
-            score_event_create_modal(
-                &t,
-                Some("Period must be between 1 and 5"),
-                &match_info,
-                &home_players,
-                &away_players,
-            )
-            .into_string(),
+            score_event_create_modal(&t, Some(error), &match_info, &home_players, &away_players)
+                .into_string(),
         )
         .into_response();
-    }
-
-    if let Some(minutes) = form.time_minutes {
-        if !(0..=60).contains(&minutes) {
-            return Html(
-                score_event_create_modal(
-                    &t,
-                    Some("Minutes must be between 0 and 60"),
-                    &match_info,
-                    &home_players,
-                    &away_players,
-                )
-                .into_string(),
-            )
-            .into_response();
-        }
-    }
-
-    if let Some(seconds) = form.time_seconds {
-        if !(0..=59).contains(&seconds) {
-            return Html(
-                score_event_create_modal(
-                    &t,
-                    Some("Seconds must be between 0 and 59"),
-                    &match_info,
-                    &home_players,
-                    &away_players,
-                )
-                .into_string(),
-            )
-            .into_response();
-        }
     }
 
     // Create score event
@@ -304,11 +270,15 @@ pub async fn score_event_update(
         .unwrap_or_default();
 
     // Validation
-    if form.period < 1 || form.period > 5 {
+    if let Err(error) = crate::validation::validate_score_event_time(
+        form.period,
+        form.time_minutes,
+        form.time_seconds,
+    ) {
         return Html(
             score_event_edit_modal(
                 &t,
-                Some("Period must be between 1 and 5"),
+                Some(error),
                 &score_event,
                 &match_info,
                 &home_players,
@@ -317,40 +287,6 @@ pub async fn score_event_update(
             .into_string(),
         )
         .into_response();
-    }
-
-    if let Some(minutes) = form.time_minutes {
-        if !(0..=60).contains(&minutes) {
-            return Html(
-                score_event_edit_modal(
-                    &t,
-                    Some("Minutes must be between 0 and 60"),
-                    &score_event,
-                    &match_info,
-                    &home_players,
-                    &away_players,
-                )
-                .into_string(),
-            )
-            .into_response();
-        }
-    }
-
-    if let Some(seconds) = form.time_seconds {
-        if !(0..=59).contains(&seconds) {
-            return Html(
-                score_event_edit_modal(
-                    &t,
-                    Some("Seconds must be between 0 and 59"),
-                    &score_event,
-                    &match_info,
-                    &home_players,
-                    &away_players,
-                )
-                .into_string(),
-            )
-            .into_response();
-        }
     }
 
     // Update score event

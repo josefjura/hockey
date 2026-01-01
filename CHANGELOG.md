@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Form buttons stack vertically on mobile for easier thumb access (#85)
 - Page layouts now adapt to different screen sizes with optimized spacing (#85)
 - Dashboard statistics now update automatically via HTMX events when creating entities from quick actions, improving performance and code organization (#135)
+- Score event validation logic is now centralized for better code maintainability (#157)
 
 ### Fixed
 
