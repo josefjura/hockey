@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Page layouts now adapt to different screen sizes with optimized spacing (#85)
 - Dashboard statistics now update automatically via HTMX events when creating entities from quick actions, improving performance and code organization (#135)
 - Score event validation logic is now centralized for better code maintainability (#157)
+- Match validation logic has been moved to a dedicated business layer for better separation of concerns and testability (#156)
 
 ### Fixed
 

@@ -7,6 +7,7 @@ use axum::{
 use serde::Deserialize;
 
 use crate::app_state::AppState;
+use crate::business;
 use crate::i18n::TranslationContext;
 use crate::service::matches::{self, CreateMatchEntity, UpdateMatchEntity};
 use crate::views::{
@@ -63,75 +64,14 @@ pub async fn match_create(
     State(state): State<AppState>,
     Form(form): Form<CreateMatchForm>,
 ) -> impl IntoResponse {
-    // Get seasons for dropdown (in case we need to show the form again with error)
+    // Get seasons and teams for dropdown (in case we need to show the form again with error)
     let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
     let teams = matches::get_teams_for_season(&state.db, form.season_id)
         .await
         .unwrap_or_default();
 
-    // Validation
-    if form.home_team_id == form.away_team_id {
-        return Html(
-            match_create_modal(
-                &t,
-                Some("Home and away teams must be different"),
-                &seasons,
-                &teams,
-            )
-            .into_string(),
-        )
-        .into_response();
-    }
-
-    if form.home_score_unidentified < 0 || form.away_score_unidentified < 0 {
-        return Html(
-            match_create_modal(&t, Some("Scores cannot be negative"), &seasons, &teams)
-                .into_string(),
-        )
-        .into_response();
-    }
-
-    // Validate that both teams participate in the selected season
-    match matches::validate_teams_in_season(
-        &state.db,
-        form.season_id,
-        form.home_team_id,
-        form.away_team_id,
-    )
-    .await
-    {
-        Ok(true) => {
-            // Both teams participate, proceed
-        }
-        Ok(false) => {
-            return Html(
-                match_create_modal(
-                    &t,
-                    Some("Both teams must participate in the selected season"),
-                    &seasons,
-                    &teams,
-                )
-                .into_string(),
-            )
-            .into_response();
-        }
-        Err(e) => {
-            tracing::error!("Failed to validate teams in season: {}", e);
-            return Html(
-                match_create_modal(
-                    &t,
-                    Some("Failed to validate team participation"),
-                    &seasons,
-                    &teams,
-                )
-                .into_string(),
-            )
-            .into_response();
-        }
-    }
-
-    // Create match
-    match matches::create_match(
+    // Create match with business layer validation
+    match business::matches::create_match_validated(
         &state.db,
         CreateMatchEntity {
             season_id: form.season_id,
@@ -158,7 +98,16 @@ pub async fn match_create(
             );
             (headers, htmx_reload_table("/matches/list", "matches-table")).into_response()
         }
-        Err(e) => {
+        Err(Ok(validation_error)) => {
+            // Validation error
+            Html(
+                match_create_modal(&t, Some(validation_error.message()), &seasons, &teams)
+                    .into_string(),
+            )
+            .into_response()
+        }
+        Err(Err(e)) => {
+            // Database error
             tracing::error!("Failed to create match: {}", e);
             Html(
                 match_create_modal(&t, Some("Failed to create match"), &seasons, &teams)
@@ -222,78 +171,8 @@ pub async fn match_update(
         .await
         .unwrap_or_default();
 
-    // Validation
-    if form.home_team_id == form.away_team_id {
-        return Html(
-            match_edit_modal(
-                &t,
-                &match_entity,
-                Some("Home and away teams must be different"),
-                &seasons,
-                &teams,
-            )
-            .into_string(),
-        )
-        .into_response();
-    }
-
-    if form.home_score_unidentified < 0 || form.away_score_unidentified < 0 {
-        return Html(
-            match_edit_modal(
-                &t,
-                &match_entity,
-                Some("Scores cannot be negative"),
-                &seasons,
-                &teams,
-            )
-            .into_string(),
-        )
-        .into_response();
-    }
-
-    // Validate that both teams participate in the selected season
-    match matches::validate_teams_in_season(
-        &state.db,
-        form.season_id,
-        form.home_team_id,
-        form.away_team_id,
-    )
-    .await
-    {
-        Ok(true) => {
-            // Both teams participate, proceed
-        }
-        Ok(false) => {
-            return Html(
-                match_edit_modal(
-                    &t,
-                    &match_entity,
-                    Some("Both teams must participate in the selected season"),
-                    &seasons,
-                    &teams,
-                )
-                .into_string(),
-            )
-            .into_response();
-        }
-        Err(e) => {
-            tracing::error!("Failed to validate teams in season: {}", e);
-            return Html(
-                match_edit_modal(
-                    &t,
-                    &match_entity,
-                    Some("Failed to validate team participation"),
-                    &seasons,
-                    &teams,
-                )
-                .into_string(),
-            )
-            .into_response();
-        }
-    }
-
-    // Update match
-    match matches::update_match(
+    // Update match with business layer validation
+    match business::matches::update_match_validated(
         &state.db,
         id,
         UpdateMatchEntity {
@@ -325,7 +204,22 @@ pub async fn match_update(
                 .into_string(),
         )
         .into_response(),
-        Err(e) => {
+        Err(Ok(validation_error)) => {
+            // Validation error
+            Html(
+                match_edit_modal(
+                    &t,
+                    &match_entity,
+                    Some(validation_error.message()),
+                    &seasons,
+                    &teams,
+                )
+                .into_string(),
+            )
+            .into_response()
+        }
+        Err(Err(e)) => {
+            // Database error
             tracing::error!("Failed to update match: {}", e);
             Html(
                 match_edit_modal(

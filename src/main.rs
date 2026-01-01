@@ -1,6 +1,7 @@
 mod app_state;
 mod assets;
 mod auth;
+mod business;
 mod common;
 mod config;
 mod i18n;
