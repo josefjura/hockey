@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dashboard statistics now update automatically via HTMX events when creating entities from quick actions, improving performance and code organization (#135)
 - Score event validation logic is now centralized for better code maintainability (#157)
 - Match validation logic has been moved to a dedicated business layer for better separation of concerns and testability (#156)
+- Player detail page data is now fetched through a dedicated business layer function for improved code organization (#154)
+- Player scoring page data is now fetched through a dedicated business layer function for improved code organization (#155)
+- Player create and update handlers now use dedicated form parsing and validation helpers for better code organization and maintainability (#153)
 
 ### Fixed
 

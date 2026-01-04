@@ -8,9 +8,7 @@ use serde::Deserialize;
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::TranslationContext;
-use crate::service::players::{
-    self, CreatePlayerEntity, PlayerFilters, SortField, SortOrder, UpdatePlayerEntity,
-};
+use crate::service::players::{self, PlayerFilters, SortField, SortOrder};
 use crate::views::{
     components::{
         error::error_message,
@@ -157,158 +155,34 @@ pub async fn player_create(
     State(state): State<AppState>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
+    use axum::http::header::{HeaderMap, HeaderName};
+
     // Get countries for form re-render on error
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
     // Parse multipart form data
-    let mut name = String::new();
-    let mut country_id: Option<i64> = None;
-    let mut photo_path: Option<String> = None;
-    let mut photo_url: Option<String> = None;
-    let mut birth_date: Option<String> = None;
-    let mut birth_place: Option<String> = None;
-    let mut height_cm: Option<i64> = None;
-    let mut weight_kg: Option<i64> = None;
-    let mut position: Option<String> = None;
-    let mut shoots: Option<String> = None;
+    let form_data =
+        match super::forms::parse_player_form(&mut multipart, "static/uploads/players", None).await
+        {
+            Ok(data) => data,
+            Err(error_msg) => {
+                return Html(player_create_modal(&t, Some(&error_msg), &countries).into_string())
+                    .into_response();
+            }
+        };
 
-    while let Ok(Some(field)) = multipart.next_field().await {
-        let field_name = field.name().unwrap_or("").to_string();
+    // Resolve final photo path (prefer uploaded file over URL)
+    let final_photo_path = super::forms::resolve_photo_path(
+        form_data.photo_path.clone(),
+        form_data.photo_url.clone(),
+        None,
+    );
 
-        match field_name.as_str() {
-            "name" => {
-                name = field.text().await.unwrap_or_default();
-            }
-            "country_id" => {
-                let text = field.text().await.unwrap_or_default();
-                country_id = text.parse().ok();
-            }
-            "photo_url" => {
-                photo_url = Some(field.text().await.unwrap_or_default());
-            }
-            "birth_date" => {
-                let text = field.text().await.unwrap_or_default();
-                birth_date = if text.trim().is_empty() {
-                    None
-                } else {
-                    Some(text)
-                };
-            }
-            "birth_place" => {
-                let text = field.text().await.unwrap_or_default();
-                birth_place = if text.trim().is_empty() {
-                    None
-                } else {
-                    Some(text)
-                };
-            }
-            "height_cm" => {
-                let text = field.text().await.unwrap_or_default();
-                height_cm = text.parse().ok();
-            }
-            "weight_kg" => {
-                let text = field.text().await.unwrap_or_default();
-                weight_kg = text.parse().ok();
-            }
-            "position" => {
-                let text = field.text().await.unwrap_or_default();
-                position = if text.trim().is_empty() {
-                    None
-                } else {
-                    Some(text)
-                };
-            }
-            "shoots" => {
-                let text = field.text().await.unwrap_or_default();
-                shoots = if text.trim().is_empty() {
-                    None
-                } else {
-                    Some(text)
-                };
-            }
-            "photo_file" => {
-                // Handle file upload
-                let filename = field.file_name().unwrap_or("photo.jpg").to_string();
-                let data = field.bytes().await.unwrap_or_default();
-
-                if !data.is_empty() {
-                    match crate::utils::save_uploaded_file(
-                        &data,
-                        &filename,
-                        "static/uploads/players",
-                    )
-                    .await
-                    {
-                        Ok(path) => photo_path = Some(path),
-                        Err(e) => {
-                            tracing::error!("Failed to save uploaded file: {}", e);
-                            return Html(player_create_modal(&t, Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string()).into_response();
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-
-    // Validation
-    let name = name.trim();
-    if name.is_empty() {
-        return Html(
-            player_create_modal(&t, Some("Player name cannot be empty"), &countries).into_string(),
-        )
-        .into_response();
-    }
-
-    if name.len() > 255 {
-        return Html(
-            player_create_modal(
-                &t,
-                Some("Player name cannot exceed 255 characters"),
-                &countries,
-            )
-            .into_string(),
-        )
-        .into_response();
-    }
-
-    let country_id = match country_id {
-        Some(id) => id,
-        None => {
-            return Html(
-                player_create_modal(&t, Some("Please select a country"), &countries).into_string(),
-            )
-            .into_response();
-        }
-    };
-
-    // Prefer uploaded file over URL
-    let final_photo_path = if photo_path.is_some() {
-        photo_path
-    } else {
-        photo_url.filter(|url| !url.trim().is_empty())
-    };
-
-    // Create player
-    match players::create_player(
-        &state.db,
-        CreatePlayerEntity {
-            name: name.to_string(),
-            country_id,
-            photo_path: final_photo_path,
-            birth_date,
-            birth_place,
-            height_cm,
-            weight_kg,
-            position,
-            shoots,
-        },
-    )
-    .await
+    // Validate and create player using business layer
+    match crate::business::players::create_player_validated(&state.db, &form_data, final_photo_path)
+        .await
     {
         Ok(_) => {
-            use axum::http::header::{HeaderMap, HeaderName};
-
             // Return HTMX response to close modal and reload table
             // Trigger entity-created event for dashboard stats update
             let mut headers = HeaderMap::new();
@@ -318,7 +192,15 @@ pub async fn player_create(
             );
             (headers, htmx_reload_table("/players/list", "players-table")).into_response()
         }
-        Err(e) => {
+        Err(Ok(validation_error)) => {
+            // Validation error
+            Html(
+                player_create_modal(&t, Some(validation_error.message()), &countries).into_string(),
+            )
+            .into_response()
+        }
+        Err(Err(e)) => {
+            // Database error
             tracing::error!("Failed to create player: {}", e);
             Html(player_create_modal(&t, Some("Failed to create player"), &countries).into_string())
                 .into_response()
@@ -362,7 +244,7 @@ pub async fn player_update(
 ) -> impl IntoResponse {
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
-    // Get current player for fallback
+    // Get current player for fallback and old photo deletion
     let current_player = match players::get_player_by_id(&state.db, id).await {
         Ok(Some(player)) => player,
         Ok(None) => {
@@ -375,183 +257,35 @@ pub async fn player_update(
     };
 
     // Parse multipart form data
-    let mut name = String::new();
-    let mut country_id: Option<i64> = None;
-    let mut photo_path: Option<String> = current_player.photo_path.clone();
-    let mut photo_url: Option<String> = None;
-    let mut new_photo_uploaded = false;
-    let mut birth_date: Option<String> = current_player.birth_date.clone();
-    let mut birth_place: Option<String> = current_player.birth_place.clone();
-    let mut height_cm: Option<i64> = current_player.height_cm;
-    let mut weight_kg: Option<i64> = current_player.weight_kg;
-    let mut position: Option<String> = current_player.position.clone();
-    let mut shoots: Option<String> = current_player.shoots.clone();
-
-    while let Ok(Some(field)) = multipart.next_field().await {
-        let field_name = field.name().unwrap_or("").to_string();
-
-        match field_name.as_str() {
-            "name" => {
-                name = field.text().await.unwrap_or_default();
-            }
-            "country_id" => {
-                let text = field.text().await.unwrap_or_default();
-                country_id = text.parse().ok();
-            }
-            "photo_url" => {
-                photo_url = Some(field.text().await.unwrap_or_default());
-            }
-            "birth_date" => {
-                let text = field.text().await.unwrap_or_default();
-                birth_date = if text.trim().is_empty() {
-                    None
-                } else {
-                    Some(text)
-                };
-            }
-            "birth_place" => {
-                let text = field.text().await.unwrap_or_default();
-                birth_place = if text.trim().is_empty() {
-                    None
-                } else {
-                    Some(text)
-                };
-            }
-            "height_cm" => {
-                let text = field.text().await.unwrap_or_default();
-                height_cm = if text.trim().is_empty() {
-                    None
-                } else {
-                    text.parse().ok()
-                };
-            }
-            "weight_kg" => {
-                let text = field.text().await.unwrap_or_default();
-                weight_kg = if text.trim().is_empty() {
-                    None
-                } else {
-                    text.parse().ok()
-                };
-            }
-            "position" => {
-                let text = field.text().await.unwrap_or_default();
-                position = if text.trim().is_empty() {
-                    None
-                } else {
-                    Some(text)
-                };
-            }
-            "shoots" => {
-                let text = field.text().await.unwrap_or_default();
-                shoots = if text.trim().is_empty() {
-                    None
-                } else {
-                    Some(text)
-                };
-            }
-            "photo_file" => {
-                // Handle file upload
-                let filename = field.file_name().unwrap_or("photo.jpg").to_string();
-                let data = field.bytes().await.unwrap_or_default();
-
-                if !data.is_empty() {
-                    match crate::utils::save_uploaded_file(
-                        &data,
-                        &filename,
-                        "static/uploads/players",
-                    )
-                    .await
-                    {
-                        Ok(path) => {
-                            // Delete old photo if it exists and is an uploaded file
-                            if let Some(old_path) = &current_player.photo_path {
-                                if old_path.starts_with("/static/uploads/") {
-                                    let _ = crate::utils::delete_uploaded_file(old_path).await;
-                                }
-                            }
-                            photo_path = Some(path);
-                            new_photo_uploaded = true;
-                        }
-                        Err(e) => {
-                            tracing::error!("Failed to save uploaded file: {}", e);
-                            return Html(player_edit_modal(&t, &current_player, Some("Failed to save photo. Only image files (jpg, png, gif, webp) are allowed."), &countries).into_string());
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-
-    // Validation
-    let name = name.trim();
-    if name.is_empty() {
-        return Html(
-            player_edit_modal(
-                &t,
-                &current_player,
-                Some("Player name cannot be empty"),
-                &countries,
-            )
-            .into_string(),
-        );
-    }
-
-    if name.len() > 255 {
-        return Html(
-            player_edit_modal(
-                &t,
-                &current_player,
-                Some("Player name cannot exceed 255 characters"),
-                &countries,
-            )
-            .into_string(),
-        );
-    }
-
-    let country_id = match country_id {
-        Some(id) => id,
-        None => {
+    let form_data = match super::forms::parse_player_form(
+        &mut multipart,
+        "static/uploads/players",
+        current_player.photo_path.as_deref(),
+    )
+    .await
+    {
+        Ok(data) => data,
+        Err(error_msg) => {
             return Html(
-                player_edit_modal(
-                    &t,
-                    &current_player,
-                    Some("Please select a country"),
-                    &countries,
-                )
-                .into_string(),
+                player_edit_modal(&t, &current_player, Some(&error_msg), &countries).into_string(),
             );
         }
     };
 
-    // If no new photo was uploaded, use the URL if provided
-    let final_photo_path = if new_photo_uploaded {
-        photo_path
-    } else if let Some(url) = photo_url {
-        if url.trim().is_empty() {
-            None
-        } else {
-            Some(url)
-        }
-    } else {
-        photo_path
-    };
+    // Resolve final photo path
+    // Priority: uploaded file > URL > existing photo
+    let final_photo_path = super::forms::resolve_photo_path(
+        form_data.photo_path.clone(),
+        form_data.photo_url.clone(),
+        current_player.photo_path.clone(),
+    );
 
-    // Update player
-    match players::update_player(
+    // Validate and update player using business layer
+    match crate::business::players::update_player_validated(
         &state.db,
         id,
-        UpdatePlayerEntity {
-            name: name.to_string(),
-            country_id,
-            photo_path: final_photo_path,
-            birth_date,
-            birth_place,
-            height_cm,
-            weight_kg,
-            position,
-            shoots,
-        },
+        &form_data,
+        final_photo_path,
     )
     .await
     {
@@ -563,7 +297,20 @@ pub async fn player_update(
             player_edit_modal(&t, &current_player, Some("Player not found"), &countries)
                 .into_string(),
         ),
-        Err(e) => {
+        Err(Ok(validation_error)) => {
+            // Validation error
+            Html(
+                player_edit_modal(
+                    &t,
+                    &current_player,
+                    Some(validation_error.message()),
+                    &countries,
+                )
+                .into_string(),
+            )
+        }
+        Err(Err(e)) => {
+            // Database error
             tracing::error!("Failed to update player: {}", e);
             Html(
                 player_edit_modal(
@@ -638,8 +385,10 @@ pub async fn player_detail(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
-    let detail = match players::get_player_detail(&state.db, id).await {
-        Ok(Some(detail)) => detail,
+    // Fetch all player detail page data from business layer
+    let page_data = match crate::business::players::get_player_detail_page_data(&state.db, id).await
+    {
+        Ok(Some(data)) => data,
         Ok(None) => {
             return Html(
                 admin_layout(
@@ -667,16 +416,11 @@ pub async fn player_detail(
         }
     };
 
-    // Get season statistics for the player
-    let season_stats = players::get_player_season_stats(&state.db, id)
-        .await
-        .unwrap_or_default();
-
-    // Get event-specific career statistics
-    let event_stats = players::get_player_event_stats(&state.db, id)
-        .await
-        .unwrap_or_default();
-
-    let content = player_detail_page(&t, &detail, &season_stats, &event_stats);
+    let content = player_detail_page(
+        &t,
+        &page_data.detail,
+        &page_data.season_stats,
+        &page_data.event_stats,
+    );
     Html(admin_layout("Player Detail", &session, "/players", &t, content).into_string())
 }

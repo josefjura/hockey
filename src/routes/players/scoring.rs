@@ -62,54 +62,6 @@ pub async fn player_scoring_get(
     Path(player_id): Path<i64>,
     Query(query): Query<PlayerScoringQuery>,
 ) -> impl IntoResponse {
-    // Verify player exists and get basic info
-    let player = match players::get_player_by_id(&state.db, player_id).await {
-        Ok(Some(p)) => p,
-        Ok(None) => {
-            return Html(
-                admin_layout(
-                    "Player Not Found",
-                    &session,
-                    "/players",
-                    &t,
-                    error_message("Player not found"),
-                )
-                .into_string(),
-            );
-        }
-        Err(e) => {
-            tracing::error!("Failed to fetch player: {}", e);
-            return Html(
-                admin_layout(
-                    "Error",
-                    &session,
-                    "/players",
-                    &t,
-                    error_message("Failed to load player"),
-                )
-                .into_string(),
-            );
-        }
-    };
-
-    // Get season stats
-    let season_stats = match players::get_player_season_stats(&state.db, player_id).await {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::error!("Failed to fetch player season stats: {}", e);
-            return Html(
-                admin_layout(
-                    "Error",
-                    &session,
-                    "/players",
-                    &t,
-                    error_message("Failed to load season statistics"),
-                )
-                .into_string(),
-            );
-        }
-    };
-
     // Build filters
     let filters = PlayerScoringFilters {
         event_type: query.event_type.clone(),
@@ -123,8 +75,8 @@ pub async fn player_scoring_get(
     let sort_field = ScoringEventSortField::from_str(&query.sort);
     let sort_order = SortOrder::from_str(&query.order);
 
-    // Get scoring events
-    let result = match players::get_player_scoring_events(
+    // Fetch all player scoring page data from business layer
+    let page_data = match crate::business::players::get_player_scoring_page_data(
         &state.db,
         player_id,
         &filters,
@@ -135,45 +87,49 @@ pub async fn player_scoring_get(
     )
     .await
     {
-        Ok(result) => result,
+        Ok(Some(data)) => data,
+        Ok(None) => {
+            return Html(
+                admin_layout(
+                    "Player Not Found",
+                    &session,
+                    "/players",
+                    &t,
+                    error_message("Player not found"),
+                )
+                .into_string(),
+            );
+        }
         Err(e) => {
-            tracing::error!("Failed to fetch player scoring events: {}", e);
+            tracing::error!("Failed to fetch player scoring page data: {}", e);
             return Html(
                 admin_layout(
                     "Error",
                     &session,
                     "/players",
                     &t,
-                    error_message("Failed to load scoring events"),
+                    error_message("Failed to load player scoring data"),
                 )
                 .into_string(),
             );
         }
     };
 
-    // Get filter data
-    let seasons = players::get_player_seasons(&state.db, player_id)
-        .await
-        .unwrap_or_default();
-    let teams = players::get_player_teams(&state.db, player_id)
-        .await
-        .unwrap_or_default();
-
     let content = player_scoring_page(
         &t,
-        &player,
-        &season_stats,
-        &result,
+        &page_data.player,
+        &page_data.season_stats,
+        &page_data.scoring_events,
         &filters,
         &sort_field,
         &sort_order,
-        &seasons,
-        &teams,
+        &page_data.seasons,
+        &page_data.teams,
     );
 
     Html(
         admin_layout(
-            &format!("{} - Scoring", player.name),
+            &format!("{} - Scoring", page_data.player.name),
             &session,
             "/players",
             &t,

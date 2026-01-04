@@ -1,5 +1,6 @@
 // Players routes module
 mod event_stats_handlers;
+pub mod forms;
 mod handlers;
 mod scoring;
 
