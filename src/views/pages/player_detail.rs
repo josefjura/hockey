@@ -428,13 +428,13 @@ fn property_change_card(
 ) -> Markup {
     // Badge color based on property type
     let badge_color = match change.property_type.as_str() {
-        "Position" => "var(--blue-500)",
-        "Trade" => "var(--green-500)",
-        "Role" => "var(--purple-500)",
-        "JerseyNumber" => "var(--orange-500)",
-        "Status" => "var(--yellow-600)",
-        "Retirement" => "var(--red-500)",
-        _ => "var(--gray-500)",
+        "Position" => "var(--primary-color)",
+        "Trade" => "var(--success-color)",
+        "Role" => "#8b5cf6", // Purple
+        "JerseyNumber" => "var(--warning-color)",
+        "Status" => "var(--info-color)",
+        "Retirement" => "var(--danger-color)",
+        _ => "var(--gray-600)",
     };
 
     html! {
