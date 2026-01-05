@@ -333,3 +333,294 @@ pub async fn get_player_detail(
         contracts,
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_create_player(pool: SqlitePool) {
+        // Get Canada's ID from migrations
+        let canada_id: i64 = sqlx::query_scalar("SELECT id FROM country WHERE name = 'Canada'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let player = CreatePlayerEntity {
+            name: "Wayne Gretzky".to_string(),
+            country_id: canada_id,
+            photo_path: Some("/photos/gretzky.jpg".to_string()),
+            birth_date: Some("1961-01-26".to_string()),
+            birth_place: Some("Brantford, ON".to_string()),
+            height_cm: Some(183),
+            weight_kg: Some(84),
+            position: Some("C".to_string()),
+            shoots: Some("L".to_string()),
+        };
+
+        let id = create_player(&pool, player).await.unwrap();
+        assert!(id > 0);
+
+        // Verify player was created
+        let result = get_player_by_id(&pool, id).await.unwrap();
+        assert!(result.is_some());
+        let player = result.unwrap();
+        assert_eq!(player.name, "Wayne Gretzky");
+        assert_eq!(player.country_id, canada_id);
+        assert_eq!(player.position, Some("C".to_string()));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_get_players_no_filters(pool: SqlitePool) {
+        let filters = PlayerFilters::default();
+        let result = get_players(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 20)
+            .await
+            .unwrap();
+
+        assert_eq!(result.items.len(), 10); // All fixture players
+        assert_eq!(result.total, 10);
+
+        // Verify sorting by name
+        assert!(result.items.iter().any(|p| p.name == "Connor McDavid"));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_get_players_with_name_filter(pool: SqlitePool) {
+        let filters = PlayerFilters {
+            name: Some("McDavid".to_string()),
+            ..Default::default()
+        };
+        let result = get_players(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 20)
+            .await
+            .unwrap();
+
+        assert_eq!(result.items.len(), 1);
+        assert_eq!(result.items[0].name, "Connor McDavid");
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_get_players_with_country_filter(pool: SqlitePool) {
+        // Get Canada's ID
+        let canada_id: i64 = sqlx::query_scalar("SELECT id FROM country WHERE name = 'Canada'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let filters = PlayerFilters {
+            country_id: Some(canada_id),
+            ..Default::default()
+        };
+        let result = get_players(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 20)
+            .await
+            .unwrap();
+
+        assert_eq!(result.items.len(), 3); // 3 Canadian players in fixtures
+        assert!(result.items.iter().all(|p| p.country_id == canada_id));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_get_players_pagination(pool: SqlitePool) {
+        let filters = PlayerFilters::default();
+        let result = get_players(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 5)
+            .await
+            .unwrap();
+
+        assert_eq!(result.items.len(), 5); // First page
+        assert_eq!(result.total, 10);
+        assert_eq!(result.page, 1);
+        assert_eq!(result.total_pages, 2);
+
+        // Get second page
+        let result_page2 = get_players(&pool, &filters, &SortField::Name, &SortOrder::Asc, 2, 5)
+            .await
+            .unwrap();
+
+        assert_eq!(result_page2.items.len(), 5); // Second page
+        assert_eq!(result_page2.page, 2);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_get_players_sorting_by_name(pool: SqlitePool) {
+        let filters = PlayerFilters::default();
+
+        // Test ascending order
+        let result_asc = get_players(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 20)
+            .await
+            .unwrap();
+
+        for i in 0..result_asc.items.len() - 1 {
+            assert!(result_asc.items[i].name <= result_asc.items[i + 1].name);
+        }
+
+        // Test descending order
+        let result_desc = get_players(&pool, &filters, &SortField::Name, &SortOrder::Desc, 1, 20)
+            .await
+            .unwrap();
+
+        for i in 0..result_desc.items.len() - 1 {
+            assert!(result_desc.items[i].name >= result_desc.items[i + 1].name);
+        }
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_get_players_sorting_by_country(pool: SqlitePool) {
+        let filters = PlayerFilters::default();
+        let result = get_players(&pool, &filters, &SortField::Country, &SortOrder::Asc, 1, 20)
+            .await
+            .unwrap();
+
+        // Verify sorting by country name
+        for i in 0..result.items.len() - 1 {
+            assert!(result.items[i].country_name <= result.items[i + 1].country_name);
+        }
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_get_player_by_id_found(pool: SqlitePool) {
+        // Player 1 is Connor McDavid from fixture
+        let result = get_player_by_id(&pool, 1).await.unwrap();
+
+        assert!(result.is_some());
+        let player = result.unwrap();
+        assert_eq!(player.id, 1);
+        assert_eq!(player.name, "Connor McDavid");
+        assert_eq!(player.position, Some("C".to_string()));
+        assert_eq!(player.shoots, Some("L".to_string()));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_player_by_id_not_found(pool: SqlitePool) {
+        let result = get_player_by_id(&pool, 999).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_update_player(pool: SqlitePool) {
+        // Get USA's ID
+        let usa_id: i64 = sqlx::query_scalar("SELECT id FROM country WHERE name = 'United States'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        // Update player 1 (Connor McDavid)
+        let update = UpdatePlayerEntity {
+            name: "Connor Andrew McDavid".to_string(),
+            country_id: usa_id, // Change nationality for test
+            photo_path: Some("/photos/mcdavid_updated.jpg".to_string()),
+            birth_date: Some("1997-01-13".to_string()),
+            birth_place: Some("Richmond Hill, Ontario".to_string()),
+            height_cm: Some(186), // Updated height
+            weight_kg: Some(89),  // Updated weight
+            position: Some("C".to_string()),
+            shoots: Some("L".to_string()),
+        };
+
+        let updated = update_player(&pool, 1, update).await.unwrap();
+        assert!(updated);
+
+        // Verify changes
+        let player = get_player_by_id(&pool, 1).await.unwrap().unwrap();
+        assert_eq!(player.name, "Connor Andrew McDavid");
+        assert_eq!(player.country_id, usa_id);
+        assert_eq!(player.height_cm, Some(186));
+        assert_eq!(player.weight_kg, Some(89));
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_player_not_found(pool: SqlitePool) {
+        let canada_id: i64 = sqlx::query_scalar("SELECT id FROM country WHERE name = 'Canada'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let update = UpdatePlayerEntity {
+            name: "Ghost Player".to_string(),
+            country_id: canada_id,
+            photo_path: None,
+            birth_date: None,
+            birth_place: None,
+            height_cm: None,
+            weight_kg: None,
+            position: None,
+            shoots: None,
+        };
+
+        let updated = update_player(&pool, 999, update).await.unwrap();
+        assert!(!updated); // Should return false for non-existent player
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_delete_player(pool: SqlitePool) {
+        // Delete player 10 (Victor Hedman)
+        let deleted = delete_player(&pool, 10).await.unwrap();
+        assert!(deleted);
+
+        // Verify player is gone
+        let player = get_player_by_id(&pool, 10).await.unwrap();
+        assert!(player.is_none());
+
+        // Verify total count decreased
+        let result = get_players(
+            &pool,
+            &PlayerFilters::default(),
+            &SortField::Name,
+            &SortOrder::Asc,
+            1,
+            20,
+        )
+        .await
+        .unwrap();
+        assert_eq!(result.total, 9); // Was 10, now 9
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_delete_player_not_found(pool: SqlitePool) {
+        let deleted = delete_player(&pool, 999).await.unwrap();
+        assert!(!deleted); // Should return false for non-existent player
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("players"))]
+    async fn test_get_player_detail_no_contracts(pool: SqlitePool) {
+        // Player 1 has no contracts (no team_participations setup)
+        let result = get_player_detail(&pool, 1).await.unwrap();
+
+        assert!(result.is_some());
+        let detail = result.unwrap();
+        assert_eq!(detail.player_info.name, "Connor McDavid");
+        assert_eq!(detail.contracts.len(), 0); // No contracts
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_get_player_detail_not_found(pool: SqlitePool) {
+        let result = get_player_detail(&pool, 999).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations", "players")
+    )]
+    async fn test_get_player_detail_with_contracts(pool: SqlitePool) {
+        // Add a player contract for player 1 in team participation 1
+        sqlx::query!(
+            "INSERT INTO player_contract (player_id, team_participation_id) VALUES (?, ?)",
+            1,
+            1
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let result = get_player_detail(&pool, 1).await.unwrap();
+
+        assert!(result.is_some());
+        let detail = result.unwrap();
+        assert_eq!(detail.player_info.name, "Connor McDavid");
+        assert_eq!(detail.contracts.len(), 1);
+
+        // Verify contract details
+        let contract = &detail.contracts[0];
+        assert_eq!(contract.team_name, "Team Canada");
+        assert_eq!(contract.season_year, 2022);
+    }
+}

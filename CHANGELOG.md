@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mobile-optimized table layouts with card-based display on small screens (#85)
 - Horizontal scroll support for tables on tablet devices (#85)
 - Bottom sheet style modals on mobile for better touch interaction (#85)
+- Comprehensive test coverage for service layer operations including players, team participations, and dashboard statistics (#126)
 
 ### Changed
 - Navigation sidebar now collapses into a hamburger menu on mobile devices (#85)

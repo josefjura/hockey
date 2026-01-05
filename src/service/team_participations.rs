@@ -249,3 +249,237 @@ pub async fn get_all_seasons_for_dropdown(
         })
         .collect())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_get_teams_for_season(pool: SqlitePool) {
+        // Season 1 (2022 Olympics) has Team Canada and Team USA
+        let teams = get_teams_for_season(&pool, 1).await.unwrap();
+
+        assert_eq!(teams.len(), 2);
+        assert!(teams.iter().any(|t| t.team_name == "Team Canada"));
+        assert!(teams.iter().any(|t| t.team_name == "Team USA"));
+
+        // Verify teams are sorted by name
+        assert!(teams[0].team_name <= teams[1].team_name);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_get_teams_for_season_empty(pool: SqlitePool) {
+        // Season 3 (2024 World Cup) has no teams
+        let teams = get_teams_for_season(&pool, 3).await.unwrap();
+
+        assert_eq!(teams.len(), 0);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_get_available_teams_for_season(pool: SqlitePool) {
+        // Season 1 has Canada and USA, so available should be Russia, Finland, Sweden
+        let available = get_available_teams_for_season(&pool, 1).await.unwrap();
+
+        assert_eq!(available.len(), 3);
+        assert!(available.iter().any(|(_, name)| name == "Team Russia"));
+        assert!(available.iter().any(|(_, name)| name == "Team Finland"));
+        assert!(available.iter().any(|(_, name)| name == "Team Sweden"));
+
+        // Should not include teams already in season
+        assert!(!available.iter().any(|(_, name)| name == "Team Canada"));
+        assert!(!available.iter().any(|(_, name)| name == "Team USA"));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_get_available_teams_for_season_all_available(pool: SqlitePool) {
+        // Season 3 has no teams, so all should be available
+        let available = get_available_teams_for_season(&pool, 3).await.unwrap();
+
+        assert_eq!(available.len(), 5); // All 5 fixture teams
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_get_available_seasons_for_team(pool: SqlitePool) {
+        // Team Canada (id=1) is in season 1, so seasons 2 and 3 should be available
+        let available = get_available_seasons_for_team(&pool, 1).await.unwrap();
+
+        assert_eq!(available.len(), 2);
+
+        // Verify labels contain event name and year
+        assert!(available.iter().any(|(id, label)| {
+            *id == 2 && label.contains("World Championship") && label.contains("2023")
+        }));
+        assert!(available.iter().any(|(id, label)| {
+            *id == 3 && label.contains("World Cup") && label.contains("2024")
+        }));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_get_available_seasons_for_team_all_available(pool: SqlitePool) {
+        // Team Sweden (id=5) is not in any season
+        let available = get_available_seasons_for_team(&pool, 5).await.unwrap();
+
+        assert_eq!(available.len(), 3); // All 3 seasons available
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_is_team_in_season_true(pool: SqlitePool) {
+        // Team Canada is in season 1
+        let result = is_team_in_season(&pool, 1, 1).await.unwrap();
+
+        assert!(result);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_is_team_in_season_false(pool: SqlitePool) {
+        // Team Sweden is not in season 1
+        let result = is_team_in_season(&pool, 1, 5).await.unwrap();
+
+        assert!(!result);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_add_team_to_season(pool: SqlitePool) {
+        // Add Team Sweden to season 3
+        let entity = CreateTeamParticipationEntity {
+            team_id: 5,
+            season_id: 3,
+        };
+
+        let id = add_team_to_season(&pool, entity).await.unwrap();
+        assert!(id > 0);
+
+        // Verify team was added
+        let is_in_season = is_team_in_season(&pool, 3, 5).await.unwrap();
+        assert!(is_in_season);
+
+        // Verify it appears in the season's teams list
+        let teams = get_teams_for_season(&pool, 3).await.unwrap();
+        assert_eq!(teams.len(), 1);
+        assert_eq!(teams[0].team_name, "Team Sweden");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_remove_team_from_season(pool: SqlitePool) {
+        // Remove team participation id=1 (Team Canada from season 1)
+        let removed = remove_team_from_season(&pool, 1).await.unwrap();
+        assert!(removed);
+
+        // Verify team was removed
+        let is_in_season = is_team_in_season(&pool, 1, 1).await.unwrap();
+        assert!(!is_in_season);
+
+        // Verify it no longer appears in the season's teams list
+        let teams = get_teams_for_season(&pool, 1).await.unwrap();
+        assert_eq!(teams.len(), 1); // Only Team USA remains
+        assert_eq!(teams[0].team_name, "Team USA");
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_remove_team_from_season_not_found(pool: SqlitePool) {
+        // Try to remove non-existent participation
+        let removed = remove_team_from_season(&pool, 999).await.unwrap();
+        assert!(!removed);
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_get_season_id_for_participation(pool: SqlitePool) {
+        // Get season_id for participation id=1 (should be season 1)
+        let season_id = get_season_id_for_participation(&pool, 1).await.unwrap();
+
+        assert_eq!(season_id, Some(1));
+    }
+
+    #[sqlx::test(
+        migrations = "./migrations",
+        fixtures("events", "seasons", "teams", "team_participations")
+    )]
+    async fn test_get_season_id_for_participation_not_found(pool: SqlitePool) {
+        // Try to get season_id for non-existent participation
+        let season_id = get_season_id_for_participation(&pool, 999).await.unwrap();
+
+        assert_eq!(season_id, None);
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons", "teams"))]
+    async fn test_get_all_teams_for_dropdown(pool: SqlitePool) {
+        let teams = get_all_teams_for_dropdown(&pool).await.unwrap();
+
+        assert_eq!(teams.len(), 5);
+
+        // Verify teams are sorted by name (alphabetically)
+        for i in 0..teams.len() - 1 {
+            assert!(
+                teams[i].1 <= teams[i + 1].1,
+                "Teams should be sorted by name"
+            );
+        }
+
+        // Verify all teams have proper formatting with country code in parentheses
+        assert!(teams.iter().all(|(_, name)| {
+            name.contains("Team") && name.contains('(') && name.contains(')')
+        }));
+
+        // Verify specific teams exist
+        assert!(teams
+            .iter()
+            .any(|(_, name)| name.starts_with("Team Canada")));
+        assert!(teams.iter().any(|(_, name)| name.starts_with("Team USA")));
+    }
+
+    #[sqlx::test(migrations = "./migrations", fixtures("events", "seasons"))]
+    async fn test_get_all_seasons_for_dropdown(pool: SqlitePool) {
+        let seasons = get_all_seasons_for_dropdown(&pool).await.unwrap();
+
+        assert_eq!(seasons.len(), 3);
+
+        // Verify seasons are sorted by year DESC (most recent first)
+        assert!(seasons[0].1.contains("2024"));
+        assert!(seasons[1].1.contains("2023"));
+        assert!(seasons[2].1.contains("2022"));
+
+        // Verify label format includes event name and year
+        assert!(seasons.iter().all(|(_, label)| {
+            (label.contains("Olympics")
+                || label.contains("Championship")
+                || label.contains("World Cup"))
+                && (label.contains("2022") || label.contains("2023") || label.contains("2024"))
+        }));
+    }
+}
