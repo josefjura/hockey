@@ -75,7 +75,10 @@ pub fn property_change_create_modal(
                 name="description"
                 rows="3"
                 required
-                placeholder=(t.messages.player_property_change_description_placeholder());
+                placeholder=(t.messages.player_property_change_description_placeholder())
+            {
+                // Empty - no initial value for create form
+            }
         }
 
         div class="form-group" {
