@@ -2,6 +2,7 @@
 mod constants;
 mod event_stats;
 mod player_ops;
+mod property_changes;
 mod scoring_entities;
 mod scoring_queries;
 
@@ -30,4 +31,11 @@ pub use event_stats::{
 pub use constants::{
     EVENT_TYPE_ASSIST_PRIMARY, EVENT_TYPE_ASSIST_SECONDARY, EVENT_TYPE_GOAL,
     FILTER_EVENT_TYPE_ASSISTS, FILTER_EVENT_TYPE_GOALS,
+};
+
+// Re-export property changes
+pub use property_changes::{
+    create_property_change, delete_property_change, get_player_property_changes,
+    get_player_seasons_for_changes, update_property_change, CreatePropertyChangeEntity,
+    PropertyChangeEntity, UpdatePropertyChangeEntity,
 };

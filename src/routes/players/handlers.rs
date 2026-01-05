@@ -421,6 +421,7 @@ pub async fn player_detail(
         &page_data.detail,
         &page_data.season_stats,
         &page_data.event_stats,
+        &page_data.property_changes,
     );
     Html(admin_layout("Player Detail", &session, "/players", &t, content).into_string())
 }

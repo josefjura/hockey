@@ -7,6 +7,7 @@ pub mod management;
 pub mod matches;
 pub mod player_detail;
 pub mod player_event_stats;
+pub mod player_property_changes;
 pub mod player_scoring;
 pub mod players;
 pub mod roster;

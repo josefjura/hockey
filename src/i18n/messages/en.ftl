@@ -440,3 +440,36 @@ players-event-stats-assists = assists identified from tracked matches
 players-event-stats-confirm-delete = Are you sure you want to delete these statistics?
 players-event-stats-delete-statistics = Delete Statistics
 players-event-stats-save-changes = Save Changes
+
+# Player Property Changes
+player-property-change-timeline = Career Timeline
+player-property-change-add = Add Change
+player-property-change-edit = Edit Change
+player-property-change-delete = Delete Change
+player-property-change-confirm-delete = Are you sure you want to delete this property change?
+
+player-property-change-date = Date
+player-property-change-date-help = When did this change occur?
+player-property-change-type = Change Type
+player-property-change-select-type = Select type...
+player-property-change-type-position = Position Change
+player-property-change-type-trade = Trade/Transfer
+player-property-change-type-role = Role Change
+player-property-change-type-jersey = Jersey Number
+player-property-change-type-status = Status Change
+player-property-change-type-retirement = Retirement
+player-property-change-type-other = Other
+
+player-property-change-old-value = Old Value
+player-property-change-old-value-placeholder = Previous value (optional)
+player-property-change-new-value = New Value
+player-property-change-new-value-placeholder = New value (optional)
+player-property-change-description = Description
+player-property-change-description-placeholder = Describe what changed and why...
+
+player-property-change-season = Season
+player-property-change-no-season = Not linked to a season
+player-property-change-season-help = Optionally link this change to a specific season
+
+player-property-change-no-changes = No Career Timeline Events
+player-property-change-no-changes-help = Track important milestones like position changes, trades, and career events

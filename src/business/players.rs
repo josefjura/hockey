@@ -4,8 +4,8 @@ use crate::common::pagination::{PagedResult, SortOrder};
 use crate::routes::players::forms::PlayerFormData;
 use crate::service::players::{
     self, CreatePlayerEntity, PlayerDetailEntity, PlayerEntity, PlayerEventStatsEntity,
-    PlayerScoringEventEntity, PlayerScoringFilters, PlayerSeasonStats, ScoringEventSortField,
-    UpdatePlayerEntity,
+    PlayerScoringEventEntity, PlayerScoringFilters, PlayerSeasonStats, PropertyChangeEntity,
+    ScoringEventSortField, UpdatePlayerEntity,
 };
 use crate::validation::validate_name;
 
@@ -21,6 +21,8 @@ pub struct PlayerDetailPageData {
     pub season_stats: Vec<PlayerSeasonStats>,
     /// Event-aggregated career statistics
     pub event_stats: Vec<PlayerEventStatsEntity>,
+    /// Property changes (career timeline)
+    pub property_changes: Vec<PropertyChangeEntity>,
 }
 
 /// Fetches all data needed for the player detail page
@@ -58,10 +60,16 @@ pub async fn get_player_detail_page_data(
         .await
         .unwrap_or_default();
 
+    // Fetch property changes (return empty vec on error to maintain partial functionality)
+    let property_changes = players::get_player_property_changes(db, player_id)
+        .await
+        .unwrap_or_default();
+
     Ok(Some(PlayerDetailPageData {
         detail,
         season_stats,
         event_stats,
+        property_changes,
     }))
 }
 
@@ -258,4 +266,53 @@ pub async fn update_player_validated(
     )
     .await
     .map_err(Err)
+}
+
+/// Validates property change data
+///
+/// # Arguments
+/// * `change_date` - Date in ISO 8601 format (YYYY-MM-DD)
+/// * `property_type` - Type of property change (must be in allowed list)
+/// * `description` - Description of the change
+///
+/// # Returns
+/// * `Ok(())` - If validation passes
+/// * `Err(&str)` - Error message if validation fails
+pub fn validate_property_change(
+    change_date: &str,
+    property_type: &str,
+    description: &str,
+) -> Result<(), &'static str> {
+    // Validate date format (basic ISO 8601 check: YYYY-MM-DD)
+    if change_date.len() != 10 {
+        return Err("Invalid date format. Use YYYY-MM-DD");
+    }
+    if change_date.chars().nth(4) != Some('-') || change_date.chars().nth(7) != Some('-') {
+        return Err("Invalid date format. Use YYYY-MM-DD");
+    }
+
+    // Validate property type (must be in predefined list)
+    const VALID_TYPES: [&str; 7] = [
+        "Position",
+        "Trade",
+        "Role",
+        "JerseyNumber",
+        "Status",
+        "Retirement",
+        "Other",
+    ];
+    if !VALID_TYPES.contains(&property_type) {
+        return Err("Invalid property type");
+    }
+
+    // Validate description (similar to validate_name)
+    let trimmed = description.trim();
+    if trimmed.is_empty() {
+        return Err("Description cannot be empty");
+    }
+    if trimmed.len() > 500 {
+        return Err("Description cannot exceed 500 characters");
+    }
+
+    Ok(())
 }

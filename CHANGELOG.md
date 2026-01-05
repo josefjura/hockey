@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Horizontal scroll support for tables on tablet devices (#85)
 - Bottom sheet style modals on mobile for better touch interaction (#85)
 - Comprehensive test coverage for service layer operations including players, team participations, and dashboard statistics (#126)
+- Career timeline for players showing property changes, trades, role changes, and career milestones with rich card display (#130)
 
 ### Changed
 - Navigation sidebar now collapses into a hamburger menu on mobile devices (#85)

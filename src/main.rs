@@ -157,6 +157,27 @@ async fn main() -> Result<(), anyhow::Error> {
             "/players/:player_id/event-stats/:id/delete",
             post(routes::players::event_stats_delete),
         )
+        // Property change routes
+        .route(
+            "/players/:id/property-changes/new",
+            get(routes::players::property_change_create_form),
+        )
+        .route(
+            "/players/:id/property-changes",
+            post(routes::players::property_change_create),
+        )
+        .route(
+            "/players/:player_id/property-changes/:id/edit",
+            get(routes::players::property_change_edit_form),
+        )
+        .route(
+            "/players/:player_id/property-changes/:id",
+            post(routes::players::property_change_update),
+        )
+        .route(
+            "/players/:player_id/property-changes/:id/delete",
+            post(routes::players::property_change_delete),
+        )
         .route("/seasons", get(routes::seasons::seasons_get))
         .route("/seasons/list", get(routes::seasons::seasons_list_partial))
         .route("/seasons/new", get(routes::seasons::season_create_form))

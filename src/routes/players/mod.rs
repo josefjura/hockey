@@ -2,6 +2,7 @@
 mod event_stats_handlers;
 pub mod forms;
 mod handlers;
+mod property_change_handlers;
 mod scoring;
 
 // Re-export all route handlers from handlers module
@@ -17,4 +18,10 @@ pub use scoring::{player_scoring_get, player_scoring_list_partial};
 pub use event_stats_handlers::{
     event_stats_create, event_stats_create_form, event_stats_delete, event_stats_edit_form,
     event_stats_update,
+};
+
+// Re-export property change handlers
+pub use property_change_handlers::{
+    property_change_create, property_change_create_form, property_change_delete,
+    property_change_edit_form, property_change_update,
 };

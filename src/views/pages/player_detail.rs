@@ -3,7 +3,7 @@ use maud::{html, Markup};
 use crate::i18n::TranslationContext;
 use crate::service::players::{
     PlayerContractWithTeamEntity, PlayerDetailEntity, PlayerEntity, PlayerEventStatsEntity,
-    PlayerSeasonStats,
+    PlayerSeasonStats, PropertyChangeEntity,
 };
 use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
 
@@ -13,6 +13,7 @@ pub fn player_detail_page(
     detail: &PlayerDetailEntity,
     season_stats: &[PlayerSeasonStats],
     event_stats: &[PlayerEventStatsEntity],
+    property_changes: &[PropertyChangeEntity],
 ) -> Markup {
     let player = &detail.player_info;
 
@@ -69,6 +70,9 @@ pub fn player_detail_page(
 
             // Career Statistics Summary by Event
             (career_stats_by_event(t, player, event_stats))
+
+            // Property Changes Timeline
+            (property_changes_timeline(t, player, property_changes))
 
             // Career History Section
             div style="margin-top: 2rem;" {
@@ -367,5 +371,171 @@ fn career_stats_by_event(
                 }
             }
         }
+    }
+}
+
+/// Property changes timeline
+fn property_changes_timeline(
+    t: &TranslationContext,
+    player: &PlayerEntity,
+    changes: &[PropertyChangeEntity],
+) -> Markup {
+    html! {
+        div style="margin-top: 2rem;" {
+            div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;" {
+                h2 style="font-size: 1.5rem; font-weight: 700; margin: 0;" {
+                    (t.messages.player_property_change_timeline())
+                }
+                button
+                    class="btn btn-sm btn-primary"
+                    hx-get=(format!("/players/{}/property-changes/new", player.id))
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                {
+                    (t.messages.player_property_change_add())
+                }
+            }
+
+            @if changes.is_empty() {
+                (empty_property_changes_state(t))
+            } @else {
+                (property_changes_list(t, player, changes))
+            }
+        }
+    }
+}
+
+/// Property changes list (timeline cards)
+fn property_changes_list(
+    t: &TranslationContext,
+    player: &PlayerEntity,
+    changes: &[PropertyChangeEntity],
+) -> Markup {
+    html! {
+        div style="display: flex; flex-direction: column; gap: 1rem;" {
+            @for change in changes {
+                (property_change_card(t, player, change))
+            }
+        }
+    }
+}
+
+/// Single property change card
+fn property_change_card(
+    t: &TranslationContext,
+    player: &PlayerEntity,
+    change: &PropertyChangeEntity,
+) -> Markup {
+    // Badge color based on property type
+    let badge_color = match change.property_type.as_str() {
+        "Position" => "var(--blue-500)",
+        "Trade" => "var(--green-500)",
+        "Role" => "var(--purple-500)",
+        "JerseyNumber" => "var(--orange-500)",
+        "Status" => "var(--yellow-600)",
+        "Retirement" => "var(--red-500)",
+        _ => "var(--gray-500)",
+    };
+
+    html! {
+        div style="padding: 1.25rem; border: 1px solid var(--gray-200); border-radius: 8px; background: white; transition: box-shadow 0.2s;"
+             onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
+             onmouseout="this.style.boxShadow='none'"
+        {
+            div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;" {
+                div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;" {
+                    // Property type badge
+                    span style=(format!("padding: 0.25rem 0.75rem; background: {}; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;", badge_color)) {
+                        (property_type_label(t, &change.property_type))
+                    }
+
+                    // Date
+                    span style="color: var(--gray-600); font-size: 0.875rem;" {
+                        (change.change_date)
+                    }
+
+                    // Season badge (if linked)
+                    @if let Some(event_name) = &change.event_name {
+                        span style="padding: 0.25rem 0.5rem; background: var(--gray-100); color: var(--gray-700); border-radius: 4px; font-size: 0.75rem;" {
+                            (event_name)
+                            @if let Some(year) = change.season_year {
+                                " " (year)
+                            }
+                        }
+                    }
+                }
+
+                // Edit button
+                button
+                    class="btn btn-sm btn-secondary"
+                    style="padding: 0.25rem 0.75rem;"
+                    hx-get=(format!("/players/{}/property-changes/{}/edit", player.id, change.id))
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                {
+                    (t.messages.common_edit())
+                }
+            }
+
+            // Old value → New value (if present)
+            @if change.old_value.is_some() || change.new_value.is_some() {
+                div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; font-size: 0.875rem; flex-wrap: wrap;" {
+                    @if let Some(old_val) = &change.old_value {
+                        span style="padding: 0.375rem 0.75rem; background: var(--red-50); color: var(--red-700); border-radius: 4px; font-family: monospace;" {
+                            (old_val)
+                        }
+                    }
+                    @if change.old_value.is_some() && change.new_value.is_some() {
+                        span style="color: var(--gray-400);" { "→" }
+                    }
+                    @if let Some(new_val) = &change.new_value {
+                        span style="padding: 0.375rem 0.75rem; background: var(--green-50); color: var(--green-700); border-radius: 4px; font-family: monospace;" {
+                            (new_val)
+                        }
+                    }
+                }
+            }
+
+            // Description
+            p style="color: var(--gray-700); line-height: 1.5; margin: 0;" {
+                (change.description)
+            }
+        }
+    }
+}
+
+/// Empty state when no property changes exist
+fn empty_property_changes_state(t: &TranslationContext) -> Markup {
+    html! {
+        div style="padding: 3rem; text-align: center; background: var(--gray-50); border-radius: 8px; border: 2px dashed var(--gray-300);" {
+            div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;" {
+                "📋"
+            }
+            p style="color: var(--gray-600); font-size: 1.125rem; margin-bottom: 0.5rem; font-weight: 500;" {
+                (t.messages.player_property_change_no_changes())
+            }
+            p style="font-size: 0.875rem; color: var(--gray-500);" {
+                (t.messages.player_property_change_no_changes_help())
+            }
+        }
+    }
+}
+
+/// Helper: Property type label translation
+fn property_type_label(t: &TranslationContext, property_type: &str) -> String {
+    match property_type {
+        "Position" => t
+            .messages
+            .player_property_change_type_position()
+            .to_string(),
+        "Trade" => t.messages.player_property_change_type_trade().to_string(),
+        "Role" => t.messages.player_property_change_type_role().to_string(),
+        "JerseyNumber" => t.messages.player_property_change_type_jersey().to_string(),
+        "Status" => t.messages.player_property_change_type_status().to_string(),
+        "Retirement" => t
+            .messages
+            .player_property_change_type_retirement()
+            .to_string(),
+        _ => t.messages.player_property_change_type_other().to_string(),
     }
 }

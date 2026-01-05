@@ -440,3 +440,36 @@ players-event-stats-assists = asistencí identifikováno ze sledovaných zápas�
 players-event-stats-confirm-delete = Opravdu chcete smazat tyto statistiky?
 players-event-stats-delete-statistics = Smazat statistiky
 players-event-stats-save-changes = Uložit změny
+
+# Player Property Changes
+player-property-change-timeline = Kariérní Timeline
+player-property-change-add = Přidat změnu
+player-property-change-edit = Upravit změnu
+player-property-change-delete = Smazat změnu
+player-property-change-confirm-delete = Opravdu chcete smazat tuto změnu?
+
+player-property-change-date = Datum
+player-property-change-date-help = Kdy došlo k této změně?
+player-property-change-type = Typ změny
+player-property-change-select-type = Vyberte typ...
+player-property-change-type-position = Změna pozice
+player-property-change-type-trade = Trade/Přestup
+player-property-change-type-role = Změna role
+player-property-change-type-jersey = Číslo dresu
+player-property-change-type-status = Změna statusu
+player-property-change-type-retirement = Odchod do důchodu
+player-property-change-type-other = Jiné
+
+player-property-change-old-value = Stará hodnota
+player-property-change-old-value-placeholder = Předchozí hodnota (volitelné)
+player-property-change-new-value = Nová hodnota
+player-property-change-new-value-placeholder = Nová hodnota (volitelné)
+player-property-change-description = Popis
+player-property-change-description-placeholder = Popište, co se změnilo a proč...
+
+player-property-change-season = Sezóna
+player-property-change-no-season = Není propojeno se sezónou
+player-property-change-season-help = Volitelně propojte tuto změnu s konkrétní sezónou
+
+player-property-change-no-changes = Žádné události v kariéře
+player-property-change-no-changes-help = Sledujte důležité milníky jako změny pozice, přestupy a kariérní události
