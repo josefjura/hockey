@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [0.1.9] - 2026-01-05
+
+### Added
 - Full responsive design for mobile and tablet devices with collapsible sidebar navigation (#85)
 - Touch-friendly form inputs with larger touch targets meeting accessibility standards (#85)
 - Mobile-optimized table layouts with card-based display on small screens (#85)
@@ -27,8 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Player scoring page data is now fetched through a dedicated business layer function for improved code organization (#155)
 - Player create and update handlers now use dedicated form parsing and validation helpers for better code organization and maintainability (#153)
 
-### Fixed
-
 ## [0.1.8] - 2025-12-31
 
 ### Added
@@ -45,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Initial changelog - previous versions not documented_
 
-[unreleased]: https://github.com/josefjura/hockey/compare/v0.1.8...HEAD
+[unreleased]: https://github.com/josefjura/hockey/compare/v0.1.9...HEAD
+[0.1.9]: https://github.com/josefjura/hockey/releases/tag/v0.1.9
 [0.1.8]: https://github.com/josefjura/hockey/releases/tag/v0.1.8
 [0.1.7]: https://github.com/josefjura/hockey/releases/tag/v0.1.7
