@@ -2,7 +2,7 @@ use maud::{html, Markup};
 
 use crate::i18n::TranslationContext;
 use crate::service::players::{PlayerEntity, PropertyChangeEntity};
-use crate::views::components::crud::modal_form;
+use crate::views::components::crud::modal_form_i18n;
 
 /// Create modal for adding property change
 pub fn property_change_create_modal(
@@ -92,13 +92,14 @@ pub fn property_change_create_modal(
         }
     };
 
-    modal_form(
+    modal_form_i18n(
         "property-change-modal",
         &title,
         error,
         &format!("/players/{}/property-changes", player.id),
         form_fields,
         &t.messages.common_create(),
+        &t.messages.common_cancel(),
     )
 }
 
@@ -220,12 +221,13 @@ pub fn property_change_edit_modal(
         }
     };
 
-    modal_form(
+    modal_form_i18n(
         "property-change-edit-modal",
         &title,
         error,
         &format!("/players/{}/property-changes/{}", player.id, change.id),
         form_fields,
         &t.messages.common_save(),
+        &t.messages.common_cancel(),
     )
 }
