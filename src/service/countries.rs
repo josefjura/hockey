@@ -79,12 +79,12 @@ pub async fn get_country_by_id(
         SELECT
             id,
             name,
-            iihf as "iihf!: bool",
+            iihf as "iihf: bool",
             iocCode as ioc_code,
             iso2Code as iso2_code,
-            isHistorical as "is_historical!: bool",
+            isHistorical as "is_historical: bool",
             years,
-            enabled as "enabled!: bool"
+            enabled as "enabled: bool"
         FROM country
         WHERE id = ?
         "#,

@@ -193,7 +193,7 @@ pub async fn get_team_by_id(db: &SqlitePool, id: i64) -> Result<Option<TeamEntit
         r#"
         SELECT
             t.id,
-            t.name as "name!",
+            t.name as name,
             t.country_id,
             c.name as country_name,
             c.iso2Code as country_iso2_code
@@ -286,15 +286,15 @@ pub async fn get_team_detail(
         TeamParticipationWithSeasonEntity,
         r#"
         SELECT
-            tp.id,
-            tp.season_id,
-            s.year as season_year,
+            tp.id as "id!",
+            tp.season_id as "season_id!",
+            s.year as "season_year!",
             s.display_name as season_display_name,
             e.name as "event_name!",
             COALESCE(
                 (SELECT COUNT(*) FROM player_contract pc WHERE pc.team_participation_id = tp.id),
                 0
-            ) as player_count
+            ) as "player_count!: i64"
         FROM team_participation tp
         INNER JOIN season s ON tp.season_id = s.id
         INNER JOIN event e ON s.event_id = e.id

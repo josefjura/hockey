@@ -82,9 +82,9 @@ pub async fn get_recent_activity(db: &SqlitePool) -> Result<Vec<RecentActivity>,
         .into_iter()
         .map(|row| RecentActivity {
             entity_type: row.entity_type,
-            entity_name: row.entity_name.unwrap_or_else(|| String::from("")),
+            entity_name: row.entity_name,
             action: row.action,
-            timestamp: row.timestamp.unwrap_or_else(|| String::from("")),
+            timestamp: row.timestamp,
         })
         .collect();
 

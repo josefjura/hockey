@@ -79,7 +79,7 @@ impl SessionStore {
 
     /// Get a session by ID
     pub async fn get_session(&self, session_id: &str) -> Option<Session> {
-        let result = sqlx::query!(
+        let row = sqlx::query!(
             r#"
             SELECT id, user_id, user_email, user_name, csrf_token, created_at, expires_at
             FROM sessions
@@ -89,21 +89,24 @@ impl SessionStore {
         )
         .fetch_optional(&self.db)
         .await
-        .ok()?;
+        .ok()??;
 
-        result.map(|row| {
-            let created_at = row.created_at.and_utc();
-            let expires_at = row.expires_at.and_utc();
+        // Parse the TEXT timestamps into DateTime<Utc>
+        let created_at = chrono::DateTime::parse_from_rfc3339(&row.created_at)
+            .ok()?
+            .with_timezone(&Utc);
+        let expires_at = chrono::DateTime::parse_from_rfc3339(&row.expires_at)
+            .ok()?
+            .with_timezone(&Utc);
 
-            Session {
-                id: row.id,
-                user_id: row.user_id,
-                user_email: row.user_email,
-                user_name: row.user_name,
-                csrf_token: row.csrf_token,
-                created_at,
-                expires_at,
-            }
+        Some(Session {
+            id: row.id,
+            user_id: row.user_id,
+            user_email: row.user_email,
+            user_name: row.user_name,
+            csrf_token: row.csrf_token,
+            created_at,
+            expires_at,
         })
     }
 

@@ -19,20 +19,27 @@ pub struct CreateTeamParticipationEntity {
     pub season_id: i64,
 }
 
+#[derive(Debug, Clone)]
+pub struct TeamParticipationNameEntity {
+    pub id: i64,
+    pub name: String,
+}
+
 /// Get all teams participating in a season with team details
 pub async fn get_teams_for_season(
     db: &SqlitePool,
     season_id: i64,
 ) -> Result<Vec<TeamParticipationEntity>, sqlx::Error> {
-    let rows = sqlx::query!(
+    let teams = sqlx::query_as!(
+        TeamParticipationEntity,
         r#"
         SELECT
-            tp.id,
-            tp.team_id,
-            t.name as "team_name!: String",
+            tp.id as "id!",
+            tp.team_id as team_id,
+            t.name as team_name,
             t.country_id,
             c.iso2Code as country_iso2_code,
-            tp.season_id
+            tp.season_id as season_id
         FROM team_participation tp
         INNER JOIN team t ON tp.team_id = t.id
         LEFT JOIN country c ON t.country_id = c.id
@@ -44,18 +51,6 @@ pub async fn get_teams_for_season(
     .fetch_all(db)
     .await?;
 
-    let teams = rows
-        .into_iter()
-        .map(|row| TeamParticipationEntity {
-            id: row.id,
-            team_id: row.team_id,
-            team_name: row.team_name,
-            country_id: row.country_id,
-            country_iso2_code: row.country_iso2_code,
-            season_id: row.season_id,
-        })
-        .collect();
-
     Ok(teams)
 }
 
@@ -64,9 +59,10 @@ pub async fn get_available_teams_for_season(
     db: &SqlitePool,
     season_id: i64,
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query!(
+    let rows = sqlx::query_as!(
+        TeamParticipationNameEntity,
         r#"
-        SELECT t.id, t.name as "name!: String"
+        SELECT t.id, t.name
         FROM team t
         WHERE t.id NOT IN (
             SELECT team_id FROM team_participation WHERE season_id = ?
@@ -89,7 +85,7 @@ pub async fn get_available_seasons_for_team(
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
-        SELECT s.id, s.display_name, s.year, e.name as event_name
+        SELECT s.id as "id!", s.display_name, s.year, e.name as event_name
         FROM season s
         INNER JOIN event e ON s.event_id = e.id
         WHERE s.id NOT IN (
@@ -191,7 +187,7 @@ pub async fn get_all_teams_for_dropdown(
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
-        SELECT t.id, t.name as "name!: String", c.iso2Code as country_code
+        SELECT t.id, t.name, c.iso2Code as country_code
         FROM team t
         LEFT JOIN country c ON t.country_id = c.id
         ORDER BY t.name ASC
@@ -223,7 +219,7 @@ pub async fn get_all_seasons_for_dropdown(
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
-        SELECT s.id, s.display_name, s.year, e.name as event_name
+        SELECT s.id as "id!", s.display_name, s.year, e.name as event_name
         FROM season s
         INNER JOIN event e ON s.event_id = e.id
         ORDER BY s.year DESC, e.name ASC

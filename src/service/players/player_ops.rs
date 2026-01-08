@@ -199,7 +199,7 @@ pub async fn get_player_by_id(
         r#"
         SELECT
             p.id,
-            p.name as "name!",
+            p.name,
             p.country_id,
             p.photo_path,
             p.birth_date,
@@ -208,7 +208,7 @@ pub async fn get_player_by_id(
             p.weight_kg,
             p.position,
             p.shoots,
-            c.name as "country_name!",
+            c.name as country_name,
             c.iso2Code as "country_iso2_code!"
         FROM player p
         INNER JOIN country c ON p.country_id = c.id
@@ -307,13 +307,13 @@ pub async fn get_player_detail(
         PlayerContractWithTeamEntity,
         r#"
         SELECT
-            t.id as team_id,
-            t.name as "team_name!",
+            t.id as "team_id!",
+            t.name team_name,
             tc.iso2Code as team_country_iso2_code,
-            s.id as season_id,
-            s.year as season_year,
+            s.id as "season_id!",
+            s.year as "season_year!",
             s.display_name as season_display_name,
-            e.name as "event_name!"
+            e.name as event_name
         FROM player_contract pc
         INNER JOIN team_participation tp ON pc.team_participation_id = tp.id
         INNER JOIN team t ON tp.team_id = t.id

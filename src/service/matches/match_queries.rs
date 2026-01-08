@@ -5,23 +5,24 @@ use super::entities::{MatchEntity, MatchFilters, ScoreEventEntity, SortField};
 
 /// Get a single match by ID with all related details
 pub async fn get_match_by_id(db: &SqlitePool, id: i64) -> Result<Option<MatchEntity>, sqlx::Error> {
-    let row = sqlx::query!(
+    let row = sqlx::query_as!(
+        MatchEntity,
         r#"
         SELECT
-            m.id as "id!: i64",
+            m.id as "id!",
             m.season_id as "season_id!: i64",
             COALESCE(s.display_name, CAST(s.year AS TEXT)) as season_name,
             e.name as event_name,
-            m.home_team_id as "home_team_id!: i64",
-            ht.name as "home_team_name!: String",
+            m.home_team_id,
+            ht.name as home_team_name,
             hc.iso2Code as home_team_country_iso2,
-            m.away_team_id as "away_team_id!: i64",
-            at.name as "away_team_name!: String",
+            m.away_team_id,
+            at.name as away_team_name,
             ac.iso2Code as away_team_country_iso2,
-            m.home_score_unidentified as "home_score_unidentified!: i32",
-            m.away_score_unidentified as "away_score_unidentified!: i32",
+            m.home_score_unidentified as "home_score_unidentified: i32",
+            m.away_score_unidentified as "away_score_unidentified: i32",
             m.match_date,
-            m.status as "status!: String",
+            m.status,
             m.venue
         FROM match m
         INNER JOIN team ht ON m.home_team_id = ht.id
@@ -37,23 +38,7 @@ pub async fn get_match_by_id(db: &SqlitePool, id: i64) -> Result<Option<MatchEnt
     .fetch_optional(db)
     .await?;
 
-    Ok(row.map(|row| MatchEntity {
-        id: row.id,
-        season_id: row.season_id,
-        season_name: row.season_name,
-        event_name: row.event_name,
-        home_team_id: row.home_team_id,
-        home_team_name: row.home_team_name,
-        home_team_country_iso2: row.home_team_country_iso2,
-        away_team_id: row.away_team_id,
-        away_team_name: row.away_team_name,
-        away_team_country_iso2: row.away_team_country_iso2,
-        home_score_unidentified: row.home_score_unidentified,
-        away_score_unidentified: row.away_score_unidentified,
-        match_date: row.match_date,
-        status: row.status,
-        venue: row.venue,
-    }))
+    Ok(row)
 }
 
 /// Get all score events for a match
@@ -61,13 +46,14 @@ pub async fn get_score_events(
     db: &SqlitePool,
     match_id: i64,
 ) -> Result<Vec<ScoreEventEntity>, sqlx::Error> {
-    let rows = sqlx::query!(
+    let rows = sqlx::query_as!(
+        ScoreEventEntity,
         r#"
         SELECT
-            se.id as "id!: i64",
-            se.match_id as "match_id!: i64",
-            se.team_id as "team_id!: i64",
-            t.name as "team_name!: String",
+            se.id as "id!",
+            se.match_id as "match_id!",
+            se.team_id as "team_id!",
+            t.name as "team_name!",
             se.scorer_id,
             scorer.name as scorer_name,
             se.assist1_id,
@@ -91,25 +77,7 @@ pub async fn get_score_events(
     .fetch_all(db)
     .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| ScoreEventEntity {
-            id: row.id,
-            match_id: row.match_id,
-            team_id: row.team_id,
-            team_name: row.team_name,
-            scorer_id: row.scorer_id,
-            scorer_name: Some(row.scorer_name),
-            assist1_id: row.assist1_id,
-            assist1_name: Some(row.assist1_name),
-            assist2_id: row.assist2_id,
-            assist2_name: Some(row.assist2_name),
-            period: row.period,
-            time_minutes: row.time_minutes,
-            time_seconds: row.time_seconds,
-            goal_type: row.goal_type,
-        })
-        .collect())
+    Ok(rows)
 }
 
 /// Get match detail with calculated scores

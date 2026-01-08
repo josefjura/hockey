@@ -17,11 +17,11 @@ pub async fn get_player_season_stats(
     let rows = sqlx::query!(
         r#"
         SELECT
-            s.id as "season_id!: i64",
-            s.year as "season_year!: i64",
+            s.id as "season_id!",
+            s.year as "season_year!",
             s.display_name as season_display_name,
-            e.id as "event_id!: i64",
-            e.name as "event_name!: String",
+            e.id as "event_id!",
+            e.name as "event_name!",
             COALESCE(SUM(CASE WHEN se.scorer_id = ? THEN 1 ELSE 0 END), 0) as "goals!: i32",
             COALESCE(SUM(CASE WHEN se.assist1_id = ? OR se.assist2_id = ? THEN 1 ELSE 0 END), 0) as "assists!: i32"
         FROM season s
@@ -303,7 +303,7 @@ pub async fn get_player_seasons(
     let rows = sqlx::query!(
         r#"
         SELECT DISTINCT
-            s.id,
+            s.id as "id!",
             COALESCE(s.display_name, CAST(s.year AS TEXT)) as "display_name!: String"
         FROM season s
         INNER JOIN team_participation tp ON s.id = tp.season_id
@@ -330,8 +330,8 @@ pub async fn get_player_teams(
     let rows = sqlx::query!(
         r#"
         SELECT DISTINCT
-            t.id,
-            t.name as "name!: String"
+            t.id as "id!",
+            t.name as "name!"
         FROM team t
         INNER JOIN team_participation tp ON t.id = tp.team_id
         INNER JOIN player_contract pc ON tp.id = pc.team_participation_id

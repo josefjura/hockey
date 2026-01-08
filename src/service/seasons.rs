@@ -191,11 +191,11 @@ pub async fn get_season_by_id(
             s.year,
             s.display_name,
             s.event_id,
-            e.name as "event_name!: String",
-            s.country_id as "country_id?: i64",
-            e.country_id as "event_country_id?: i64",
-            c1.name as "country_name?: String",
-            c2.name as "event_country_name?: String"
+            e.name as event_name,
+            s.country_id,
+            e.country_id as event_country_id,
+            c1.name as country_name,
+            c2.name as event_country_name
         FROM season s
         INNER JOIN event e ON s.event_id = e.id
         LEFT JOIN country c1 ON s.country_id = c1.id

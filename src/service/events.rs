@@ -169,7 +169,7 @@ pub async fn get_event_detail(
     let seasons = sqlx::query_as!(
         SeasonEntity,
         r#"
-        SELECT id, year, display_name
+        SELECT id as "id!", year, display_name
         FROM season
         WHERE event_id = ?
         ORDER BY year DESC
@@ -178,6 +178,15 @@ pub async fn get_event_detail(
     )
     .fetch_all(db)
     .await?;
+
+    // let seasons = rows
+    //     .into_iter()
+    //     .map(|row| SeasonEntity {
+    //         id: row.id,
+    //         year: row.year,
+    //         display_name: row.display_name,
+    //     })
+    //     .collect();
 
     Ok(Some(EventDetailEntity {
         event_info,

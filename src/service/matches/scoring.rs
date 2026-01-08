@@ -10,10 +10,10 @@ pub async fn get_score_event_by_id(
     let row = sqlx::query!(
         r#"
         SELECT
-            se.id as "id!: i64",
-            se.match_id as "match_id!: i64",
-            se.team_id as "team_id!: i64",
-            t.name as "team_name!: String",
+            se.id as "id!",
+            se.match_id as "match_id!",
+            se.team_id as "team_id!",
+            t.name as "team_name!",
             se.scorer_id,
             scorer.name as scorer_name,
             se.assist1_id,

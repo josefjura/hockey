@@ -4,7 +4,7 @@ use sqlx::SqlitePool;
 pub async fn get_seasons(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
-        SELECT s.id, COALESCE(s.display_name, CAST(s.year AS TEXT)) as name
+        SELECT s.id as "id!: i64", COALESCE(s.display_name, CAST(s.year AS TEXT)) as name
         FROM season s
         ORDER BY s.year DESC
         "#
@@ -19,7 +19,7 @@ pub async fn get_seasons(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Er
 pub async fn get_teams(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
-        SELECT t.id, t.name as "name!: String"
+        SELECT t.id, t.name
         FROM team t
         ORDER BY t.name ASC
         "#
@@ -37,7 +37,7 @@ pub async fn get_teams_for_season(
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
-        SELECT DISTINCT t.id, t.name as "name!: String"
+        SELECT DISTINCT t.id as "id!", t.name
         FROM team t
         INNER JOIN team_participation tp ON t.id = tp.team_id
         WHERE tp.season_id = ?
@@ -58,7 +58,7 @@ pub async fn get_players_for_team(
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
     let rows = sqlx::query!(
         r#"
-        SELECT DISTINCT p.id, p.name
+        SELECT DISTINCT p.id as "id!", p.name
         FROM player p
         INNER JOIN player_contract pc ON p.id = pc.player_id
         INNER JOIN team_participation tp ON pc.team_participation_id = tp.id

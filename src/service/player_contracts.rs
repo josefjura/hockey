@@ -35,16 +35,17 @@ pub async fn get_roster(
     db: &SqlitePool,
     team_participation_id: i64,
 ) -> Result<Vec<PlayerInRoster>, sqlx::Error> {
-    let rows = sqlx::query!(
+    let players = sqlx::query_as!(
+        PlayerInRoster,
         r#"
         SELECT
-            pc.id as player_contract_id,
-            p.id as player_id,
-            p.name as "player_name!: String",
+            pc.id as "player_contract_id!",
+            p.id as "player_id!",
+            p.name as player_name,
             p.photo_path,
-            c.id as country_id,
-            c.name as "country_name!: String",
-            c.iso2Code as "country_iso2_code!: String"
+            c.id as "country_id!",
+            c.name as country_name,
+            c.iso2Code as "country_iso2_code!"
         FROM player_contract pc
         INNER JOIN player p ON pc.player_id = p.id
         INNER JOIN country c ON p.country_id = c.id
@@ -55,19 +56,6 @@ pub async fn get_roster(
     )
     .fetch_all(db)
     .await?;
-
-    let players = rows
-        .into_iter()
-        .map(|row| PlayerInRoster {
-            player_contract_id: row.player_contract_id,
-            player_id: row.player_id,
-            player_name: row.player_name,
-            country_id: row.country_id,
-            country_name: row.country_name,
-            country_iso2_code: row.country_iso2_code,
-            photo_path: row.photo_path,
-        })
-        .collect();
 
     Ok(players)
 }
@@ -83,13 +71,13 @@ pub async fn get_team_participation_context(
         SELECT
             tp.id as team_participation_id,
             t.id as team_id,
-            t.name as "team_name!: String",
+            t.name as team_name,
             c.iso2Code as country_iso2_code,
             s.id as season_id,
             s.year as season_year,
             s.display_name as season_display_name,
             e.id as event_id,
-            e.name as "event_name!: String"
+            e.name as event_name
         FROM team_participation tp
         INNER JOIN team t ON tp.team_id = t.id
         LEFT JOIN country c ON t.country_id = c.id
