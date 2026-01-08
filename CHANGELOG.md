@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+### Security
+- Production deployments now require a secure SESSION_SECRET to be explicitly set, preventing the use of insecure default values that could allow session forgery (#179)
+- SESSION_SECRET must now be at least 32 characters long to ensure adequate cryptographic security (#179)
+
 ## [0.1.9] - 2026-01-05
 
 ### Added
