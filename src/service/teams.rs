@@ -365,8 +365,13 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations", fixtures("teams"))]
     async fn test_get_teams_with_country_filter(pool: SqlitePool) {
+        let canada_id: i64 = sqlx::query_scalar("SELECT id FROM country WHERE name = 'Canada'")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
         let filters = TeamFilters {
-            country_id: Some(1), // Canada
+            country_id: Some(canada_id),
             ..Default::default()
         };
         let result = get_teams(&pool, &filters, &SortField::Name, &SortOrder::Asc, 1, 20)
@@ -374,7 +379,7 @@ mod tests {
             .unwrap();
 
         assert!(!result.items.is_empty());
-        assert!(result.items.iter().all(|t| t.country_id == Some(1)));
+        assert!(result.items.iter().all(|t| t.country_id == Some(canada_id)));
     }
 
     #[sqlx::test(migrations = "./migrations", fixtures("teams"))]

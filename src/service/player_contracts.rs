@@ -230,10 +230,11 @@ mod tests {
         .unwrap();
 
         let participation_id = sqlx::query_scalar::<_, i64>(
-            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+            "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?) RETURNING id",
         )
         .bind(team_id)
         .bind(season_id)
+        .bind(event_id)
         .fetch_one(&pool)
         .await
         .unwrap();
@@ -277,10 +278,11 @@ mod tests {
         .unwrap();
 
         let participation_id = sqlx::query_scalar::<_, i64>(
-            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+            "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?) RETURNING id",
         )
         .bind(team_id)
         .bind(season_id)
+        .bind(event_id)
         .fetch_one(&pool)
         .await
         .unwrap();
@@ -353,10 +355,11 @@ mod tests {
         .unwrap();
 
         let participation_id = sqlx::query_scalar::<_, i64>(
-            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+            "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?) RETURNING id",
         )
         .bind(team_id)
         .bind(season_id)
+        .bind(event_id)
         .fetch_one(&pool)
         .await
         .unwrap();
@@ -415,10 +418,11 @@ mod tests {
         .unwrap();
 
         let participation_id = sqlx::query_scalar::<_, i64>(
-            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+            "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?) RETURNING id",
         )
         .bind(team_id)
         .bind(season_id)
+        .bind(event_id)
         .fetch_one(&pool)
         .await
         .unwrap();
@@ -495,10 +499,11 @@ mod tests {
         .unwrap();
 
         let participation_id = sqlx::query_scalar::<_, i64>(
-            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+            "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?) RETURNING id",
         )
         .bind(team_id)
         .bind(season_id)
+        .bind(event_id)
         .fetch_one(&pool)
         .await
         .unwrap();
@@ -568,10 +573,11 @@ mod tests {
         .unwrap();
 
         let participation_id = sqlx::query_scalar::<_, i64>(
-            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+            "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?) RETURNING id",
         )
         .bind(team_id)
         .bind(season_id)
+        .bind(event_id)
         .fetch_one(&pool)
         .await
         .unwrap();
@@ -635,10 +641,11 @@ mod tests {
         .unwrap();
 
         let participation_id = sqlx::query_scalar::<_, i64>(
-            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+            "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?) RETURNING id",
         )
         .bind(team_id)
         .bind(season_id)
+        .bind(event_id)
         .fetch_one(&pool)
         .await
         .unwrap();
@@ -710,10 +717,11 @@ mod tests {
         .unwrap();
 
         let participation_id = sqlx::query_scalar::<_, i64>(
-            "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?) RETURNING id",
+            "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?) RETURNING id",
         )
         .bind(team_id)
         .bind(season_id)
+        .bind(event_id)
         .fetch_one(&pool)
         .await
         .unwrap();

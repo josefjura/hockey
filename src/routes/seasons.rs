@@ -600,12 +600,35 @@ pub async fn season_add_team(
         _ => {}
     }
 
+    // Get event_id from season
+    let event_id = match sqlx::query_scalar::<_, i64>("SELECT event_id FROM season WHERE id = ?")
+        .bind(season_id)
+        .fetch_one(&state.db)
+        .await
+    {
+        Ok(id) => id,
+        Err(e) => {
+            tracing::error!("Failed to get event_id for season: {}", e);
+            return Html(
+                add_team_modal(
+                    &t,
+                    season_id,
+                    Some("Failed to get season information"),
+                    &available_teams,
+                )
+                .into_string(),
+            )
+            .into_response();
+        }
+    };
+
     // Create team participation
     match team_participations::add_team_to_season(
         &state.db,
         CreateTeamParticipationEntity {
             team_id: form.team_id,
             season_id,
+            event_id,
         },
     )
     .await

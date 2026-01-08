@@ -17,6 +17,7 @@ pub struct TeamParticipationEntity {
 pub struct CreateTeamParticipationEntity {
     pub team_id: i64,
     pub season_id: i64,
+    pub event_id: i64,
 }
 
 #[derive(Debug, Clone)]
@@ -143,9 +144,10 @@ pub async fn add_team_to_season(
     entity: CreateTeamParticipationEntity,
 ) -> Result<i64, sqlx::Error> {
     let result = sqlx::query!(
-        "INSERT INTO team_participation (team_id, season_id) VALUES (?, ?)",
+        "INSERT INTO team_participation (team_id, season_id, event_id) VALUES (?, ?, ?)",
         entity.team_id,
-        entity.season_id
+        entity.season_id,
+        entity.event_id
     )
     .execute(db)
     .await?;
@@ -363,10 +365,11 @@ mod tests {
         fixtures("events", "seasons", "teams", "team_participations")
     )]
     async fn test_add_team_to_season(pool: SqlitePool) {
-        // Add Team Sweden to season 3
+        // Add Team Sweden to season 3 (World Cup event)
         let entity = CreateTeamParticipationEntity {
             team_id: 5,
             season_id: 3,
+            event_id: 3,
         };
 
         let id = add_team_to_season(&pool, entity).await.unwrap();

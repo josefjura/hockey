@@ -140,12 +140,32 @@ pub async fn team_participation_create(
         }
     }
 
+    // Get event_id from season
+    let event_id = match sqlx::query_scalar::<_, i64>("SELECT event_id FROM season WHERE id = ?")
+        .bind(form.season_id)
+        .fetch_one(&state.db)
+        .await
+    {
+        Ok(id) => id,
+        Err(e) => {
+            tracing::error!("Failed to get event_id for season: {}", e);
+            return Html(
+                crate::views::components::error::error_message(
+                    &t.messages.error_system().to_string(),
+                )
+                .into_string(),
+            )
+            .into_response();
+        }
+    };
+
     // Create the team participation
     match team_participations::add_team_to_season(
         &state.db,
         CreateTeamParticipationEntity {
             team_id: form.team_id,
             season_id: form.season_id,
+            event_id,
         },
     )
     .await

@@ -19,12 +19,15 @@ CREATE TABLE player_property_change (
   player_id INTEGER NOT NULL,
   season_id INTEGER,
   property_type TEXT NOT NULL,
+  old_value TEXT,
+  new_value TEXT,
   change_date TEXT,
   description TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (player_id) REFERENCES player(id),
-  FOREIGN KEY (season_id) REFERENCES season(id)
+  FOREIGN KEY (season_id) REFERENCES season(id),
+  UNIQUE (player_id, property_type, change_date)
 ) STRICT;
 
 CREATE INDEX idx_player_property_change_player_id ON player_property_change(player_id);

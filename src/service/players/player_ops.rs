@@ -414,7 +414,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(result.items.len(), 3); // 3 Canadian players in fixtures
+        assert_eq!(result.items.len(), 6); // 6 Canadian players in fixtures
         assert!(result.items.iter().all(|p| p.country_id == canada_id));
     }
 
