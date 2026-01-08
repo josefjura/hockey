@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Database queries now perform significantly faster with proper indexes on all foreign keys and common query patterns, preventing performance degradation as data grows (#177)
 
 ### Security
 - Production deployments now require a secure SESSION_SECRET to be explicitly set, preventing the use of insecure default values that could allow session forgery (#179)
