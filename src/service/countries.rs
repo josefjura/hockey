@@ -156,9 +156,9 @@ mod tests {
         let filters = CountryFilters::default();
         let countries = get_countries(&pool, &filters).await.unwrap();
 
-        // Migration seeds ~230 countries
+        // Migration seeds 198 countries
         assert!(
-            countries.len() > 200,
+            countries.len() >= 198,
             "Should return all countries from migration"
         );
         assert!(countries.iter().any(|c| c.name == "Canada"));

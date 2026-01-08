@@ -14,7 +14,7 @@ CREATE TABLE country (
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) STRICT;
 
--- Country data - 213 countries including historical ones
+-- Country data - 198 countries including historical ones
 INSERT INTO country (name, iihf, iso2Code, iocCode, isHistorical, years, enabled) VALUES
 ('Afghanistan', 0, 'AF','AFG', 0, NULL, 0),
 ('Albania', 0, 'AL','ALB', 0, NULL, 0),
