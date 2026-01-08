@@ -7,7 +7,7 @@ use crate::service::players::{
     PlayerScoringEventEntity, PlayerScoringFilters, PlayerSeasonStats, PropertyChangeEntity,
     ScoringEventSortField, UpdatePlayerEntity,
 };
-use crate::validation::validate_name;
+use crate::validation::{validate_height_cm, validate_name, validate_weight_kg};
 
 /// Bundled player detail page data
 ///
@@ -161,6 +161,10 @@ pub enum PlayerValidationError {
     InvalidName(&'static str),
     /// Country ID is required but not provided
     MissingCountryId,
+    /// Player height validation failed
+    InvalidHeight(&'static str),
+    /// Player weight validation failed
+    InvalidWeight(&'static str),
 }
 
 impl PlayerValidationError {
@@ -169,6 +173,8 @@ impl PlayerValidationError {
         match self {
             PlayerValidationError::InvalidName(msg) => msg,
             PlayerValidationError::MissingCountryId => "Please select a country",
+            PlayerValidationError::InvalidHeight(msg) => msg,
+            PlayerValidationError::InvalidWeight(msg) => msg,
         }
     }
 }
@@ -200,6 +206,14 @@ pub async fn create_player_validated(
         .country_id
         .ok_or(Ok(PlayerValidationError::MissingCountryId))?;
 
+    // Validate height
+    let validated_height = validate_height_cm(form_data.height_cm)
+        .map_err(|msg| Ok(PlayerValidationError::InvalidHeight(msg)))?;
+
+    // Validate weight
+    let validated_weight = validate_weight_kg(form_data.weight_kg)
+        .map_err(|msg| Ok(PlayerValidationError::InvalidWeight(msg)))?;
+
     // Create player
     players::create_player(
         db,
@@ -209,8 +223,8 @@ pub async fn create_player_validated(
             photo_path,
             birth_date: form_data.birth_date.clone(),
             birth_place: form_data.birth_place.clone(),
-            height_cm: form_data.height_cm,
-            weight_kg: form_data.weight_kg,
+            height_cm: validated_height,
+            weight_kg: validated_weight,
             position: form_data.position.clone(),
             shoots: form_data.shoots.clone(),
         },
@@ -248,6 +262,14 @@ pub async fn update_player_validated(
         .country_id
         .ok_or(Ok(PlayerValidationError::MissingCountryId))?;
 
+    // Validate height
+    let validated_height = validate_height_cm(form_data.height_cm)
+        .map_err(|msg| Ok(PlayerValidationError::InvalidHeight(msg)))?;
+
+    // Validate weight
+    let validated_weight = validate_weight_kg(form_data.weight_kg)
+        .map_err(|msg| Ok(PlayerValidationError::InvalidWeight(msg)))?;
+
     // Update player
     players::update_player(
         db,
@@ -258,8 +280,8 @@ pub async fn update_player_validated(
             photo_path,
             birth_date: form_data.birth_date.clone(),
             birth_place: form_data.birth_place.clone(),
-            height_cm: form_data.height_cm,
-            weight_kg: form_data.weight_kg,
+            height_cm: validated_height,
+            weight_kg: validated_weight,
             position: form_data.position.clone(),
             shoots: form_data.shoots.clone(),
         },

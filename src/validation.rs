@@ -118,6 +118,80 @@ pub fn validate_score_event_time(
     Ok(())
 }
 
+/// Validates player height in centimeters
+///
+/// Ensures height is within reasonable human biological limits.
+/// Based on professional hockey player data.
+///
+/// # Arguments
+/// * `height` - Optional height in centimeters
+///
+/// # Returns
+/// * `Ok(Some(i64))` - If height is valid
+/// * `Ok(None)` - If height is None
+/// * `Err(&'static str)` - Error message if validation fails
+///
+/// # Valid Range
+/// * Minimum: 100 cm (3'3") - very short but possible
+/// * Maximum: 250 cm (8'2") - very tall (Zdeno Chára is 206cm)
+///
+/// # Examples
+/// ```
+/// let result = validate_height_cm(Some(185));
+/// assert!(result.is_ok());
+///
+/// let result = validate_height_cm(Some(-50));
+/// assert!(result.is_err());
+///
+/// let result = validate_height_cm(None);
+/// assert!(result.is_ok());
+/// ```
+pub fn validate_height_cm(height: Option<i64>) -> Result<Option<i64>, &'static str> {
+    match height {
+        None => Ok(None),
+        Some(h) if h < 100 => Err("Height must be at least 100 cm (3'3\")"),
+        Some(h) if h > 250 => Err("Height must be less than 250 cm (8'2\")"),
+        Some(h) => Ok(Some(h)),
+    }
+}
+
+/// Validates player weight in kilograms
+///
+/// Ensures weight is within reasonable human biological limits.
+/// Based on professional hockey player data.
+///
+/// # Arguments
+/// * `weight` - Optional weight in kilograms
+///
+/// # Returns
+/// * `Ok(Some(i64))` - If weight is valid
+/// * `Ok(None)` - If weight is None
+/// * `Err(&'static str)` - Error message if validation fails
+///
+/// # Valid Range
+/// * Minimum: 40 kg (88 lbs) - light but possible for youth
+/// * Maximum: 200 kg (440 lbs) - very heavy
+///
+/// # Examples
+/// ```
+/// let result = validate_weight_kg(Some(85));
+/// assert!(result.is_ok());
+///
+/// let result = validate_weight_kg(Some(-10));
+/// assert!(result.is_err());
+///
+/// let result = validate_weight_kg(None);
+/// assert!(result.is_ok());
+/// ```
+pub fn validate_weight_kg(weight: Option<i64>) -> Result<Option<i64>, &'static str> {
+    match weight {
+        None => Ok(None),
+        Some(w) if w < 40 => Err("Weight must be at least 40 kg (88 lbs)"),
+        Some(w) if w > 200 => Err("Weight must be less than 200 kg (440 lbs)"),
+        Some(w) => Ok(Some(w)),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -227,6 +301,64 @@ mod tests {
         assert_eq!(
             validate_score_event_time(1, Some(15), Some(60)).unwrap_err(),
             "Seconds must be between 0 and 59"
+        );
+    }
+
+    #[test]
+    fn test_validate_height_cm_success() {
+        assert_eq!(validate_height_cm(Some(185)).unwrap(), Some(185));
+        assert_eq!(validate_height_cm(Some(100)).unwrap(), Some(100));
+        assert_eq!(validate_height_cm(Some(250)).unwrap(), Some(250));
+        assert_eq!(validate_height_cm(None).unwrap(), None);
+    }
+
+    #[test]
+    fn test_validate_height_cm_too_small() {
+        assert!(validate_height_cm(Some(99)).is_err());
+        assert!(validate_height_cm(Some(0)).is_err());
+        assert!(validate_height_cm(Some(-100)).is_err());
+        assert_eq!(
+            validate_height_cm(Some(99)).unwrap_err(),
+            "Height must be at least 100 cm (3'3\")"
+        );
+    }
+
+    #[test]
+    fn test_validate_height_cm_too_large() {
+        assert!(validate_height_cm(Some(251)).is_err());
+        assert!(validate_height_cm(Some(500)).is_err());
+        assert_eq!(
+            validate_height_cm(Some(251)).unwrap_err(),
+            "Height must be less than 250 cm (8'2\")"
+        );
+    }
+
+    #[test]
+    fn test_validate_weight_kg_success() {
+        assert_eq!(validate_weight_kg(Some(85)).unwrap(), Some(85));
+        assert_eq!(validate_weight_kg(Some(40)).unwrap(), Some(40));
+        assert_eq!(validate_weight_kg(Some(200)).unwrap(), Some(200));
+        assert_eq!(validate_weight_kg(None).unwrap(), None);
+    }
+
+    #[test]
+    fn test_validate_weight_kg_too_small() {
+        assert!(validate_weight_kg(Some(39)).is_err());
+        assert!(validate_weight_kg(Some(0)).is_err());
+        assert!(validate_weight_kg(Some(-50)).is_err());
+        assert_eq!(
+            validate_weight_kg(Some(39)).unwrap_err(),
+            "Weight must be at least 40 kg (88 lbs)"
+        );
+    }
+
+    #[test]
+    fn test_validate_weight_kg_too_large() {
+        assert!(validate_weight_kg(Some(201)).is_err());
+        assert!(validate_weight_kg(Some(500)).is_err());
+        assert_eq!(
+            validate_weight_kg(Some(201)).unwrap_err(),
+            "Weight must be less than 200 kg (440 lbs)"
         );
     }
 }
