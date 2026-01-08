@@ -110,7 +110,20 @@ jobs:
         run: |
           cargo build --release
           ./target/release/hockey &
-          sleep 5
+
+          # Wait for server to be ready (up to 60 seconds)
+          echo "Waiting for server to start..."
+          for i in {1..60}; do
+            if curl -s -f http://localhost:8080/auth/login > /dev/null 2>&1; then
+              echo "✅ Server is ready after ${i} seconds"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "❌ Server failed to start within 60 seconds"
+              exit 1
+            fi
+            sleep 1
+          done
         env:
           DATABASE_URL: sqlite:./ci_test.db
           SESSION_SECRET: test-secret-key-for-ci-only
