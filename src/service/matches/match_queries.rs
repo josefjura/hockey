@@ -10,7 +10,7 @@ pub async fn get_match_by_id(db: &SqlitePool, id: i64) -> Result<Option<MatchEnt
         r#"
         SELECT
             m.id as "id!",
-            m.season_id as "season_id!: i64",
+            m.season_id as "season_id!",
             COALESCE(s.display_name, CAST(s.year AS TEXT)) as season_name,
             e.name as event_name,
             m.home_team_id,

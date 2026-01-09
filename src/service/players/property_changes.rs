@@ -1,4 +1,4 @@
-use sqlx::{Row, SqlitePool};
+use sqlx::SqlitePool;
 
 /// Property change entity (full data from database)
 #[derive(Debug, Clone)]
@@ -46,16 +46,17 @@ pub async fn get_player_property_changes(
     db: &SqlitePool,
     player_id: i64,
 ) -> Result<Vec<PropertyChangeEntity>, sqlx::Error> {
-    let rows = sqlx::query(
+    let rows = sqlx::query_as!(
+        PropertyChangeEntity,
         r#"
         SELECT
-            pc.id,
-            pc.player_id,
-            pc.change_date,
-            pc.property_type,
+            pc.id as "id!",
+            pc.player_id as "player_id!",
+            pc.change_date as "change_date!",
+            pc.property_type as "property_type!",
             pc.old_value,
             pc.new_value,
-            pc.description,
+            pc.description as "description!",
             pc.season_id,
             s.year as season_year,
             s.display_name as season_display_name,
@@ -66,27 +67,12 @@ pub async fn get_player_property_changes(
         WHERE pc.player_id = ?
         ORDER BY pc.change_date DESC, pc.id DESC
         "#,
+        player_id
     )
-    .bind(player_id)
     .fetch_all(db)
     .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| PropertyChangeEntity {
-            id: row.get("id"),
-            player_id: row.get("player_id"),
-            change_date: row.get("change_date"),
-            property_type: row.get("property_type"),
-            old_value: row.get("old_value"),
-            new_value: row.get("new_value"),
-            description: row.get("description"),
-            season_id: row.get("season_id"),
-            season_year: row.get("season_year"),
-            season_display_name: row.get("season_display_name"),
-            event_name: row.get("event_name"),
-        })
-        .collect())
+    Ok(rows)
 }
 
 /// Create a new property change
@@ -94,20 +80,20 @@ pub async fn create_property_change(
     db: &SqlitePool,
     entity: CreatePropertyChangeEntity,
 ) -> Result<i64, sqlx::Error> {
-    let result = sqlx::query(
+    let result = sqlx::query!(
         r#"
         INSERT INTO player_property_change
         (player_id, change_date, property_type, old_value, new_value, description, season_id)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         "#,
+        entity.player_id,
+        entity.change_date,
+        entity.property_type,
+        entity.old_value,
+        entity.new_value,
+        entity.description,
+        entity.season_id
     )
-    .bind(entity.player_id)
-    .bind(entity.change_date)
-    .bind(entity.property_type)
-    .bind(entity.old_value)
-    .bind(entity.new_value)
-    .bind(entity.description)
-    .bind(entity.season_id)
     .execute(db)
     .await?;
 
@@ -120,21 +106,21 @@ pub async fn update_property_change(
     id: i64,
     entity: UpdatePropertyChangeEntity,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
+    let result = sqlx::query!(
         r#"
         UPDATE player_property_change
         SET change_date = ?, property_type = ?, old_value = ?, new_value = ?,
             description = ?, season_id = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
         "#,
+        entity.change_date,
+        entity.property_type,
+        entity.old_value,
+        entity.new_value,
+        entity.description,
+        entity.season_id,
+        id
     )
-    .bind(entity.change_date)
-    .bind(entity.property_type)
-    .bind(entity.old_value)
-    .bind(entity.new_value)
-    .bind(entity.description)
-    .bind(entity.season_id)
-    .bind(id)
     .execute(db)
     .await?;
 
@@ -143,10 +129,12 @@ pub async fn update_property_change(
 
 /// Delete a property change
 pub async fn delete_property_change(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM player_property_change WHERE id = ?")
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"DELETE FROM player_property_change WHERE id = ?"#,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
@@ -156,9 +144,9 @@ pub async fn get_player_seasons_for_changes(
     db: &SqlitePool,
     player_id: i64,
 ) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query(
+    let rows = sqlx::query!(
         r#"
-        SELECT DISTINCT s.id, s.year, s.display_name, e.name as event_name
+        SELECT DISTINCT s.id as "id!", s.year as "year!", s.display_name, e.name as "event_name!"
         FROM season s
         INNER JOIN event e ON s.event_id = e.id
         INNER JOIN team_participation tp ON tp.season_id = s.id
@@ -166,18 +154,18 @@ pub async fn get_player_seasons_for_changes(
         WHERE pc.player_id = ?
         ORDER BY s.year DESC
         "#,
+        player_id
     )
-    .bind(player_id)
     .fetch_all(db)
     .await?;
 
     Ok(rows
         .into_iter()
         .map(|row| {
-            let year: i64 = row.get("year");
-            let display_name: Option<String> = row.get("display_name");
-            let event_name: String = row.get("event_name");
-            let id: i64 = row.get("id");
+            let year = row.year;
+            let display_name = row.display_name;
+            let event_name = row.event_name;
+            let id = row.id;
 
             let label = if let Some(display) = display_name {
                 format!("{} {} ({})", event_name, display, year)

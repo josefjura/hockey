@@ -1,4 +1,4 @@
-use sqlx::{Row, SqlitePool};
+use sqlx::SqlitePool;
 
 /// Player event statistics entity (career totals for a player in a specific event/competition)
 #[derive(Debug, Clone)]
@@ -20,49 +20,41 @@ pub async fn get_player_event_stats(
     db: &SqlitePool,
     player_id: i64,
 ) -> Result<Vec<PlayerEventStatsEntity>, sqlx::Error> {
-    let rows = sqlx::query(
+    let rows = sqlx::query_as!(
+        PlayerEventStatsEntity,
         r#"
         SELECT
-            pes.id,
-            pes.player_id,
-            pes.event_id,
+            pes.id as "id!",
+            pes.event_id as "event_id!",
             e.name as event_name,
-            pes.goals_total,
-            pes.assists_total,
-            COALESCE(SUM(CASE WHEN se.scorer_id = ? THEN 1 ELSE 0 END), 0) as goals_identified,
-            COALESCE(SUM(CASE WHEN se.assist1_id = ? OR se.assist2_id = ? THEN 1 ELSE 0 END), 0) as assists_identified
+            CAST(pes.goals_total AS INTEGER) as "goals_total!: i32",
+            CAST(pes.assists_total AS INTEGER) as "assists_total!: i32",
+            CAST(pes.goals_total + pes.assists_total AS INTEGER) as "points_total!: i32",
+            CAST(COALESCE(SUM(CASE WHEN se.scorer_id = ? THEN 1 ELSE 0 END), 0) AS INTEGER) as "goals_identified!: i32",
+            CAST(COALESCE(SUM(CASE WHEN se.assist1_id = ? OR se.assist2_id = ? THEN 1 ELSE 0 END), 0) AS INTEGER) as "assists_identified!: i32",
+            CAST(COALESCE(SUM(CASE WHEN se.scorer_id = ? THEN 1 ELSE 0 END), 0) +
+            COALESCE(SUM(CASE WHEN se.assist1_id = ? OR se.assist2_id = ? THEN 1 ELSE 0 END), 0) AS INTEGER) as "points_identified!: i32"
         FROM player_event_stats pes
         INNER JOIN event e ON pes.event_id = e.id
         LEFT JOIN season s ON s.event_id = e.id
         LEFT JOIN match m ON m.season_id = s.id
         LEFT JOIN score_event se ON se.match_id = m.id
         WHERE pes.player_id = ?
-        GROUP BY pes.id, pes.player_id, pes.event_id, e.name, pes.goals_total, pes.assists_total
+        GROUP BY pes.id, pes.event_id, e.name, pes.goals_total, pes.assists_total
         ORDER BY e.name ASC
         "#,
+        player_id,
+        player_id,
+        player_id,
+        player_id,
+        player_id,
+        player_id,
+        player_id
     )
-    .bind(player_id)
-    .bind(player_id)
-    .bind(player_id)
-    .bind(player_id)
     .fetch_all(db)
     .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| PlayerEventStatsEntity {
-            id: row.get("id"),
-            event_id: row.get("event_id"),
-            event_name: row.get("event_name"),
-            goals_total: row.get("goals_total"),
-            assists_total: row.get("assists_total"),
-            points_total: row.get::<i32, _>("goals_total") + row.get::<i32, _>("assists_total"),
-            goals_identified: row.get("goals_identified"),
-            assists_identified: row.get("assists_identified"),
-            points_identified: row.get::<i32, _>("goals_identified")
-                + row.get::<i32, _>("assists_identified"),
-        })
-        .collect())
+    Ok(rows)
 }
 
 /// Create or update event stats atomically (for create operations with initial values)
@@ -76,24 +68,24 @@ pub async fn create_or_update_player_event_stats(
 ) -> Result<i64, sqlx::Error> {
     // Use UPSERT pattern: INSERT with ON CONFLICT DO UPDATE
     // This is atomic - either both insert and values happen, or neither
-    let row = sqlx::query(
-        "INSERT INTO player_event_stats (player_id, event_id, goals_total, assists_total)
+    let result = sqlx::query!(
+        r#"INSERT INTO player_event_stats (player_id, event_id, goals_total, assists_total)
          VALUES (?, ?, ?, ?)
          ON CONFLICT(player_id, event_id)
          DO UPDATE SET
            goals_total = excluded.goals_total,
            assists_total = excluded.assists_total,
            updated_at = CURRENT_TIMESTAMP
-         RETURNING id",
+         RETURNING id"#,
+        player_id,
+        event_id,
+        goals_total,
+        assists_total
     )
-    .bind(player_id)
-    .bind(event_id)
-    .bind(goals_total)
-    .bind(assists_total)
     .fetch_one(db)
     .await?;
 
-    Ok(row.get("id"))
+    Ok(result.id)
 }
 
 /// Update event stats totals
@@ -103,12 +95,12 @@ pub async fn update_player_event_stats(
     goals_total: i32,
     assists_total: i32,
 ) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query(
-        "UPDATE player_event_stats SET goals_total = ?, assists_total = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+    let result = sqlx::query!(
+        r#"UPDATE player_event_stats SET goals_total = ?, assists_total = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"#,
+        goals_total,
+        assists_total,
+        id
     )
-    .bind(goals_total)
-    .bind(assists_total)
-    .bind(id)
     .execute(db)
     .await?;
 
@@ -117,30 +109,31 @@ pub async fn update_player_event_stats(
 
 /// Delete event stats
 pub async fn delete_player_event_stats(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query("DELETE FROM player_event_stats WHERE id = ?")
-        .bind(id)
-        .execute(db)
-        .await?;
+    let result = sqlx::query!(
+        r#"DELETE FROM player_event_stats WHERE id = ?"#,
+        id
+    )
+    .execute(db)
+    .await?;
 
     Ok(result.rows_affected() > 0)
 }
 
 /// Get all events (for dropdowns when adding stats)
 pub async fn get_all_events(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query("SELECT id, name FROM event ORDER BY name ASC")
-        .fetch_all(db)
-        .await?;
+    let rows = sqlx::query!(
+        r#"SELECT id, name FROM event ORDER BY name ASC"#
+    )
+    .fetch_all(db)
+    .await?;
 
-    Ok(rows
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect())
+    Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sqlx::SqlitePool;
+    use sqlx::{Row, SqlitePool};
 
     #[sqlx::test(migrations = "./migrations", fixtures("players", "events"))]
     async fn test_update_player_event_stats(pool: SqlitePool) {
