@@ -129,12 +129,9 @@ pub async fn update_property_change(
 
 /// Delete a property change
 pub async fn delete_property_change(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query!(
-        r#"DELETE FROM player_property_change WHERE id = ?"#,
-        id
-    )
-    .execute(db)
-    .await?;
+    let result = sqlx::query!(r#"DELETE FROM player_property_change WHERE id = ?"#, id)
+        .execute(db)
+        .await?;
 
     Ok(result.rows_affected() > 0)
 }

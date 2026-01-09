@@ -109,23 +109,18 @@ pub async fn update_player_event_stats(
 
 /// Delete event stats
 pub async fn delete_player_event_stats(db: &SqlitePool, id: i64) -> Result<bool, sqlx::Error> {
-    let result = sqlx::query!(
-        r#"DELETE FROM player_event_stats WHERE id = ?"#,
-        id
-    )
-    .execute(db)
-    .await?;
+    let result = sqlx::query!(r#"DELETE FROM player_event_stats WHERE id = ?"#, id)
+        .execute(db)
+        .await?;
 
     Ok(result.rows_affected() > 0)
 }
 
 /// Get all events (for dropdowns when adding stats)
 pub async fn get_all_events(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query!(
-        r#"SELECT id, name FROM event ORDER BY name ASC"#
-    )
-    .fetch_all(db)
-    .await?;
+    let rows = sqlx::query!(r#"SELECT id, name FROM event ORDER BY name ASC"#)
+        .fetch_all(db)
+        .await?;
 
     Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }
