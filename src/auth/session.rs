@@ -54,11 +54,16 @@ impl SessionStore {
     }
 
     /// Create a new session
-    pub async fn create_session(&self, user_id: i64, email: String, name: String) -> Session {
+    pub async fn create_session(
+        &self,
+        user_id: i64,
+        email: String,
+        name: String,
+    ) -> Result<Session, sqlx::Error> {
         let session = Session::new(user_id, email, name);
 
         // Store in database
-        let _ = sqlx::query!(
+        sqlx::query!(
             r#"
             INSERT INTO sessions (id, user_id, user_email, user_name, csrf_token, created_at, expires_at)
             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
@@ -72,9 +77,9 @@ impl SessionStore {
             session.expires_at
         )
         .execute(&self.db)
-        .await;
+        .await?;
 
-        session
+        Ok(session)
     }
 
     /// Get a session by ID
@@ -116,7 +121,9 @@ impl SessionStore {
 
         if session.is_expired() {
             // Remove expired session
-            self.delete_session(session_id).await;
+            if let Err(e) = self.delete_session(session_id).await {
+                tracing::error!("Failed to delete expired session {}: {}", session_id, e);
+            }
             return None;
         }
 
@@ -124,16 +131,19 @@ impl SessionStore {
     }
 
     /// Refresh session expiry
-    pub async fn refresh_session(&self, session_id: &str) -> Option<Session> {
-        let session = self.get_session(session_id).await?;
+    pub async fn refresh_session(&self, session_id: &str) -> Result<Option<Session>, sqlx::Error> {
+        let session = match self.get_session(session_id).await {
+            Some(s) => s,
+            None => return Ok(None),
+        };
 
         if session.is_expired() {
-            return None;
+            return Ok(None);
         }
 
         let new_expires_at = Utc::now() + Duration::days(7);
 
-        let _ = sqlx::query!(
+        sqlx::query!(
             r#"
             UPDATE sessions
             SET expires_at = ?1
@@ -143,17 +153,17 @@ impl SessionStore {
             session_id
         )
         .execute(&self.db)
-        .await;
+        .await?;
 
-        Some(Session {
+        Ok(Some(Session {
             expires_at: new_expires_at,
             ..session
-        })
+        }))
     }
 
     /// Delete a session
-    pub async fn delete_session(&self, session_id: &str) {
-        let _ = sqlx::query!(
+    pub async fn delete_session(&self, session_id: &str) -> Result<(), sqlx::Error> {
+        sqlx::query!(
             r#"
             DELETE FROM sessions
             WHERE id = ?1
@@ -161,13 +171,15 @@ impl SessionStore {
             session_id
         )
         .execute(&self.db)
-        .await;
+        .await?;
+
+        Ok(())
     }
 
     /// Clean up expired sessions (should be called periodically)
-    pub async fn cleanup_expired(&self) {
+    pub async fn cleanup_expired(&self) -> Result<(), sqlx::Error> {
         let now = Utc::now();
-        let _ = sqlx::query!(
+        sqlx::query!(
             r#"
             DELETE FROM sessions
             WHERE expires_at < ?1
@@ -175,7 +187,9 @@ impl SessionStore {
             now
         )
         .execute(&self.db)
-        .await;
+        .await?;
+
+        Ok(())
     }
 
     /// Get number of active sessions
@@ -204,7 +218,8 @@ mod tests {
         let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
-            .await;
+            .await
+            .expect("Failed to create session");
 
         assert_eq!(session.user_id, 1);
         assert_eq!(session.user_email, "test@example.com");
@@ -216,7 +231,8 @@ mod tests {
         let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
-            .await;
+            .await
+            .expect("Failed to create session");
 
         let retrieved = store.get_session(&session.id).await;
         assert!(retrieved.is_some());
@@ -228,10 +244,14 @@ mod tests {
         let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
-            .await;
+            .await
+            .expect("Failed to create session");
 
         assert_eq!(store.session_count().await, 1);
-        store.delete_session(&session.id).await;
+        store
+            .delete_session(&session.id)
+            .await
+            .expect("Failed to delete session");
         assert_eq!(store.session_count().await, 0);
     }
 
@@ -240,7 +260,8 @@ mod tests {
         let store = SessionStore::new(pool);
         let session = store
             .create_session(1, "test@example.com".to_string(), "Test User".to_string())
-            .await;
+            .await
+            .expect("Failed to create session");
 
         // Valid session
         let validated = store.validate_session(&session.id).await;

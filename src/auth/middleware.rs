@@ -33,7 +33,9 @@ pub async fn require_auth(
             // Validate session
             if let Some(session) = state.sessions.validate_session(&session_id).await {
                 // Refresh session expiry on each request
-                state.sessions.refresh_session(&session_id).await;
+                if let Err(e) = state.sessions.refresh_session(&session_id).await {
+                    tracing::error!("Failed to refresh session {}: {}", session_id, e);
+                }
 
                 // Add session to request extensions
                 request.extensions_mut().insert(session);
@@ -67,7 +69,9 @@ pub async fn optional_auth(
             verify_signed_session_id(&signed_session_id, &state.session_secret)
         {
             if let Some(session) = state.sessions.validate_session(&session_id).await {
-                state.sessions.refresh_session(&session_id).await;
+                if let Err(e) = state.sessions.refresh_session(&session_id).await {
+                    tracing::error!("Failed to refresh session {}: {}", session_id, e);
+                }
                 request.extensions_mut().insert(session);
             }
         }

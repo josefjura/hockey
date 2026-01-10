@@ -109,6 +109,7 @@ pub async fn create_test_session(pool: &SqlitePool) -> Session {
             user.name.unwrap_or_else(|| "Test User".to_string()),
         )
         .await
+        .expect("Failed to create test session")
 }
 
 /// Generate a session cookie from a Session

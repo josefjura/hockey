@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Session operations now properly report errors instead of silently failing, preventing confusing authentication states where users think they're logged in but aren't, or sessions expire unexpectedly (#167)
 - Database foreign key constraints now properly enforce CASCADE and RESTRICT rules, automatically cleaning up related records when parent entities are deleted and preventing orphaned data (#160)
 - Error messages now appear in the user's selected language instead of always showing in English, ensuring a consistent multilingual experience for Czech users (#175)
 - CI builds no longer fail during E2E tests due to SESSION_SECRET being too short to meet the 32-character security requirement

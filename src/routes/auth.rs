@@ -86,10 +86,20 @@ pub async fn login_post(
     }
 
     // Create session
-    let session = state
+    let session = match state
         .sessions
         .create_session(user_id, user_email.clone(), user_name)
-        .await;
+        .await
+    {
+        Ok(s) => s,
+        Err(e) => {
+            tracing::error!("Failed to create session for user {}: {}", user_email, e);
+            return Err((
+                jar,
+                Html(login_page(Some("Login failed - please try again".to_string())).into_string()),
+            ));
+        }
+    };
 
     tracing::info!("User {} logged in successfully", user_email);
 
@@ -120,8 +130,10 @@ pub async fn logout_post(State(state): State<AppState>, jar: CookieJar) -> impl 
             verify_signed_session_id(session_cookie.value(), &state.session_secret)
         {
             // Delete session from store
-            state.sessions.delete_session(&session_id).await;
-            tracing::info!("User logged out");
+            match state.sessions.delete_session(&session_id).await {
+                Ok(_) => tracing::info!("User logged out"),
+                Err(e) => tracing::error!("Failed to delete session on logout: {}", e),
+            }
         }
     }
 

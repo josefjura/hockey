@@ -80,8 +80,10 @@ async fn main() -> Result<(), anyhow::Error> {
         let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3600)); // Every hour
         loop {
             interval.tick().await;
-            session_store.cleanup_expired().await;
-            tracing::debug!("Cleaned up expired sessions");
+            match session_store.cleanup_expired().await {
+                Ok(_) => tracing::debug!("Cleaned up expired sessions"),
+                Err(e) => tracing::error!("Failed to cleanup expired sessions: {}", e),
+            }
         }
     });
 
