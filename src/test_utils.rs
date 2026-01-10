@@ -25,7 +25,7 @@ pub const TEST_SESSION_SECRET: &str = "test-secret-key-DO-NOT-USE-IN-PRODUCTION-
 /// using the provided database pool. Use with axum-test for route testing.
 pub fn create_test_app(pool: SqlitePool) -> Router {
     let session_store = SessionStore::new(pool.clone());
-    let state = AppState::new(pool, session_store, TEST_SESSION_SECRET.to_string());
+    let state = AppState::new(pool, session_store, TEST_SESSION_SECRET.to_string(), false);
 
     // Public routes
     let public_routes = Router::new()

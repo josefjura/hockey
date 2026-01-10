@@ -67,6 +67,7 @@ async fn main() -> Result<(), anyhow::Error> {
         db_pool,
         session_store.clone(),
         config.session_secret.clone(),
+        config.is_production(),
     );
 
     // Start background task to cleanup expired sessions

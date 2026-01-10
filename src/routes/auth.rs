@@ -123,6 +123,7 @@ pub async fn login_post(
     let session_cookie = Cookie::build((SESSION_COOKIE_NAME, signed_session_id))
         .path("/")
         .http_only(true)
+        .secure(state.is_production)
         .same_site(SameSite::Strict)
         .max_age(time::Duration::days(7))
         .build();
