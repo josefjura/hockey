@@ -182,6 +182,15 @@ pub async fn get_player_scoring_page_data(
     }))
 }
 
+/// Unified error type for player operations
+#[derive(Debug)]
+pub enum PlayerError {
+    /// Validation error
+    Validation(PlayerValidationError),
+    /// Database error
+    Database(sqlx::Error),
+}
+
 /// Validation error for player operations
 #[derive(Debug, Clone)]
 pub enum PlayerValidationError {
@@ -207,6 +216,29 @@ impl PlayerValidationError {
     }
 }
 
+impl From<PlayerValidationError> for PlayerError {
+    fn from(err: PlayerValidationError) -> Self {
+        PlayerError::Validation(err)
+    }
+}
+
+impl From<sqlx::Error> for PlayerError {
+    fn from(err: sqlx::Error) -> Self {
+        PlayerError::Database(err)
+    }
+}
+
+impl std::fmt::Display for PlayerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PlayerError::Validation(e) => write!(f, "Validation error: {}", e.message()),
+            PlayerError::Database(e) => write!(f, "Database error: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for PlayerError {}
+
 /// Validates and creates a new player
 ///
 /// This function validates the player data and creates the player in the database.
@@ -218,29 +250,28 @@ impl PlayerValidationError {
 ///
 /// # Returns
 /// * `Ok(i64)` - ID of created player
-/// * `Err(PlayerValidationError)` - If validation fails
-/// * `Err(sqlx::Error)` - If database operation fails
+/// * `Err(PlayerError)` - If validation or database operation fails
 pub async fn create_player_validated(
     db: &SqlitePool,
     form_data: &PlayerFormData,
     photo_path: Option<String>,
-) -> Result<i64, Result<PlayerValidationError, sqlx::Error>> {
+) -> Result<i64, PlayerError> {
     // Validate name
     let validated_name = validate_name(&form_data.name)
-        .map_err(|msg| Ok(PlayerValidationError::InvalidName(msg)))?;
+        .map_err(PlayerValidationError::InvalidName)?;
 
     // Validate country_id is provided
     let country_id = form_data
         .country_id
-        .ok_or(Ok(PlayerValidationError::MissingCountryId))?;
+        .ok_or(PlayerValidationError::MissingCountryId)?;
 
     // Validate height
     let validated_height = validate_height_cm(form_data.height_cm)
-        .map_err(|msg| Ok(PlayerValidationError::InvalidHeight(msg)))?;
+        .map_err(PlayerValidationError::InvalidHeight)?;
 
     // Validate weight
     let validated_weight = validate_weight_kg(form_data.weight_kg)
-        .map_err(|msg| Ok(PlayerValidationError::InvalidWeight(msg)))?;
+        .map_err(PlayerValidationError::InvalidWeight)?;
 
     // Create player
     players::create_player(
@@ -258,7 +289,7 @@ pub async fn create_player_validated(
         },
     )
     .await
-    .map_err(Err)
+    .map_err(PlayerError::Database)
 }
 
 /// Validates and updates an existing player
@@ -273,30 +304,29 @@ pub async fn create_player_validated(
 ///
 /// # Returns
 /// * `Ok(bool)` - true if player was updated, false if not found
-/// * `Err(PlayerValidationError)` - If validation fails
-/// * `Err(sqlx::Error)` - If database operation fails
+/// * `Err(PlayerError)` - If validation or database operation fails
 pub async fn update_player_validated(
     db: &SqlitePool,
     id: i64,
     form_data: &PlayerFormData,
     photo_path: Option<String>,
-) -> Result<bool, Result<PlayerValidationError, sqlx::Error>> {
+) -> Result<bool, PlayerError> {
     // Validate name
     let validated_name = validate_name(&form_data.name)
-        .map_err(|msg| Ok(PlayerValidationError::InvalidName(msg)))?;
+        .map_err(PlayerValidationError::InvalidName)?;
 
     // Validate country_id is provided
     let country_id = form_data
         .country_id
-        .ok_or(Ok(PlayerValidationError::MissingCountryId))?;
+        .ok_or(PlayerValidationError::MissingCountryId)?;
 
     // Validate height
     let validated_height = validate_height_cm(form_data.height_cm)
-        .map_err(|msg| Ok(PlayerValidationError::InvalidHeight(msg)))?;
+        .map_err(PlayerValidationError::InvalidHeight)?;
 
     // Validate weight
     let validated_weight = validate_weight_kg(form_data.weight_kg)
-        .map_err(|msg| Ok(PlayerValidationError::InvalidWeight(msg)))?;
+        .map_err(PlayerValidationError::InvalidWeight)?;
 
     // Update player
     players::update_player(
@@ -315,7 +345,7 @@ pub async fn update_player_validated(
         },
     )
     .await
-    .map_err(Err)
+    .map_err(PlayerError::Database)
 }
 
 /// Validates property change data

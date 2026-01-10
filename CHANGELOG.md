@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Simplified internal code structure by removing duplicate country-fetching logic across multiple modules, making the codebase easier to maintain and understand (#168)
+- Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 
 ### Fixed
 - Error handling is now consistent across all routes, making debugging easier and providing clearer error messages when operations fail (#163)

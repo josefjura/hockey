@@ -240,7 +240,7 @@ pub async fn player_create(
             );
             (headers, htmx_reload_table("/players/list", "players-table")).into_response()
         }
-        Err(Ok(validation_error)) => {
+        Err(crate::business::players::PlayerError::Validation(validation_error)) => {
             // Validation error
             Html(
                 player_create_modal(&session, &t, Some(validation_error.message()), &countries)
@@ -248,7 +248,7 @@ pub async fn player_create(
             )
             .into_response()
         }
-        Err(Err(e)) => {
+        Err(crate::business::players::PlayerError::Database(e)) => {
             // Database error
             tracing::error!("Failed to create player: {}", e);
             Html(
@@ -386,7 +386,7 @@ pub async fn player_update(
             .into_string(),
         )
         .into_response(),
-        Err(Ok(validation_error)) => {
+        Err(crate::business::players::PlayerError::Validation(validation_error)) => {
             // Validation error
             Html(
                 player_edit_modal(
@@ -400,7 +400,7 @@ pub async fn player_update(
             )
             .into_response()
         }
-        Err(Err(e)) => {
+        Err(crate::business::players::PlayerError::Database(e)) => {
             // Database error
             tracing::error!("Failed to update player: {}", e);
             Html(
