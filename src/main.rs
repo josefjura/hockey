@@ -56,9 +56,14 @@ async fn main() -> Result<(), anyhow::Error> {
         .foreign_keys(true);
 
     let db_pool = SqlitePoolOptions::new()
-        .max_connections(5)
+        .max_connections(config.db_max_connections)
         .connect_with(connection_options)
         .await?;
+
+    tracing::info!(
+        "Database connection pool configured with {} max connections",
+        config.db_max_connections
+    );
 
     // Run migrations
     tracing::info!("Running database migrations...");

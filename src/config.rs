@@ -6,6 +6,7 @@ pub struct Config {
     pub session_secret: String,
     pub environment: Environment,
     pub port: u16,
+    pub db_max_connections: u32,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -76,11 +77,17 @@ impl Config {
             .unwrap_or_else(|_| "8080".to_string())
             .parse::<u16>()?;
 
+        let db_max_connections = env::var("DB_MAX_CONNECTIONS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(5);
+
         Ok(Config {
             database_url,
             session_secret,
             environment,
             port,
+            db_max_connections,
         })
     }
 
@@ -106,6 +113,7 @@ mod tests {
         env::remove_var("SESSION_SECRET");
         env::remove_var("DATABASE_URL");
         env::remove_var("PORT");
+        env::remove_var("DB_MAX_CONNECTIONS");
     }
 
     #[test]
@@ -204,5 +212,43 @@ mod tests {
         assert!(result.is_ok());
         let config = result.unwrap();
         assert_eq!(config.session_secret.len(), 64);
+    }
+
+    #[test]
+    #[serial]
+    fn test_default_db_max_connections() {
+        clear_env();
+        env::set_var("ENVIRONMENT", "development");
+
+        let result = Config::from_env_vars();
+        assert!(result.is_ok());
+        let config = result.unwrap();
+        assert_eq!(config.db_max_connections, 5);
+    }
+
+    #[test]
+    #[serial]
+    fn test_custom_db_max_connections() {
+        clear_env();
+        env::set_var("ENVIRONMENT", "development");
+        env::set_var("DB_MAX_CONNECTIONS", "10");
+
+        let result = Config::from_env_vars();
+        assert!(result.is_ok());
+        let config = result.unwrap();
+        assert_eq!(config.db_max_connections, 10);
+    }
+
+    #[test]
+    #[serial]
+    fn test_invalid_db_max_connections_uses_default() {
+        clear_env();
+        env::set_var("ENVIRONMENT", "development");
+        env::set_var("DB_MAX_CONNECTIONS", "invalid");
+
+        let result = Config::from_env_vars();
+        assert!(result.is_ok());
+        let config = result.unwrap();
+        assert_eq!(config.db_max_connections, 5);
     }
 }

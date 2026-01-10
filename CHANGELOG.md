@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Database connection pool size is now configurable via the `DB_MAX_CONNECTIONS` environment variable, allowing you to optimize performance for different workloads or limit resources in constrained environments (default: 5) (#181)
 
 ### Changed
 - Simplified internal code structure by removing duplicate country-fetching logic across multiple modules, making the codebase easier to maintain and understand (#168)
