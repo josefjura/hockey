@@ -9,10 +9,11 @@ use serde::Deserialize;
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::TranslationContext;
-use crate::service::seasons::{
-    self, CreateSeasonEntity, SeasonFilters, SortField, SortOrder, UpdateSeasonEntity,
-};
 use crate::service::team_participations::{self, CreateTeamParticipationEntity};
+use crate::service::{
+    countries,
+    seasons::{self, CreateSeasonEntity, SeasonFilters, SortField, SortOrder, UpdateSeasonEntity},
+};
 use crate::views::{
     components::{error::error_message, htmx::htmx_reload_table},
     layout::admin_layout,
@@ -204,7 +205,9 @@ pub async fn season_create_form(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
-    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
+    let countries = countries::get_countries_simple(&state.db)
+        .await
+        .unwrap_or_default();
     Html(season_create_modal(&session, &t, None, &events, &countries, None).into_string())
 }
 
@@ -240,7 +243,9 @@ pub async fn event_season_create_form(
     };
 
     let events = vec![(event.id, event.name)];
-    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
+    let countries = countries::get_countries_simple(&state.db)
+        .await
+        .unwrap_or_default();
     let return_url = format!("/events/{}", event_id);
     Html(
         crate::views::pages::seasons::season_create_modal_with_return(
@@ -270,7 +275,9 @@ pub async fn season_create(
 
     // Get events and countries for form re-render on error
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
-    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
+    let countries = countries::get_countries_simple(&state.db)
+        .await
+        .unwrap_or_default();
 
     // Validation
     if form.year < 1900 || form.year > 2100 {
@@ -380,7 +387,9 @@ pub async fn season_edit_form(
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
-    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
+    let countries = countries::get_countries_simple(&state.db)
+        .await
+        .unwrap_or_default();
 
     let season = match seasons::get_season_by_id(&state.db, id).await {
         Ok(Some(season)) => season,
@@ -422,7 +431,9 @@ pub async fn season_update(
     }
 
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
-    let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
+    let countries = countries::get_countries_simple(&state.db)
+        .await
+        .unwrap_or_default();
 
     // Validation
     if form.year < 1900 || form.year > 2100 {

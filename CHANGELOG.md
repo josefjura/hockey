@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Simplified internal code structure by removing duplicate country-fetching logic across multiple modules, making the codebase easier to maintain and understand (#168)
 
 ### Fixed
 - Error handling is now consistent across all routes, making debugging easier and providing clearer error messages when operations fail (#163)

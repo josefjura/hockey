@@ -8,7 +8,10 @@ use serde::Deserialize;
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::TranslationContext;
-use crate::service::players::{self, PlayerFilters, SortField, SortOrder};
+use crate::service::{
+    countries,
+    players::{self, PlayerFilters, SortField, SortOrder},
+};
 use crate::views::{
     components::{
         error::error_message,
@@ -99,7 +102,7 @@ pub async fn players_get(
     };
 
     // Get countries for filter
-    let countries = match players::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -170,7 +173,7 @@ pub async fn player_create_form(
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let countries = match players::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -190,7 +193,7 @@ pub async fn player_create(
     use axum::http::header::{HeaderMap, HeaderName};
 
     // Get countries for form re-render on error
-    let countries = match players::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -264,7 +267,7 @@ pub async fn player_edit_form(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
-    let countries = match players::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -306,7 +309,7 @@ pub async fn player_update(
     Path(id): Path<i64>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
-    let countries = match players::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for dropdown: {}", e);

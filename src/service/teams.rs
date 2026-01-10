@@ -235,11 +235,6 @@ fn apply_filters<'a>(
     }
 }
 
-/// Get all countries for dropdowns (only enabled countries)
-pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    crate::service::countries::get_countries_simple(db).await
-}
-
 /// Get team detail with all participations (seasons/events)
 pub async fn get_team_detail(
     db: &SqlitePool,
@@ -436,7 +431,9 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn test_get_countries_for_team_creation(pool: SqlitePool) {
-        let countries = get_countries(&pool).await.unwrap();
+        let countries = crate::service::countries::get_countries_simple(&pool)
+            .await
+            .unwrap();
 
         assert!(!countries.is_empty());
         assert!(countries.len() > 50); // Many countries in migrations

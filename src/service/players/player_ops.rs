@@ -286,11 +286,6 @@ fn apply_filters<'a>(
     }
 }
 
-/// Get all countries for dropdowns (only enabled countries)
-pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    crate::service::countries::get_countries_simple(db).await
-}
-
 /// Get player detail with all contracts (career history)
 pub async fn get_player_detail(
     db: &SqlitePool,

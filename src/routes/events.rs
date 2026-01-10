@@ -8,7 +8,10 @@ use serde::Deserialize;
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::TranslationContext;
-use crate::service::events::{self, CreateEventEntity, EventFilters, UpdateEventEntity};
+use crate::service::{
+    countries,
+    events::{self, CreateEventEntity, EventFilters, UpdateEventEntity},
+};
 use crate::validation::validate_name;
 use crate::views::{
     components::{error::error_message, htmx::htmx_reload_table},
@@ -86,7 +89,7 @@ pub async fn events_get(
     };
 
     // Get countries for filter
-    let countries = match events::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -177,7 +180,7 @@ pub async fn event_create_form(
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let countries = match events::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -197,7 +200,7 @@ pub async fn event_create(
     let name = match validate_name(&form.name) {
         Ok(n) => n,
         Err(error) => {
-            let countries = match events::get_countries(&state.db).await {
+            let countries = match countries::get_countries_simple(&state.db).await {
                 Ok(countries) => countries,
                 Err(e) => {
                     tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -233,7 +236,7 @@ pub async fn event_create(
         }
         Err(e) => {
             tracing::error!("Failed to create event: {}", e);
-            let countries = match events::get_countries(&state.db).await {
+            let countries = match countries::get_countries_simple(&state.db).await {
                 Ok(countries) => countries,
                 Err(e) => {
                     tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -275,7 +278,7 @@ pub async fn event_edit_form(
         }
     };
 
-    let countries = match events::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -314,7 +317,7 @@ pub async fn event_update(
                     );
                 }
             };
-            let countries = match events::get_countries(&state.db).await {
+            let countries = match countries::get_countries_simple(&state.db).await {
                 Ok(countries) => countries,
                 Err(e) => {
                     tracing::warn!("Failed to load countries for dropdown: {}", e);
@@ -361,7 +364,7 @@ pub async fn event_update(
                     );
                 }
             };
-            let countries = match events::get_countries(&state.db).await {
+            let countries = match countries::get_countries_simple(&state.db).await {
                 Ok(countries) => countries,
                 Err(e) => {
                     tracing::warn!("Failed to load countries for dropdown: {}", e);

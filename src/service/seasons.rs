@@ -288,22 +288,6 @@ pub async fn get_events(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Err
     Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
 }
 
-/// Get all countries for dropdowns (only enabled countries)
-pub async fn get_countries(db: &SqlitePool) -> Result<Vec<(i64, String)>, sqlx::Error> {
-    let rows = sqlx::query!(
-        r#"
-        SELECT id, name
-        FROM country
-        WHERE enabled = 1
-        ORDER BY name
-        "#
-    )
-    .fetch_all(db)
-    .await?;
-
-    Ok(rows.into_iter().map(|row| (row.id, row.name)).collect())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -399,7 +383,9 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn test_get_countries_for_season_creation(pool: SqlitePool) {
-        let countries = get_countries(&pool).await.unwrap();
+        let countries = crate::service::countries::get_countries_simple(&pool)
+            .await
+            .unwrap();
         assert!(!countries.is_empty());
     }
 }

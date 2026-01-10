@@ -8,8 +8,9 @@ use serde::Deserialize;
 use crate::app_state::AppState;
 use crate::auth::Session;
 use crate::i18n::TranslationContext;
-use crate::service::teams::{
-    self, CreateTeamEntity, SortField, SortOrder, TeamFilters, UpdateTeamEntity,
+use crate::service::{
+    countries,
+    teams::{self, CreateTeamEntity, SortField, SortOrder, TeamFilters, UpdateTeamEntity},
 };
 use crate::validation::validate_name;
 use crate::views::{
@@ -118,7 +119,7 @@ pub async fn teams_get(
     };
 
     // Get countries for filter
-    let countries = match teams::get_countries(&state.db).await {
+    let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
         Err(e) => {
             tracing::warn!("Failed to load countries for filter dropdown: {}", e);
