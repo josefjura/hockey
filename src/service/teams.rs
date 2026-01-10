@@ -2,6 +2,9 @@ use sqlx::{Row, SqlitePool};
 
 use crate::common::pagination::PagedResult;
 
+// Re-export SortOrder for backwards compatibility
+pub use crate::common::pagination::SortOrder;
+
 #[derive(Debug, Clone)]
 pub struct TeamEntity {
     pub id: i64,
@@ -79,42 +82,7 @@ impl SortField {
     }
 }
 
-/// Sort order (ascending/descending)
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SortOrder {
-    Asc,
-    Desc,
-}
-
-impl SortOrder {
-    pub fn from_str(s: &str) -> Self {
-        match s.to_lowercase().as_str() {
-            "desc" => Self::Desc,
-            _ => Self::Asc,
-        }
-    }
-
-    pub fn to_sql(&self) -> &'static str {
-        match self {
-            Self::Asc => "ASC",
-            Self::Desc => "DESC",
-        }
-    }
-
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Asc => "asc",
-            Self::Desc => "desc",
-        }
-    }
-
-    pub fn toggle(&self) -> Self {
-        match self {
-            Self::Asc => Self::Desc,
-            Self::Desc => Self::Asc,
-        }
-    }
-}
+// SortOrder is now imported from crate::common::pagination
 
 /// Create a new team
 pub async fn create_team(db: &SqlitePool, team: CreateTeamEntity) -> Result<i64, sqlx::Error> {
@@ -159,11 +127,13 @@ pub async fn get_teams(
     apply_filters(&mut data_query, filters);
 
     // Apply sorting
-    data_query.push(format!(
-        " ORDER BY {} {}",
-        sort_field.to_sql(),
-        sort_order.to_sql()
-    ));
+    // SECURITY: Using .push() method to safely append enum values.
+    // This prevents SQL injection as values come from trusted enum matches.
+    data_query
+        .push(" ORDER BY ")
+        .push(sort_field.to_sql())
+        .push(" ")
+        .push(sort_order.to_sql());
 
     // Apply pagination
     let offset = (page - 1) * page_size;

@@ -81,17 +81,21 @@ pub async fn get_player_scoring_events(
                     WHEN se.scorer_id = ",
     );
     count_query.push_bind(player_id);
-    count_query.push(format!(" THEN '{}' WHEN se.assist1_id = ", EVENT_TYPE_GOAL));
+    // SECURITY: Using .push() with constants to avoid format!() macro
+    count_query
+        .push(" THEN '")
+        .push(EVENT_TYPE_GOAL)
+        .push("' WHEN se.assist1_id = ");
     count_query.push_bind(player_id);
-    count_query.push(format!(
-        " THEN '{}' WHEN se.assist2_id = ",
-        EVENT_TYPE_ASSIST_PRIMARY
-    ));
+    count_query
+        .push(" THEN '")
+        .push(EVENT_TYPE_ASSIST_PRIMARY)
+        .push("' WHEN se.assist2_id = ");
     count_query.push_bind(player_id);
-    count_query.push(format!(
-        " THEN '{}' END as event_type FROM score_event se WHERE se.scorer_id = ",
-        EVENT_TYPE_ASSIST_SECONDARY
-    ));
+    count_query
+        .push(" THEN '")
+        .push(EVENT_TYPE_ASSIST_SECONDARY)
+        .push("' END as event_type FROM score_event se WHERE se.scorer_id = ");
     count_query.push_bind(player_id);
     count_query.push(" OR se.assist1_id = ");
     count_query.push_bind(player_id);
@@ -130,17 +134,21 @@ pub async fn get_player_scoring_events(
                     WHEN se.scorer_id = ",
     );
     data_query.push_bind(player_id);
-    data_query.push(format!(" THEN '{}' WHEN se.assist1_id = ", EVENT_TYPE_GOAL));
+    // SECURITY: Using .push() with constants to avoid format!() macro
+    data_query
+        .push(" THEN '")
+        .push(EVENT_TYPE_GOAL)
+        .push("' WHEN se.assist1_id = ");
     data_query.push_bind(player_id);
-    data_query.push(format!(
-        " THEN '{}' WHEN se.assist2_id = ",
-        EVENT_TYPE_ASSIST_PRIMARY
-    ));
+    data_query
+        .push(" THEN '")
+        .push(EVENT_TYPE_ASSIST_PRIMARY)
+        .push("' WHEN se.assist2_id = ");
     data_query.push_bind(player_id);
-    data_query.push(format!(
-        " THEN '{}' END as event_type FROM score_event se WHERE se.scorer_id = ",
-        EVENT_TYPE_ASSIST_SECONDARY
-    ));
+    data_query
+        .push(" THEN '")
+        .push(EVENT_TYPE_ASSIST_SECONDARY)
+        .push("' END as event_type FROM score_event se WHERE se.scorer_id = ");
     data_query.push_bind(player_id);
     data_query.push(" OR se.assist1_id = ");
     data_query.push_bind(player_id);
@@ -260,16 +268,22 @@ fn apply_filters<'a>(
     filters: &'a PlayerScoringFilters,
 ) {
     // Event type filter
+    // SECURITY: Using .push() with constants to avoid format!() macro
     if let Some(event_type) = &filters.event_type {
         match event_type.as_str() {
             FILTER_EVENT_TYPE_GOALS => {
-                query.push(format!(" AND pe.event_type = '{}'", EVENT_TYPE_GOAL));
+                query
+                    .push(" AND pe.event_type = '")
+                    .push(EVENT_TYPE_GOAL)
+                    .push("'");
             }
             FILTER_EVENT_TYPE_ASSISTS => {
-                query.push(format!(
-                    " AND (pe.event_type = '{}' OR pe.event_type = '{}')",
-                    EVENT_TYPE_ASSIST_PRIMARY, EVENT_TYPE_ASSIST_SECONDARY
-                ));
+                query
+                    .push(" AND (pe.event_type = '")
+                    .push(EVENT_TYPE_ASSIST_PRIMARY)
+                    .push("' OR pe.event_type = '")
+                    .push(EVENT_TYPE_ASSIST_SECONDARY)
+                    .push("')");
             }
             _ => {} // "all" - no filter
         }
