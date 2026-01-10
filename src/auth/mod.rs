@@ -1,10 +1,12 @@
 pub mod middleware;
 pub mod password;
+pub mod rate_limit;
 pub mod session;
 pub mod signing;
 
 pub use middleware::{require_auth, SESSION_COOKIE_NAME};
 pub use password::verify_password;
+pub use rate_limit::{rate_limit_login, LoginRateLimiter};
 pub use signing::{sign_session_id, verify_signed_session_id};
 
 // Re-export these for potential future use

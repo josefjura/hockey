@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Player height and weight fields now reject invalid values like negative numbers or biologically impossible measurements with both backend validation and HTML5 form constraints (100-250 cm for height, 40-200 kg for weight) (#174)
 
 ### Security
+- Login endpoint now has rate limiting protection to prevent brute force attacks, allowing only 5 login attempts per minute (#183)
 - Session cookies are now cryptographically signed using HMAC-SHA256, preventing attackers from forging valid session tokens even if they can guess session IDs (#162)
 - Production deployments now require a secure SESSION_SECRET to be explicitly set, preventing the use of insecure default values that could allow session forgery (#179)
 - SESSION_SECRET must now be at least 32 characters long to ensure adequate cryptographic security (#179)

@@ -28,7 +28,7 @@ use std::net::SocketAddr;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use auth::{require_auth, SessionStore};
+use auth::{rate_limit_login, require_auth, LoginRateLimiter, SessionStore};
 use views::{layout::admin_layout, pages::dashboard::dashboard_page};
 
 #[tokio::main]
@@ -79,10 +79,19 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     });
 
+    // Create rate limiter for login endpoint
+    let login_rate_limiter = LoginRateLimiter::new();
+
     // Public routes (no authentication required)
     let public_routes = Router::new()
         .route("/auth/login", get(routes::auth::login_get))
-        .route("/auth/login", post(routes::auth::login_post))
+        .route(
+            "/auth/login",
+            post(routes::auth::login_post).layer(middleware::from_fn_with_state(
+                login_rate_limiter,
+                rate_limit_login,
+            )),
+        )
         .route("/auth/logout", post(routes::auth::logout_post))
         .route("/locale/:code", get(routes::locale::set_locale));
 
