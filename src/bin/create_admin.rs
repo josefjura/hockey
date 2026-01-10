@@ -1,6 +1,6 @@
 use anyhow::Result;
 use bcrypt::{hash, DEFAULT_COST};
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::io::{self, Write};
 
 #[tokio::main]
@@ -16,10 +16,14 @@ async fn main() -> Result<()> {
 
     println!("Connecting to database: {}", database_url);
 
-    // Connect to database
+    // Connect to database with foreign keys enabled
+    let connection_options = database_url
+        .parse::<SqliteConnectOptions>()?
+        .foreign_keys(true);
+
     let pool = SqlitePoolOptions::new()
         .max_connections(1)
-        .connect(&database_url)
+        .connect_with(connection_options)
         .await?;
 
     println!("Connected successfully!\n");

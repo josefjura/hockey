@@ -23,7 +23,7 @@ use axum::{
     Extension, Router,
 };
 use i18n::TranslationContext;
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::net::SocketAddr;
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -48,10 +48,15 @@ async fn main() -> Result<(), anyhow::Error> {
     tracing::info!("Environment: {:?}", config.environment);
     tracing::info!("Database: {}", config.database_url);
 
-    // Set up database connection pool
+    // Set up database connection pool with foreign keys enabled
+    let connection_options = config
+        .database_url
+        .parse::<SqliteConnectOptions>()?
+        .foreign_keys(true);
+
     let db_pool = SqlitePoolOptions::new()
         .max_connections(5)
-        .connect(&config.database_url)
+        .connect_with(connection_options)
         .await?;
 
     // Run migrations
