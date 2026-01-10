@@ -421,7 +421,8 @@ pub fn player_create_modal(
                     type="number"
                     name="height_cm"
                     placeholder="180"
-                    min="0"
+                    min="100"
+                    max="250"
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             }
             div {
@@ -432,7 +433,8 @@ pub fn player_create_modal(
                     type="number"
                     name="weight_kg"
                     placeholder="80"
-                    min="0"
+                    min="40"
+                    max="200"
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             }
         }
@@ -593,7 +595,8 @@ pub fn player_edit_modal(
                     name="height_cm"
                     value=[player.height_cm]
                     placeholder="180"
-                    min="0"
+                    min="100"
+                    max="250"
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             }
             div {
@@ -605,7 +608,8 @@ pub fn player_edit_modal(
                     name="weight_kg"
                     value=[player.weight_kg]
                     placeholder="80"
-                    min="0"
+                    min="40"
+                    max="200"
                     style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
             }
         }
