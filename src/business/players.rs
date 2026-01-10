@@ -51,19 +51,39 @@ pub async fn get_player_detail_page_data(
     };
 
     // Fetch season statistics (return empty vec on error to maintain partial functionality)
-    let season_stats = players::get_player_season_stats(db, player_id)
-        .await
-        .unwrap_or_default();
+    let season_stats = match players::get_player_season_stats(db, player_id).await {
+        Ok(stats) => stats,
+        Err(e) => {
+            tracing::warn!(
+                "Failed to load season stats for player {}: {}",
+                player_id,
+                e
+            );
+            Vec::new()
+        }
+    };
 
     // Fetch event statistics (return empty vec on error to maintain partial functionality)
-    let event_stats = players::get_player_event_stats(db, player_id)
-        .await
-        .unwrap_or_default();
+    let event_stats = match players::get_player_event_stats(db, player_id).await {
+        Ok(stats) => stats,
+        Err(e) => {
+            tracing::warn!("Failed to load event stats for player {}: {}", player_id, e);
+            Vec::new()
+        }
+    };
 
     // Fetch property changes (return empty vec on error to maintain partial functionality)
-    let property_changes = players::get_player_property_changes(db, player_id)
-        .await
-        .unwrap_or_default();
+    let property_changes = match players::get_player_property_changes(db, player_id).await {
+        Ok(changes) => changes,
+        Err(e) => {
+            tracing::warn!(
+                "Failed to load property changes for player {}: {}",
+                player_id,
+                e
+            );
+            Vec::new()
+        }
+    };
 
     Ok(Some(PlayerDetailPageData {
         detail,
@@ -138,12 +158,20 @@ pub async fn get_player_scoring_page_data(
     .await?;
 
     // Fetch filter dropdown data (return empty vec on error to maintain partial functionality)
-    let seasons = players::get_player_seasons(db, player_id)
-        .await
-        .unwrap_or_default();
-    let teams = players::get_player_teams(db, player_id)
-        .await
-        .unwrap_or_default();
+    let seasons = match players::get_player_seasons(db, player_id).await {
+        Ok(seasons) => seasons,
+        Err(e) => {
+            tracing::warn!("Failed to load seasons for player {}: {}", player_id, e);
+            Vec::new()
+        }
+    };
+    let teams = match players::get_player_teams(db, player_id).await {
+        Ok(teams) => teams,
+        Err(e) => {
+            tracing::warn!("Failed to load teams for player {}: {}", player_id, e);
+            Vec::new()
+        }
+    };
 
     Ok(Some(PlayerScoringPageData {
         player,

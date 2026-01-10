@@ -106,9 +106,17 @@ pub async fn roster_add_player_form(
     Path(team_participation_id): Path<i64>,
 ) -> impl IntoResponse {
     let available_players =
-        player_contracts::get_available_players(&state.db, team_participation_id)
-            .await
-            .unwrap_or_default();
+        match player_contracts::get_available_players(&state.db, team_participation_id).await {
+            Ok(players) => players,
+            Err(e) => {
+                tracing::warn!(
+                    "Failed to load available players for team participation {}: {}",
+                    team_participation_id,
+                    e
+                );
+                Vec::new()
+            }
+        };
 
     Html(add_player_modal(&t, team_participation_id, None, &available_players).into_string())
 }
@@ -122,9 +130,17 @@ pub async fn roster_add_player(
 ) -> axum::response::Response {
     // Get available players for form re-render on error
     let available_players =
-        player_contracts::get_available_players(&state.db, team_participation_id)
-            .await
-            .unwrap_or_default();
+        match player_contracts::get_available_players(&state.db, team_participation_id).await {
+            Ok(players) => players,
+            Err(e) => {
+                tracing::warn!(
+                    "Failed to load available players for team participation {}: {}",
+                    team_participation_id,
+                    e
+                );
+                Vec::new()
+            }
+        };
 
     // Check if player is already in roster
     match player_contracts::is_player_in_roster(&state.db, team_participation_id, form.player_id)

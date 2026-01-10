@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Error handling is now consistent across all routes, making debugging easier and providing clearer error messages when operations fail (#163)
+- Database errors when loading dropdown data (countries, seasons, teams) are now logged instead of silently ignored, making it easier to diagnose problems (#163)
+- Failed database operations now distinguish between "not found" and "database error" scenarios, providing more accurate error messages to users (#163)
 - Session operations now properly report errors instead of silently failing, preventing confusing authentication states where users think they're logged in but aren't, or sessions expire unexpectedly (#167)
 - Database foreign key constraints now properly enforce CASCADE and RESTRICT rules, automatically cleaning up related records when parent entities are deleted and preventing orphaned data (#160)
 - Error messages now appear in the user's selected language instead of always showing in English, ensuring a consistent multilingual experience for Czech users (#175)

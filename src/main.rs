@@ -4,6 +4,7 @@ mod auth;
 mod business;
 mod common;
 mod config;
+mod error;
 mod i18n;
 mod routes;
 mod service;

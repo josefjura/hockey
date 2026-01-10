@@ -118,7 +118,13 @@ pub async fn teams_get(
     };
 
     // Get countries for filter
-    let countries = teams::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match teams::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for filter dropdown: {}", e);
+            Vec::new()
+        }
+    };
 
     let content = teams_page(
         &session,
@@ -282,10 +288,25 @@ pub async fn team_update(
     let name = match validate_name(&form.name) {
         Ok(n) => n,
         Err(error) => {
-            let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-            let Some(team) = team else {
-                return Html(error_message(&t, t.messages.error_team_not_found()).into_string())
+            let team = match teams::get_team_by_id(&state.db, id).await {
+                Ok(Some(team)) => team,
+                Ok(None) => {
+                    return Html(
+                        error_message(&t, t.messages.error_team_not_found()).into_string(),
+                    )
                     .into_response();
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Database error fetching team {} for form re-render: {}",
+                        id,
+                        e
+                    );
+                    return Html(
+                        error_message(&t, t.messages.error_failed_to_load_team()).into_string(),
+                    )
+                    .into_response();
+                }
             };
             return Html(team_edit_modal(&session, &t, &team, Some(error)).into_string())
                 .into_response();
@@ -312,10 +333,25 @@ pub async fn team_update(
         }
         Err(e) => {
             tracing::error!("Failed to update team: {}", e);
-            let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
-            let Some(team) = team else {
-                return Html(error_message(&t, t.messages.error_team_not_found()).into_string())
+            let team = match teams::get_team_by_id(&state.db, id).await {
+                Ok(Some(team)) => team,
+                Ok(None) => {
+                    return Html(
+                        error_message(&t, t.messages.error_team_not_found()).into_string(),
+                    )
                     .into_response();
+                }
+                Err(e2) => {
+                    tracing::error!(
+                        "Database error fetching team {} for form re-render: {}",
+                        id,
+                        e2
+                    );
+                    return Html(
+                        error_message(&t, t.messages.error_failed_to_load_team()).into_string(),
+                    )
+                    .into_response();
+                }
             };
             Html(team_edit_modal(&session, &t, &team, Some("Failed to update team")).into_string())
                 .into_response()

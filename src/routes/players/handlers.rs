@@ -99,7 +99,13 @@ pub async fn players_get(
     };
 
     // Get countries for filter
-    let countries = players::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match players::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for dropdown: {}", e);
+            Vec::new()
+        }
+    };
 
     let content = players_page(
         &session,
@@ -164,7 +170,13 @@ pub async fn player_create_form(
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let countries = players::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match players::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for dropdown: {}", e);
+            Vec::new()
+        }
+    };
     Html(player_create_modal(&session, &t, None, &countries).into_string())
 }
 
@@ -178,7 +190,13 @@ pub async fn player_create(
     use axum::http::header::{HeaderMap, HeaderName};
 
     // Get countries for form re-render on error
-    let countries = players::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match players::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for dropdown: {}", e);
+            Vec::new()
+        }
+    };
 
     // Parse multipart form data
     let form_data =
@@ -246,7 +264,13 @@ pub async fn player_edit_form(
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
-    let countries = players::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match players::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for dropdown: {}", e);
+            Vec::new()
+        }
+    };
 
     let player = match players::get_player_by_id(&state.db, id).await {
         Ok(Some(player)) => player,
@@ -282,7 +306,13 @@ pub async fn player_update(
     Path(id): Path<i64>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
-    let countries = players::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match players::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for dropdown: {}", e);
+            Vec::new()
+        }
+    };
 
     // Get current player for fallback and old photo deletion
     let current_player = match players::get_player_by_id(&state.db, id).await {

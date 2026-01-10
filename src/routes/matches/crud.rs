@@ -53,7 +53,13 @@ pub async fn match_create_form(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     // Get seasons for dropdown (teams will be loaded dynamically based on season)
-    let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
+    let seasons = match matches::get_seasons(&state.db).await {
+        Ok(seasons) => seasons,
+        Err(e) => {
+            tracing::warn!("Failed to load seasons for dropdown: {}", e);
+            Vec::new()
+        }
+    };
 
     Html(match_create_modal(&t, None, &seasons, &[]).into_string())
 }
@@ -65,10 +71,24 @@ pub async fn match_create(
     Form(form): Form<CreateMatchForm>,
 ) -> impl IntoResponse {
     // Get seasons and teams for dropdown (in case we need to show the form again with error)
-    let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
-    let teams = matches::get_teams_for_season(&state.db, form.season_id)
-        .await
-        .unwrap_or_default();
+    let seasons = match matches::get_seasons(&state.db).await {
+        Ok(seasons) => seasons,
+        Err(e) => {
+            tracing::warn!("Failed to load seasons for dropdown: {}", e);
+            Vec::new()
+        }
+    };
+    let teams = match matches::get_teams_for_season(&state.db, form.season_id).await {
+        Ok(teams) => teams,
+        Err(e) => {
+            tracing::warn!(
+                "Failed to load teams for season {} dropdown: {}",
+                form.season_id,
+                e
+            );
+            Vec::new()
+        }
+    };
 
     // Create match with business layer validation
     match business::matches::create_match_validated(
@@ -148,10 +168,24 @@ pub async fn match_edit_form(
     };
 
     // Get seasons for dropdown and teams for the current season
-    let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
-    let teams = matches::get_teams_for_season(&state.db, match_entity.season_id)
-        .await
-        .unwrap_or_default();
+    let seasons = match matches::get_seasons(&state.db).await {
+        Ok(seasons) => seasons,
+        Err(e) => {
+            tracing::warn!("Failed to load seasons for dropdown: {}", e);
+            Vec::new()
+        }
+    };
+    let teams = match matches::get_teams_for_season(&state.db, match_entity.season_id).await {
+        Ok(teams) => teams,
+        Err(e) => {
+            tracing::warn!(
+                "Failed to load teams for season {} dropdown: {}",
+                match_entity.season_id,
+                e
+            );
+            Vec::new()
+        }
+    };
 
     Html(match_edit_modal(&t, &match_entity, None, &seasons, &teams).into_string())
 }
@@ -164,20 +198,53 @@ pub async fn match_update(
     Form(form): Form<UpdateMatchForm>,
 ) -> impl IntoResponse {
     // Get match for re-showing form on error
-    let match_entity = matches::get_match_by_id(&state.db, id).await.ok().flatten();
-
-    let Some(match_entity) = match_entity else {
-        return Html(
-            crate::views::components::error::error_message(&t, t.messages.error_match_not_found())
+    let match_entity = match matches::get_match_by_id(&state.db, id).await {
+        Ok(Some(match_entity)) => match_entity,
+        Ok(None) => {
+            return Html(
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_match_not_found(),
+                )
                 .into_string(),
-        )
-        .into_response();
+            )
+            .into_response();
+        }
+        Err(e) => {
+            tracing::error!(
+                "Database error fetching match {} for form re-render: {}",
+                id,
+                e
+            );
+            return Html(
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_match(),
+                )
+                .into_string(),
+            )
+            .into_response();
+        }
     };
 
-    let seasons = matches::get_seasons(&state.db).await.unwrap_or_default();
-    let teams = matches::get_teams_for_season(&state.db, form.season_id)
-        .await
-        .unwrap_or_default();
+    let seasons = match matches::get_seasons(&state.db).await {
+        Ok(seasons) => seasons,
+        Err(e) => {
+            tracing::warn!("Failed to load seasons for dropdown: {}", e);
+            Vec::new()
+        }
+    };
+    let teams = match matches::get_teams_for_season(&state.db, form.season_id).await {
+        Ok(teams) => teams,
+        Err(e) => {
+            tracing::warn!(
+                "Failed to load teams for season {} dropdown: {}",
+                form.season_id,
+                e
+            );
+            Vec::new()
+        }
+    };
 
     // Update match with business layer validation
     match business::matches::update_match_validated(

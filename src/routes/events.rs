@@ -86,7 +86,13 @@ pub async fn events_get(
     };
 
     // Get countries for filter
-    let countries = events::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match events::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for dropdown: {}", e);
+            Vec::new()
+        }
+    };
 
     let content = events_page(&t, &result, &filters, &countries);
     Html(admin_layout("Events", &session, "/events", &t, content).into_string())
@@ -171,7 +177,13 @@ pub async fn event_create_form(
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    let countries = events::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match events::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for dropdown: {}", e);
+            Vec::new()
+        }
+    };
     Html(event_create_modal(&t, &countries, None).into_string())
 }
 
@@ -185,7 +197,13 @@ pub async fn event_create(
     let name = match validate_name(&form.name) {
         Ok(n) => n,
         Err(error) => {
-            let countries = events::get_countries(&state.db).await.unwrap_or_default();
+            let countries = match events::get_countries(&state.db).await {
+                Ok(countries) => countries,
+                Err(e) => {
+                    tracing::warn!("Failed to load countries for dropdown: {}", e);
+                    Vec::new()
+                }
+            };
             return Html(event_create_modal(&t, &countries, Some(error)).into_string())
                 .into_response();
         }
@@ -215,7 +233,13 @@ pub async fn event_create(
         }
         Err(e) => {
             tracing::error!("Failed to create event: {}", e);
-            let countries = events::get_countries(&state.db).await.unwrap_or_default();
+            let countries = match events::get_countries(&state.db).await {
+                Ok(countries) => countries,
+                Err(e) => {
+                    tracing::warn!("Failed to load countries for dropdown: {}", e);
+                    Vec::new()
+                }
+            };
             Html(event_create_modal(&t, &countries, Some("Failed to create event")).into_string())
                 .into_response()
         }
@@ -251,7 +275,13 @@ pub async fn event_edit_form(
         }
     };
 
-    let countries = events::get_countries(&state.db).await.unwrap_or_default();
+    let countries = match events::get_countries(&state.db).await {
+        Ok(countries) => countries,
+        Err(e) => {
+            tracing::warn!("Failed to load countries for dropdown: {}", e);
+            Vec::new()
+        }
+    };
     Html(event_edit_modal(&t, &event, &countries, None).into_string())
 }
 
@@ -266,10 +296,30 @@ pub async fn event_update(
     let name = match validate_name(&form.name) {
         Ok(n) => n,
         Err(error) => {
-            let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
-            let countries = events::get_countries(&state.db).await.unwrap_or_default();
-            let Some(event) = event else {
-                return Html(error_message(&t, t.messages.error_event_not_found()).into_string());
+            let event = match events::get_event_by_id(&state.db, id).await {
+                Ok(Some(event)) => event,
+                Ok(None) => {
+                    return Html(
+                        error_message(&t, t.messages.error_event_not_found()).into_string(),
+                    );
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Database error fetching event {} for form re-render: {}",
+                        id,
+                        e
+                    );
+                    return Html(
+                        error_message(&t, t.messages.error_failed_to_load_event()).into_string(),
+                    );
+                }
+            };
+            let countries = match events::get_countries(&state.db).await {
+                Ok(countries) => countries,
+                Err(e) => {
+                    tracing::warn!("Failed to load countries for dropdown: {}", e);
+                    Vec::new()
+                }
             };
             return Html(event_edit_modal(&t, &event, &countries, Some(error)).into_string());
         }
@@ -293,10 +343,30 @@ pub async fn event_update(
         Ok(false) => Html(error_message(&t, t.messages.error_event_not_found()).into_string()),
         Err(e) => {
             tracing::error!("Failed to update event: {}", e);
-            let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
-            let countries = events::get_countries(&state.db).await.unwrap_or_default();
-            let Some(event) = event else {
-                return Html(error_message(&t, t.messages.error_event_not_found()).into_string());
+            let event = match events::get_event_by_id(&state.db, id).await {
+                Ok(Some(event)) => event,
+                Ok(None) => {
+                    return Html(
+                        error_message(&t, t.messages.error_event_not_found()).into_string(),
+                    );
+                }
+                Err(e2) => {
+                    tracing::error!(
+                        "Database error fetching event {} for form re-render: {}",
+                        id,
+                        e2
+                    );
+                    return Html(
+                        error_message(&t, t.messages.error_failed_to_load_event()).into_string(),
+                    );
+                }
+            };
+            let countries = match events::get_countries(&state.db).await {
+                Ok(countries) => countries,
+                Err(e) => {
+                    tracing::warn!("Failed to load countries for dropdown: {}", e);
+                    Vec::new()
+                }
             };
             Html(
                 event_edit_modal(&t, &event, &countries, Some("Failed to update event"))

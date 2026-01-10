@@ -300,29 +300,65 @@ pub async fn event_create_post(...) -> impl IntoResponse { }
 ### Error Handling
 **CRITICAL**: Proper error handling in Axum routes and templates.
 
-#### Error Patterns:
-1. **Typed Errors**: Use `AppError` enum with `IntoResponse`
-   ```rust
-   pub enum AppError {
-       NotFound { entity: String, id: i64 },
-       InvalidInput { message: String },
-       Database(sqlx::Error),
-       Unauthorized,
-   }
+#### Available Error Infrastructure
+- **`src/error.rs`**: Central `AppError` enum with `IntoResponse` implementation (available for new code)
+- **`src/views/components/error.rs`**: Error display components (error_message, error_state, error_alert)
+- **`src/validation.rs`**: Validation helpers with Result-based error handling
 
-   impl IntoResponse for AppError {
-       fn into_response(self) -> Response {
-           match self {
-               AppError::NotFound { entity, id } => {
-                   (StatusCode::NOT_FOUND, html! { /* error page */ }).into_response()
-               }
-               // ... other cases
-           }
+#### Error Patterns:
+
+1. **NEVER use `unwrap_or_default()` without logging**
+   ```rust
+   // BAD - Silent failure
+   let countries = get_countries(&db).await.unwrap_or_default();
+
+   // GOOD - Log the error
+   let countries = match get_countries(&db).await {
+       Ok(countries) => countries,
+       Err(e) => {
+           tracing::warn!("Failed to load countries for dropdown: {}", e);
+           Vec::new()
        }
-   }
+   };
    ```
 
-2. **Validation**: Use validation helpers from `src/validation.rs`
+2. **NEVER use `ok().flatten()` - It discards error information**
+   ```rust
+   // BAD - Can't distinguish between not found and database error
+   let team = get_team_by_id(&db, id).await.ok().flatten();
+
+   // GOOD - Handle both cases explicitly
+   let team = match get_team_by_id(&db, id).await {
+       Ok(Some(team)) => team,
+       Ok(None) => {
+           return Html(error_message(&t, t.messages.error_team_not_found()).into_string())
+               .into_response();
+       }
+       Err(e) => {
+           tracing::error!("Database error fetching team {}: {}", id, e);
+           return Html(error_message(&t, t.messages.error_failed_to_load_team()).into_string())
+               .into_response();
+       }
+   };
+   ```
+
+3. **Three-branch match for `Result<Option<T>>`**
+   ```rust
+   let entity = match service::get_by_id(&db, id).await {
+       Ok(Some(entity)) => entity,
+       Ok(None) => {
+           // Not found - return 404-appropriate message
+           return Html(error_message(&t, t.messages.error_not_found()).into_string());
+       }
+       Err(e) => {
+           // Database error - log and return 500-appropriate message
+           tracing::error!("Database error: {}", e);
+           return Html(error_message(&t, t.messages.error_failed_to_load()).into_string());
+       }
+   };
+   ```
+
+4. **Validation**: Use validation helpers from `src/validation.rs`
    ```rust
    use crate::validation::validate_name;
 
@@ -332,20 +368,37 @@ pub async fn event_create_post(...) -> impl IntoResponse { }
    };
    ```
 
-3. **Graceful Fallbacks**: Empty states in templates
+5. **Graceful degradation for non-critical data**
    ```rust
-   @if teams.is_empty() {
-       p { "No teams found." }
-   } @else {
-       // ... render table
+   // Dropdown data can fail gracefully with empty list
+   let countries = match get_countries(&db).await {
+       Ok(countries) => countries,
+       Err(e) => {
+           tracing::warn!("Failed to load countries: {}", e);
+           Vec::new() // Show empty dropdown instead of failing entire page
+       }
+   };
+   ```
+
+6. **AppError for new routes** (optional)
+   The `AppError` enum in `src/error.rs` is available for new code:
+   ```rust
+   use crate::error::AppError;
+
+   pub async fn handler(...) -> Result<impl IntoResponse, AppError> {
+       let entity = service::get_by_id(&db, id)
+           .await
+           .map_err(|e| AppError::database(e, "fetching entity"))?
+           .ok_or_else(|| AppError::not_found_with_id("Entity", id))?;
+
+       Ok(Html(page_content(&entity)))
    }
    ```
 
-4. **HTMX Error Responses**: Return error HTML fragments
-   ```rust
-   // On error, return error message fragment
-   html! { div.error { (error_message) } }
-   ```
+#### Logging Levels
+- `tracing::error!()` - Critical errors that prevent operation (database errors, auth failures)
+- `tracing::warn!()` - Non-critical failures where we can degrade gracefully (dropdown data)
+- `tracing::debug!()` - Expected conditions (not found, validation errors)
 
 ### Database Query Pattern
 - Use SQLx QueryBuilder for dynamic queries
