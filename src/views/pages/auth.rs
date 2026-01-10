@@ -2,7 +2,7 @@ use maud::{html, Markup};
 
 use crate::views::layout::auth_layout;
 
-pub fn login_page(error: Option<String>, csrf_token: &str) -> Markup {
+pub fn login_page(error: Option<String>) -> Markup {
     auth_layout(
         "Sign In",
         html! {
@@ -18,7 +18,6 @@ pub fn login_page(error: Option<String>, csrf_token: &str) -> Markup {
                 }
 
                 form method="POST" action="/auth/login" {
-                    input type="hidden" name="csrf_token" value=(csrf_token);
 
                     div.form-group {
                         label for="email" { "Email" }

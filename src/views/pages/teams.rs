@@ -1,14 +1,17 @@
 use maud::{html, Markup};
 
+use crate::auth::Session;
 use crate::common::pagination::PagedResult;
 use crate::i18n::TranslationContext;
 use crate::service::teams::{SortField, SortOrder, TeamEntity, TeamFilters};
 use crate::views::components::crud::{
     empty_state, modal_form, page_header, pagination, table_actions,
 };
+use crate::views::components::forms::csrf_token_field;
 
 /// Main teams page with table and filters
 pub fn teams_page(
+    session: &Session,
     t: &TranslationContext,
     result: &PagedResult<TeamEntity>,
     filters: &TeamFilters,
@@ -81,7 +84,7 @@ pub fn teams_page(
             }
 
             // Table
-            (team_list_content(t, result, filters, sort_field, sort_order))
+            (team_list_content(session, t, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -91,6 +94,7 @@ pub fn teams_page(
 
 /// Teams table content (for HTMX updates)
 pub fn team_list_content(
+    session: &Session,
     t: &TranslationContext,
     result: &PagedResult<TeamEntity>,
     filters: &TeamFilters,
@@ -177,7 +181,8 @@ pub fn team_list_content(
                                     &format!("/teams/{}/edit", team.id),
                                     &build_delete_url(team.id, filters, sort_field, sort_order),
                                     "teams-table",
-                                    &t.messages.teams_entity().to_string()
+                                    &t.messages.teams_entity().to_string(),
+                                    &session.csrf_token
                                 ))
                             }
                         }
@@ -325,8 +330,10 @@ fn build_delete_url(
 }
 
 /// Create team modal
-pub fn team_create_modal(t: &TranslationContext, error: Option<&str>) -> Markup {
+pub fn team_create_modal(session: &Session, t: &TranslationContext, error: Option<&str>) -> Markup {
     let form_fields = html! {
+        (csrf_token_field(&session.csrf_token))
+
         div class="form-group" {
             label class="form-label" {
                 (t.messages.teams_name_label())
@@ -361,8 +368,15 @@ pub fn team_create_modal(t: &TranslationContext, error: Option<&str>) -> Markup 
 }
 
 /// Edit team modal
-pub fn team_edit_modal(t: &TranslationContext, team: &TeamEntity, error: Option<&str>) -> Markup {
+pub fn team_edit_modal(
+    session: &Session,
+    t: &TranslationContext,
+    team: &TeamEntity,
+    error: Option<&str>,
+) -> Markup {
     let form_fields = html! {
+        (csrf_token_field(&session.csrf_token))
+
         div class="form-group" {
             label class="form-label" {
                 (t.messages.teams_name_label())

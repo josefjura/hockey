@@ -55,12 +55,19 @@ fn default_order() -> String {
 pub struct CreateTeamForm {
     name: String,
     country_id: Option<i64>,
+    csrf_token: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateTeamForm {
     name: String,
     country_id: Option<i64>,
+    csrf_token: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DeleteTeamForm {
+    csrf_token: String,
 }
 
 /// GET /teams - Teams list page
@@ -110,12 +117,21 @@ pub async fn teams_get(
     // Get countries for filter
     let countries = teams::get_countries(&state.db).await.unwrap_or_default();
 
-    let content = teams_page(&t, &result, &filters, &sort_field, &sort_order, &countries);
+    let content = teams_page(
+        &session,
+        &t,
+        &result,
+        &filters,
+        &sort_field,
+        &sort_order,
+        &countries,
+    );
     Html(admin_layout("Teams", &session, "/teams", &t, content).into_string())
 }
 
 /// GET /teams/list - HTMX endpoint for table updates
 pub async fn teams_list_partial(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Query(query): Query<TeamsQuery>,
@@ -149,25 +165,34 @@ pub async fn teams_list_partial(
         }
     };
 
-    Html(team_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
+    Html(team_list_content(&session, &t, &result, &filters, &sort_field, &sort_order).into_string())
 }
 
 /// GET /teams/new - Show create modal
-pub async fn team_create_form(Extension(t): Extension<TranslationContext>) -> impl IntoResponse {
-    Html(team_create_modal(&t, None).into_string())
+pub async fn team_create_form(
+    Extension(session): Extension<Session>,
+    Extension(t): Extension<TranslationContext>,
+) -> impl IntoResponse {
+    Html(team_create_modal(&session, &t, None).into_string())
 }
 
 /// POST /teams - Create new team
 pub async fn team_create(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Form(form): Form<CreateTeamForm>,
 ) -> impl IntoResponse {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
+
     // Validation
     let name = match validate_name(&form.name) {
         Ok(n) => n,
         Err(error) => {
-            return Html(team_create_modal(&t, Some(error)).into_string()).into_response()
+            return Html(team_create_modal(&session, &t, Some(error)).into_string()).into_response()
         }
     };
 
@@ -195,13 +220,15 @@ pub async fn team_create(
         }
         Err(e) => {
             tracing::error!("Failed to create team: {}", e);
-            Html(team_create_modal(&t, Some("Failed to create team")).into_string()).into_response()
+            Html(team_create_modal(&session, &t, Some("Failed to create team")).into_string())
+                .into_response()
         }
     }
 }
 
 /// GET /teams/{id}/edit - Show edit modal
 pub async fn team_edit_form(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -221,25 +248,32 @@ pub async fn team_edit_form(
         }
     };
 
-    Html(team_edit_modal(&t, &team, None).into_string())
+    Html(team_edit_modal(&session, &t, &team, None).into_string())
 }
 
 /// POST /teams/{id} - Update team
 pub async fn team_update(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Form(form): Form<UpdateTeamForm>,
 ) -> impl IntoResponse {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
+
     // Validation
     let name = match validate_name(&form.name) {
         Ok(n) => n,
         Err(error) => {
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
             let Some(team) = team else {
-                return Html(error_message("Team not found").into_string());
+                return Html(error_message("Team not found").into_string()).into_response();
             };
-            return Html(team_edit_modal(&t, &team, Some(error)).into_string());
+            return Html(team_edit_modal(&session, &t, &team, Some(error)).into_string())
+                .into_response();
         }
     };
 
@@ -256,26 +290,34 @@ pub async fn team_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            htmx_reload_table("/teams/list", "teams-table")
+            htmx_reload_table("/teams/list", "teams-table").into_response()
         }
-        Ok(false) => Html(error_message("Team not found").into_string()),
+        Ok(false) => Html(error_message("Team not found").into_string()).into_response(),
         Err(e) => {
             tracing::error!("Failed to update team: {}", e);
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
             let Some(team) = team else {
-                return Html(error_message("Team not found").into_string());
+                return Html(error_message("Team not found").into_string()).into_response();
             };
-            Html(team_edit_modal(&t, &team, Some("Failed to update team")).into_string())
+            Html(team_edit_modal(&session, &t, &team, Some("Failed to update team")).into_string())
+                .into_response()
         }
     }
 }
 
 /// POST /teams/{id}/delete - Delete team
 pub async fn team_delete(
+    Extension(session): Extension<Session>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Query(query): Query<TeamsQuery>,
+    Form(form): Form<DeleteTeamForm>,
 ) -> impl IntoResponse {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
+
     match teams::delete_team(&state.db, id).await {
         Ok(true) => {
             // Build URL to reload table with current filters and sorting
@@ -297,9 +339,11 @@ pub async fn team_delete(
                 "<div hx-get=\"{}\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>",
                 reload_url
             ))
+            .into_response()
         }
         Ok(false) => {
             Html(crate::views::components::error::error_message("Team not found").into_string())
+                .into_response()
         }
         Err(e) => {
             tracing::error!("Failed to delete team: {}", e);
@@ -307,6 +351,7 @@ pub async fn team_delete(
                 crate::views::components::error::error_message("Failed to delete team")
                     .into_string(),
             )
+            .into_response()
         }
     }
 }
@@ -448,7 +493,11 @@ mod tests {
         let response = server
             .post("/teams")
             .add_cookie(session_cookie(&session))
-            .form(&[("name", "New Team"), ("country_id", "1")])
+            .form(&[
+                ("name", "New Team"),
+                ("country_id", "1"),
+                ("csrf_token", &session.csrf_token),
+            ])
             .await;
 
         response.assert_status_ok();
@@ -474,7 +523,11 @@ mod tests {
         let response = server
             .post("/teams")
             .add_cookie(session_cookie(&session))
-            .form(&[("name", ""), ("country_id", "1")]) // Empty name should fail
+            .form(&[
+                ("name", ""), // Empty name should fail
+                ("country_id", "1"),
+                ("csrf_token", &session.csrf_token),
+            ])
             .await;
 
         response.assert_status_ok();
@@ -516,7 +569,11 @@ mod tests {
         let response = server
             .post("/teams/1")
             .add_cookie(session_cookie(&session))
-            .form(&[("name", "Updated Team Canada"), ("country_id", "1")])
+            .form(&[
+                ("name", "Updated Team Canada"),
+                ("country_id", "1"),
+                ("csrf_token", &session.csrf_token),
+            ])
             .await;
 
         response.assert_status_ok();
@@ -538,6 +595,7 @@ mod tests {
         let response = server
             .post("/teams/1/delete")
             .add_cookie(session_cookie(&session))
+            .form(&[("csrf_token", &session.csrf_token)])
             .await;
 
         response.assert_status_ok();

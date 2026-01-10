@@ -1,13 +1,16 @@
 use maud::{html, Markup};
 
+use crate::auth::Session;
 use crate::i18n::TranslationContext;
 use crate::service::seasons::{PagedResult, SeasonEntity, SeasonFilters, SortField, SortOrder};
 use crate::views::components::crud::{
     empty_state, modal_form, page_header, pagination, table_actions,
 };
+use crate::views::components::forms::csrf_token_field;
 
 /// Main seasons page with table and filters
 pub fn seasons_page(
+    session: &Session,
     t: &TranslationContext,
     result: &PagedResult<SeasonEntity>,
     filters: &SeasonFilters,
@@ -82,7 +85,7 @@ pub fn seasons_page(
             }
 
             // Table
-            (season_list_content(t, result, filters, sort_field, sort_order))
+            (season_list_content(session, t, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -92,6 +95,7 @@ pub fn seasons_page(
 
 /// Seasons table content (for HTMX updates)
 pub fn season_list_content(
+    session: &Session,
     t: &TranslationContext,
     result: &PagedResult<SeasonEntity>,
     filters: &SeasonFilters,
@@ -188,6 +192,7 @@ pub fn season_list_content(
                                     &build_delete_url(season.id, filters, sort_field, sort_order),
                                     "seasons-table",
                                     &t.messages.seasons_entity().to_string(),
+                                    &session.csrf_token
                                 ))
                             }
                         }
@@ -334,16 +339,26 @@ fn build_delete_url(
 
 /// Create season modal
 pub fn season_create_modal(
+    session: &Session,
     t: &TranslationContext,
     error: Option<&str>,
     events: &[(i64, String)],
     countries: &[(i64, String)],
     preselected_event_id: Option<i64>,
 ) -> Markup {
-    season_create_modal_with_return(t, error, events, countries, preselected_event_id, None)
+    season_create_modal_with_return(
+        session,
+        t,
+        error,
+        events,
+        countries,
+        preselected_event_id,
+        None,
+    )
 }
 
 pub fn season_create_modal_with_return(
+    session: &Session,
     t: &TranslationContext,
     error: Option<&str>,
     events: &[(i64, String)],
@@ -352,6 +367,8 @@ pub fn season_create_modal_with_return(
     return_url: Option<&str>,
 ) -> Markup {
     let form_fields = html! {
+        (csrf_token_field(&session.csrf_token))
+
         @if let Some(url) = return_url {
             input type="hidden" name="return_url" value=(url);
         }
@@ -455,6 +472,7 @@ pub fn season_create_modal_with_return(
 
 /// Edit season modal
 pub fn season_edit_modal(
+    session: &Session,
     t: &TranslationContext,
     season: &SeasonEntity,
     error: Option<&str>,
@@ -462,6 +480,8 @@ pub fn season_edit_modal(
     countries: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
+        (csrf_token_field(&session.csrf_token))
+
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                 (t.messages.seasons_event())

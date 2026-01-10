@@ -61,6 +61,7 @@ pub struct CreateSeasonForm {
     country_id: Option<i64>,
     #[serde(default, deserialize_with = "crate::utils::empty_string_as_none")]
     return_url: Option<String>,
+    csrf_token: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -70,11 +71,23 @@ pub struct UpdateSeasonForm {
     event_id: i64,
     #[serde(default, deserialize_with = "crate::utils::empty_string_as_none_i64")]
     country_id: Option<i64>,
+    csrf_token: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct AddTeamForm {
     team_id: i64,
+    csrf_token: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DeleteSeasonForm {
+    csrf_token: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DeleteTeamParticipationForm {
+    csrf_token: String,
 }
 
 /// GET /seasons - Seasons list page
@@ -124,12 +137,21 @@ pub async fn seasons_get(
     // Get events for filter
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
 
-    let content = seasons_page(&t, &result, &filters, &sort_field, &sort_order, &events);
+    let content = seasons_page(
+        &session,
+        &t,
+        &result,
+        &filters,
+        &sort_field,
+        &sort_order,
+        &events,
+    );
     Html(admin_layout("Seasons", &session, "/seasons", &t, content).into_string())
 }
 
 /// GET /seasons/list - HTMX endpoint for table updates
 pub async fn seasons_list_partial(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Query(query): Query<SeasonsQuery>,
@@ -163,21 +185,26 @@ pub async fn seasons_list_partial(
         }
     };
 
-    Html(season_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
+    Html(
+        season_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
+            .into_string(),
+    )
 }
 
 /// GET /seasons/new - Show create modal
 pub async fn season_create_form(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
     let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
-    Html(season_create_modal(&t, None, &events, &countries, None).into_string())
+    Html(season_create_modal(&session, &t, None, &events, &countries, None).into_string())
 }
 
 /// GET /events/{event_id}/seasons/new - Show create modal for specific event
 pub async fn event_season_create_form(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(event_id): Path<i64>,
@@ -204,6 +231,7 @@ pub async fn event_season_create_form(
     let return_url = format!("/events/{}", event_id);
     Html(
         crate::views::pages::seasons::season_create_modal_with_return(
+            &session,
             &t,
             None,
             &events,
@@ -217,10 +245,16 @@ pub async fn event_season_create_form(
 
 /// POST /seasons - Create new season
 pub async fn season_create(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Form(form): Form<CreateSeasonForm>,
 ) -> impl IntoResponse {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
+
     // Get events and countries for form re-render on error
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
     let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
@@ -229,6 +263,7 @@ pub async fn season_create(
     if form.year < 1900 || form.year > 2100 {
         return Html(
             season_create_modal(
+                &session,
                 &t,
                 Some("Year must be between 1900 and 2100"),
                 &events,
@@ -245,6 +280,7 @@ pub async fn season_create(
         if !trimmed.is_empty() && trimmed.len() > 255 {
             return Html(
                 season_create_modal(
+                    &session,
                     &t,
                     Some("Display name cannot exceed 255 characters"),
                     &events,
@@ -309,6 +345,7 @@ pub async fn season_create(
             tracing::error!("Failed to create season: {}", e);
             Html(
                 season_create_modal(
+                    &session,
                     &t,
                     Some("Failed to create season"),
                     &events,
@@ -324,6 +361,7 @@ pub async fn season_create(
 
 /// GET /seasons/{id}/edit - Show edit modal
 pub async fn season_edit_form(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -347,16 +385,22 @@ pub async fn season_edit_form(
         }
     };
 
-    Html(season_edit_modal(&t, &season, None, &events, &countries).into_string())
+    Html(season_edit_modal(&session, &t, &season, None, &events, &countries).into_string())
 }
 
 /// POST /seasons/{id} - Update season
 pub async fn season_update(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Form(form): Form<UpdateSeasonForm>,
 ) -> impl IntoResponse {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
+
     let events = seasons::get_events(&state.db).await.unwrap_or_default();
     let countries = seasons::get_countries(&state.db).await.unwrap_or_default();
 
@@ -367,10 +411,11 @@ pub async fn season_update(
             .ok()
             .flatten();
         let Some(season) = season else {
-            return Html(error_message("Season not found").into_string());
+            return Html(error_message("Season not found").into_string()).into_response();
         };
         return Html(
             season_edit_modal(
+                &session,
                 &t,
                 &season,
                 Some("Year must be between 1900 and 2100"),
@@ -378,7 +423,8 @@ pub async fn season_update(
                 &countries,
             )
             .into_string(),
-        );
+        )
+        .into_response();
     }
 
     if let Some(display_name) = &form.display_name {
@@ -389,10 +435,11 @@ pub async fn season_update(
                 .ok()
                 .flatten();
             let Some(season) = season else {
-                return Html(error_message("Season not found").into_string());
+                return Html(error_message("Season not found").into_string()).into_response();
             };
             return Html(
                 season_edit_modal(
+                    &session,
                     &t,
                     &season,
                     Some("Display name cannot exceed 255 characters"),
@@ -400,7 +447,8 @@ pub async fn season_update(
                     &countries,
                 )
                 .into_string(),
-            );
+            )
+            .into_response();
         }
     }
 
@@ -427,8 +475,9 @@ pub async fn season_update(
         Ok(true) => {
             // Return HTMX response to close modal and reload table
             Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+                .into_response()
         }
-        Ok(false) => Html(error_message("Season not found").into_string()),
+        Ok(false) => Html(error_message("Season not found").into_string()).into_response(),
         Err(e) => {
             tracing::error!("Failed to update season: {}", e);
             let season = seasons::get_season_by_id(&state.db, id)
@@ -436,10 +485,11 @@ pub async fn season_update(
                 .ok()
                 .flatten();
             let Some(season) = season else {
-                return Html(error_message("Season not found").into_string());
+                return Html(error_message("Season not found").into_string()).into_response();
             };
             Html(
                 season_edit_modal(
+                    &session,
                     &t,
                     &season,
                     Some("Failed to update season"),
@@ -448,17 +498,25 @@ pub async fn season_update(
                 )
                 .into_string(),
             )
+            .into_response()
         }
     }
 }
 
 /// POST /seasons/{id}/delete - Delete season
 pub async fn season_delete(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Query(query): Query<SeasonsQuery>,
+    Form(form): Form<DeleteSeasonForm>,
 ) -> impl IntoResponse {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
+
     match seasons::delete_season(&state.db, id).await {
         Ok(true) => {
             // Reload the table content after successful delete
@@ -486,14 +544,20 @@ pub async fn season_delete(
                     return Html(
                         crate::views::components::error::error_message("Failed to reload seasons")
                             .into_string(),
-                    );
+                    )
+                    .into_response();
                 }
             };
 
-            Html(season_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
+            Html(
+                season_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
+                    .into_string(),
+            )
+            .into_response()
         }
         Ok(false) => {
             Html(crate::views::components::error::error_message("Season not found").into_string())
+                .into_response()
         }
         Err(e) => {
             tracing::error!("Failed to delete season: {}", e);
@@ -501,6 +565,7 @@ pub async fn season_delete(
                 crate::views::components::error::error_message("Failed to delete season")
                     .into_string(),
             )
+            .into_response()
         }
     }
 }
@@ -547,6 +612,7 @@ pub async fn season_detail(
 
 /// GET /seasons/{season_id}/teams/add - Show add team modal
 pub async fn season_add_team_form(
+    Extension(_session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(season_id): Path<i64>,
@@ -560,11 +626,17 @@ pub async fn season_add_team_form(
 
 /// POST /seasons/{season_id}/teams - Add team to season
 pub async fn season_add_team(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(season_id): Path<i64>,
     Form(form): Form<AddTeamForm>,
 ) -> axum::response::Response {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
+
     // Get available teams for form re-render on error
     let available_teams = team_participations::get_available_teams_for_season(&state.db, season_id)
         .await
@@ -662,9 +734,16 @@ pub async fn season_add_team(
 
 /// POST /team-participations/{id}/delete - Remove team from season
 pub async fn team_participation_delete(
+    Extension(session): Extension<Session>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
+    Form(form): Form<DeleteTeamParticipationForm>,
 ) -> axum::response::Response {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
+
     // Get season_id before deleting for redirect
     let season_id = match team_participations::get_season_id_for_participation(&state.db, id).await
     {

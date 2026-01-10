@@ -1,9 +1,11 @@
+pub mod csrf;
 pub mod middleware;
 pub mod password;
 pub mod rate_limit;
 pub mod session;
 pub mod signing;
 
+pub use csrf::validate_csrf_token;
 pub use middleware::{require_auth, SESSION_COOKIE_NAME};
 pub use password::verify_password;
 pub use rate_limit::{rate_limit_login, LoginRateLimiter};

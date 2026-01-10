@@ -16,6 +16,7 @@ pub struct PlayerFormData {
     pub weight_kg: Option<i64>,
     pub position: Option<String>,
     pub shoots: Option<String>,
+    pub csrf_token: String,
 }
 
 /// Parse player form data from multipart request
@@ -100,6 +101,9 @@ pub async fn parse_player_form(
                 } else {
                     Some(text)
                 };
+            }
+            "csrf_token" => {
+                form_data.csrf_token = field.text().await.unwrap_or_default();
             }
             "photo_file" => {
                 // Handle file upload

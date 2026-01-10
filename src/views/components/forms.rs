@@ -2,6 +2,27 @@
 
 use maud::{html, Markup, PreEscaped};
 
+/// CSRF token hidden input field
+///
+/// Adds a hidden input field with the CSRF token from the session.
+/// This should be included in all forms that perform state-changing operations.
+///
+/// # Arguments
+/// * `token` - The CSRF token from the user's session
+///
+/// # Example
+/// ```rust
+/// form method="POST" action="/teams" {
+///     (csrf_token_field(&session.csrf_token))
+///     // ... other fields
+/// }
+/// ```
+pub fn csrf_token_field(token: &str) -> Markup {
+    html! {
+        input type="hidden" name="csrf_token" value=(token);
+    }
+}
+
 /// Form input types
 pub enum InputType {
     Text,

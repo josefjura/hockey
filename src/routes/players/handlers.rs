@@ -98,12 +98,21 @@ pub async fn players_get(
     // Get countries for filter
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
 
-    let content = players_page(&t, &result, &filters, &sort_field, &sort_order, &countries);
+    let content = players_page(
+        &session,
+        &t,
+        &result,
+        &filters,
+        &sort_field,
+        &sort_order,
+        &countries,
+    );
     Html(admin_layout("Players", &session, "/players", &t, content).into_string())
 }
 
 /// GET /players/list - HTMX endpoint for table updates
 pub async fn players_list_partial(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Query(query): Query<PlayersQuery>,
@@ -137,20 +146,25 @@ pub async fn players_list_partial(
         }
     };
 
-    Html(player_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
+    Html(
+        player_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
+            .into_string(),
+    )
 }
 
 /// GET /players/new - Show create modal
 pub async fn player_create_form(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     let countries = players::get_countries(&state.db).await.unwrap_or_default();
-    Html(player_create_modal(&t, None, &countries).into_string())
+    Html(player_create_modal(&session, &t, None, &countries).into_string())
 }
 
 /// POST /players - Create new player
 pub async fn player_create(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     mut multipart: Multipart,
@@ -166,10 +180,17 @@ pub async fn player_create(
         {
             Ok(data) => data,
             Err(error_msg) => {
-                return Html(player_create_modal(&t, Some(&error_msg), &countries).into_string())
-                    .into_response();
+                return Html(
+                    player_create_modal(&session, &t, Some(&error_msg), &countries).into_string(),
+                )
+                .into_response();
             }
         };
+
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form_data.csrf_token, &session) {
+        return response.into_response();
+    }
 
     // Resolve final photo path (prefer uploaded file over URL)
     let final_photo_path = super::forms::resolve_photo_path(
@@ -195,21 +216,26 @@ pub async fn player_create(
         Err(Ok(validation_error)) => {
             // Validation error
             Html(
-                player_create_modal(&t, Some(validation_error.message()), &countries).into_string(),
+                player_create_modal(&session, &t, Some(validation_error.message()), &countries)
+                    .into_string(),
             )
             .into_response()
         }
         Err(Err(e)) => {
             // Database error
             tracing::error!("Failed to create player: {}", e);
-            Html(player_create_modal(&t, Some("Failed to create player"), &countries).into_string())
-                .into_response()
+            Html(
+                player_create_modal(&session, &t, Some("Failed to create player"), &countries)
+                    .into_string(),
+            )
+            .into_response()
         }
     }
 }
 
 /// GET /players/{id}/edit - Show edit modal
 pub async fn player_edit_form(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -232,11 +258,12 @@ pub async fn player_edit_form(
         }
     };
 
-    Html(player_edit_modal(&t, &player, None, &countries).into_string())
+    Html(player_edit_modal(&session, &t, &player, None, &countries).into_string())
 }
 
 /// POST /players/{id} - Update player
 pub async fn player_update(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
@@ -248,11 +275,11 @@ pub async fn player_update(
     let current_player = match players::get_player_by_id(&state.db, id).await {
         Ok(Some(player)) => player,
         Ok(None) => {
-            return Html(error_message("Player not found").into_string());
+            return Html(error_message("Player not found").into_string()).into_response();
         }
         Err(e) => {
             tracing::error!("Failed to fetch player: {}", e);
-            return Html(error_message("Failed to load player").into_string());
+            return Html(error_message("Failed to load player").into_string()).into_response();
         }
     };
 
@@ -267,10 +294,17 @@ pub async fn player_update(
         Ok(data) => data,
         Err(error_msg) => {
             return Html(
-                player_edit_modal(&t, &current_player, Some(&error_msg), &countries).into_string(),
-            );
+                player_edit_modal(&session, &t, &current_player, Some(&error_msg), &countries)
+                    .into_string(),
+            )
+            .into_response();
         }
     };
+
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form_data.csrf_token, &session) {
+        return response.into_response();
+    }
 
     // Resolve final photo path
     // Priority: uploaded file > URL > existing photo
@@ -291,16 +325,24 @@ pub async fn player_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload page to show updated data
-            htmx_reload_page()
+            htmx_reload_page().into_response()
         }
         Ok(false) => Html(
-            player_edit_modal(&t, &current_player, Some("Player not found"), &countries)
-                .into_string(),
-        ),
+            player_edit_modal(
+                &session,
+                &t,
+                &current_player,
+                Some("Player not found"),
+                &countries,
+            )
+            .into_string(),
+        )
+        .into_response(),
         Err(Ok(validation_error)) => {
             // Validation error
             Html(
                 player_edit_modal(
+                    &session,
                     &t,
                     &current_player,
                     Some(validation_error.message()),
@@ -308,12 +350,14 @@ pub async fn player_update(
                 )
                 .into_string(),
             )
+            .into_response()
         }
         Err(Err(e)) => {
             // Database error
             tracing::error!("Failed to update player: {}", e);
             Html(
                 player_edit_modal(
+                    &session,
                     &t,
                     &current_player,
                     Some("Failed to update player"),
@@ -321,17 +365,30 @@ pub async fn player_update(
                 )
                 .into_string(),
             )
+            .into_response()
         }
     }
 }
 
+/// Deserialize delete form
+#[derive(Debug, Deserialize)]
+pub struct DeletePlayerForm {
+    csrf_token: String,
+}
+
 /// POST /players/{id}/delete - Delete player
 pub async fn player_delete(
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
     Query(query): Query<PlayersQuery>,
+    axum::Form(form): axum::Form<DeletePlayerForm>,
 ) -> impl IntoResponse {
+    // Validate CSRF token
+    if let Err(response) = crate::auth::validate_csrf_token(&form.csrf_token, &session) {
+        return response.into_response();
+    }
     match players::delete_player(&state.db, id).await {
         Ok(true) => {
             // Reload the table content after successful delete
@@ -359,14 +416,20 @@ pub async fn player_delete(
                     return Html(
                         crate::views::components::error::error_message("Failed to reload players")
                             .into_string(),
-                    );
+                    )
+                    .into_response();
                 }
             };
 
-            Html(player_list_content(&t, &result, &filters, &sort_field, &sort_order).into_string())
+            Html(
+                player_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
+                    .into_string(),
+            )
+            .into_response()
         }
         Ok(false) => {
             Html(crate::views::components::error::error_message("Player not found").into_string())
+                .into_response()
         }
         Err(e) => {
             tracing::error!("Failed to delete player: {}", e);
@@ -374,6 +437,7 @@ pub async fn player_delete(
                 crate::views::components::error::error_message("Failed to delete player")
                     .into_string(),
             )
+            .into_response()
         }
     }
 }

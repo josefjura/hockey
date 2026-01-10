@@ -20,15 +20,11 @@ use crate::views::pages::auth::login_page;
 pub struct LoginForm {
     email: String,
     password: String,
-    csrf_token: String,
 }
 
 /// GET /auth/login - Show login page
 pub async fn login_get() -> Html<String> {
-    // Generate a simple CSRF token for the form
-    let csrf_token = uuid::Uuid::new_v4().to_string();
-
-    let html = login_page(None, &csrf_token);
+    let html = login_page(None);
     Html(html.into_string())
 }
 
@@ -48,11 +44,8 @@ pub async fn login_post(
             (
                 jar.clone(),
                 Html(
-                    login_page(
-                        Some("An error occurred. Please try again.".to_string()),
-                        &form.csrf_token,
-                    )
-                    .into_string(),
+                    login_page(Some("An error occurred. Please try again.".to_string()))
+                        .into_string(),
                 ),
             )
         })?;
@@ -63,13 +56,7 @@ pub async fn login_post(
         None => {
             return Err((
                 jar,
-                Html(
-                    login_page(
-                        Some("Invalid email or password".to_string()),
-                        &form.csrf_token,
-                    )
-                    .into_string(),
-                ),
+                Html(login_page(Some("Invalid email or password".to_string())).into_string()),
             ));
         }
     };
@@ -86,11 +73,7 @@ pub async fn login_post(
         (
             jar.clone(),
             Html(
-                login_page(
-                    Some("An error occurred. Please try again.".to_string()),
-                    &form.csrf_token,
-                )
-                .into_string(),
+                login_page(Some("An error occurred. Please try again.".to_string())).into_string(),
             ),
         )
     })?;
@@ -98,13 +81,7 @@ pub async fn login_post(
     if !password_valid {
         return Err((
             jar,
-            Html(
-                login_page(
-                    Some("Invalid email or password".to_string()),
-                    &form.csrf_token,
-                )
-                .into_string(),
-            ),
+            Html(login_page(Some("Invalid email or password".to_string())).into_string()),
         ));
     }
 

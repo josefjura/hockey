@@ -1,6 +1,7 @@
 use maud::{html, Markup};
 
 use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
+use crate::views::components::forms::csrf_token_field;
 
 /// Table actions (Edit/Delete buttons) with custom confirmation dialog
 pub fn table_actions(
@@ -8,6 +9,7 @@ pub fn table_actions(
     delete_url: &str,
     table_id: &str,
     entity_label: &str,
+    csrf_token: &str,
 ) -> Markup {
     let confirm = confirm_attrs(
         &format!("Delete {}", entity_label),
@@ -31,21 +33,25 @@ pub fn table_actions(
             {
                 "Edit"
             }
-            button
-                class="btn btn-sm btn-danger"
-                hx-post=(delete_url)
-                hx-target=(format!("#{}", table_id))
-                hx-swap="outerHTML"
-                hx-confirm-custom=(confirm)
-            {
-                "Delete"
+            form style="display: inline;" {
+                (csrf_token_field(csrf_token))
+                button
+                    type="submit"
+                    class="btn btn-sm btn-danger"
+                    hx-post=(delete_url)
+                    hx-target=(format!("#{}", table_id))
+                    hx-swap="outerHTML"
+                    hx-confirm-custom=(confirm)
+                {
+                    "Delete"
+                }
             }
         }
     }
 }
 
 /// Table actions with i18n support and custom confirmation dialog
-#[allow(dead_code)]
+#[allow(dead_code, clippy::too_many_arguments)]
 pub fn table_actions_i18n(
     edit_url: &str,
     delete_url: &str,
@@ -54,6 +60,7 @@ pub fn table_actions_i18n(
     delete_label: &str,
     confirm_title: &str,
     confirm_message: &str,
+    csrf_token: &str,
 ) -> Markup {
     let confirm = confirm_attrs(
         confirm_title,
@@ -74,14 +81,18 @@ pub fn table_actions_i18n(
             {
                 (edit_label)
             }
-            button
-                class="btn btn-sm btn-danger"
-                hx-post=(delete_url)
-                hx-target=(format!("#{}", table_id))
-                hx-swap="outerHTML"
-                hx-confirm-custom=(confirm)
-            {
-                (delete_label)
+            form style="display: inline;" {
+                (csrf_token_field(csrf_token))
+                button
+                    type="submit"
+                    class="btn btn-sm btn-danger"
+                    hx-post=(delete_url)
+                    hx-target=(format!("#{}", table_id))
+                    hx-swap="outerHTML"
+                    hx-confirm-custom=(confirm)
+                {
+                    (delete_label)
+                }
             }
         }
     }

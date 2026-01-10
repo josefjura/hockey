@@ -1,13 +1,16 @@
 use maud::{html, Markup};
 
+use crate::auth::Session;
 use crate::i18n::TranslationContext;
 use crate::service::players::{PagedResult, PlayerEntity, PlayerFilters, SortField, SortOrder};
 use crate::views::components::crud::{
     empty_state, modal_form_multipart, page_header, pagination, table_actions,
 };
+use crate::views::components::forms::csrf_token_field;
 
 /// Main players page with table and filters
 pub fn players_page(
+    session: &Session,
     t: &TranslationContext,
     result: &PagedResult<PlayerEntity>,
     filters: &PlayerFilters,
@@ -80,7 +83,7 @@ pub fn players_page(
             }
 
             // Table
-            (player_list_content(t, result, filters, sort_field, sort_order))
+            (player_list_content(session, t, result, filters, sort_field, sort_order))
 
             // Modal container
             div id="modal-container" {}
@@ -90,6 +93,7 @@ pub fn players_page(
 
 /// Players table content (for HTMX updates)
 pub fn player_list_content(
+    session: &Session,
     t: &TranslationContext,
     result: &PagedResult<PlayerEntity>,
     filters: &PlayerFilters,
@@ -184,7 +188,8 @@ pub fn player_list_content(
                                     &format!("/players/{}/edit", player.id),
                                     &build_delete_url(player.id, filters, sort_field, sort_order),
                                     "players-table",
-                                    &t.messages.players_entity().to_string()
+                                    &t.messages.players_entity().to_string(),
+                                    &session.csrf_token
                                 ))
                             }
                         }
@@ -328,11 +333,14 @@ fn build_delete_url(
 
 /// Create player modal
 pub fn player_create_modal(
+    session: &Session,
     t: &TranslationContext,
     error: Option<&str>,
     _countries: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
+        (csrf_token_field(&session.csrf_token))
+
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                 (t.messages.players_name_label())
@@ -482,12 +490,15 @@ pub fn player_create_modal(
 
 /// Edit player modal
 pub fn player_edit_modal(
+    session: &Session,
     t: &TranslationContext,
     player: &PlayerEntity,
     error: Option<&str>,
     _countries: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
+        (csrf_token_field(&session.csrf_token))
+
         div style="margin-bottom: 1rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                 (t.messages.players_name_label())

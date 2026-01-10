@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session cookies are now cryptographically signed using HMAC-SHA256, preventing attackers from forging valid session tokens even if they can guess session IDs (#162)
 - Production deployments now require a secure SESSION_SECRET to be explicitly set, preventing the use of insecure default values that could allow session forgery (#179)
 - SESSION_SECRET must now be at least 32 characters long to ensure adequate cryptographic security (#179)
+- All state-changing forms now require and validate CSRF tokens, protecting against Cross-Site Request Forgery attacks where malicious sites could trick users into performing unwanted actions (#161)
 
 ## [0.1.9] - 2026-01-05
 
