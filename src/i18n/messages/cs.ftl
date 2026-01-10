@@ -368,6 +368,54 @@ error-system = Nastala systémová chyba. Zkuste to prosím znovu.
 error-team-already-in-season = Tento tým již v vybrané sezóně účinkuje
 error-creating-participation = Nepodařilo se přidat tým do sezóny
 
+# Error messages - Entity not found
+error-player-not-found = Hráč nenalezen
+error-event-not-found = Událost nenalezena
+error-season-not-found = Sezóna nenalezena
+error-team-not-found = Tým nenalezen
+error-match-not-found = Zápas nenalezen
+error-score-event-not-found = Událost skóre nenalezena
+error-player-contract-not-found = Kontrakt hráče nenalezen
+error-team-participation-not-found = Účast týmu nenalezena
+error-statistics-not-found = Statistiky nenalezeny
+
+# Error messages - Failed to load
+error-failed-to-load-players = Nepodařilo se načíst hráče
+error-failed-to-load-player = Nepodařilo se načíst hráče
+error-failed-to-load-events = Nepodařilo se načíst události
+error-failed-to-load-event = Nepodařilo se načíst událost
+error-failed-to-load-seasons = Nepodařilo se načíst sezóny
+error-failed-to-load-season = Nepodařilo se načíst sezónu
+error-failed-to-load-teams = Nepodařilo se načíst týmy
+error-failed-to-load-team = Nepodařilo se načíst tým
+error-failed-to-load-matches = Nepodařilo se načíst zápasy
+error-failed-to-load-match = Nepodařilo se načíst zápas
+error-failed-to-load-match-detail = Nepodařilo se načíst detail zápasu
+error-failed-to-load-roster = Nepodařilo se načíst soupisku
+error-failed-to-load-score-event = Nepodařilo se načíst událost skóre
+error-failed-to-load-player-scoring-data = Nepodařilo se načíst data bodování hráče
+error-failed-to-load-scoring-events = Nepodařilo se načíst události bodování
+error-failed-to-load-statistics = Nepodařilo se načíst statistiky
+
+# Error messages - Failed to delete
+error-failed-to-delete-player = Nepodařilo se smazat hráče
+error-failed-to-delete-event = Nepodařilo se smazat událost
+error-failed-to-delete-season = Nepodařilo se smazat sezónu
+error-failed-to-delete-team = Nepodařilo se smazat tým
+error-failed-to-delete-match = Nepodařilo se smazat zápas
+error-failed-to-delete-score-event = Nepodařilo se smazat událost skóre
+error-failed-to-delete-statistics = Nepodařilo se smazat statistiky
+
+# Error messages - Failed to save/update
+error-failed-to-save-statistics = Nepodařilo se uložit statistiky
+
+# Error messages - Failed to reload
+error-failed-to-reload-players = Nepodařilo se znovu načíst hráče
+error-failed-to-reload-seasons = Nepodařilo se znovu načíst sezóny
+
+# Error messages - Failed to remove
+error-failed-to-remove-team-from-season = Nepodařilo se odebrat tým ze sezóny
+
 # Player Scoring
 player-scoring-title = Historie bodování
 player-scoring-total-goals = Celkem gólů

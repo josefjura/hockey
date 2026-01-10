@@ -99,7 +99,10 @@ pub async fn matches_get(
                     &session,
                     "/matches",
                     &t,
-                    crate::views::components::error::error_message("Failed to load matches"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_matches(),
+                    ),
                 )
                 .into_string(),
             );
@@ -154,8 +157,11 @@ pub async fn matches_list_partial(
         Err(e) => {
             tracing::error!("Failed to fetch matches: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load matches")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_matches(),
+                )
+                .into_string(),
             );
         }
     };

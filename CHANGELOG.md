@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Error messages now appear in the user's selected language instead of always showing in English, ensuring a consistent multilingual experience for Czech users (#175)
 - CI builds no longer fail during E2E tests due to SESSION_SECRET being too short to meet the 32-character security requirement
 - CI E2E tests now wait for the server to actually start instead of using a fixed delay, preventing test failures caused by server startup taking longer than expected
 - Database queries now perform significantly faster with proper indexes on all foreign keys and common query patterns, preventing performance degradation as data grows (#177)

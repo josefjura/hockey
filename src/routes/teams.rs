@@ -107,7 +107,10 @@ pub async fn teams_get(
                     &session,
                     "/teams",
                     &t,
-                    crate::views::components::error::error_message("Failed to load teams"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_teams(),
+                    ),
                 )
                 .into_string(),
             );
@@ -159,8 +162,11 @@ pub async fn teams_list_partial(
         Err(e) => {
             tracing::error!("Failed to fetch teams: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load teams")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_teams(),
+                )
+                .into_string(),
             );
         }
     };
@@ -237,13 +243,21 @@ pub async fn team_edit_form(
         Ok(Some(team)) => team,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Team not found").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_team_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch team: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load team").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_team(),
+                )
+                .into_string(),
             );
         }
     };
@@ -270,7 +284,8 @@ pub async fn team_update(
         Err(error) => {
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
             let Some(team) = team else {
-                return Html(error_message("Team not found").into_string()).into_response();
+                return Html(error_message(&t, t.messages.error_team_not_found()).into_string())
+                    .into_response();
             };
             return Html(team_edit_modal(&session, &t, &team, Some(error)).into_string())
                 .into_response();
@@ -292,12 +307,15 @@ pub async fn team_update(
             // Return HTMX response to close modal and reload table
             htmx_reload_table("/teams/list", "teams-table").into_response()
         }
-        Ok(false) => Html(error_message("Team not found").into_string()).into_response(),
+        Ok(false) => {
+            Html(error_message(&t, t.messages.error_team_not_found()).into_string()).into_response()
+        }
         Err(e) => {
             tracing::error!("Failed to update team: {}", e);
             let team = teams::get_team_by_id(&state.db, id).await.ok().flatten();
             let Some(team) = team else {
-                return Html(error_message("Team not found").into_string()).into_response();
+                return Html(error_message(&t, t.messages.error_team_not_found()).into_string())
+                    .into_response();
             };
             Html(team_edit_modal(&session, &t, &team, Some("Failed to update team")).into_string())
                 .into_response()
@@ -309,6 +327,7 @@ pub async fn team_update(
 pub async fn team_delete(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
+    Extension(t): Extension<TranslationContext>,
     Path(id): Path<i64>,
     Query(query): Query<TeamsQuery>,
     Form(form): Form<DeleteTeamForm>,
@@ -341,15 +360,19 @@ pub async fn team_delete(
             ))
             .into_response()
         }
-        Ok(false) => {
-            Html(crate::views::components::error::error_message("Team not found").into_string())
-                .into_response()
-        }
+        Ok(false) => Html(
+            crate::views::components::error::error_message(&t, t.messages.error_team_not_found())
+                .into_string(),
+        )
+        .into_response(),
         Err(e) => {
             tracing::error!("Failed to delete team: {}", e);
             Html(
-                crate::views::components::error::error_message("Failed to delete team")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_delete_team(),
+                )
+                .into_string(),
             )
             .into_response()
         }
@@ -372,7 +395,10 @@ pub async fn team_detail(
                     &session,
                     "/teams",
                     &t,
-                    crate::views::components::error::error_message("Team not found"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_team_not_found(),
+                    ),
                 )
                 .into_string(),
             );
@@ -385,7 +411,10 @@ pub async fn team_detail(
                     &session,
                     "/teams",
                     &t,
-                    crate::views::components::error::error_message("Failed to load team"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_team(),
+                    ),
                 )
                 .into_string(),
             );

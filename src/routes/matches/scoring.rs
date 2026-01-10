@@ -58,14 +58,21 @@ pub async fn score_event_create_form(
         Ok(Some(m)) => m,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Match not found").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_match_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch match: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load match")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_match(),
+                )
+                .into_string(),
             );
         }
     };
@@ -98,7 +105,8 @@ pub async fn score_event_create(
 
     let Some(match_info) = match_info else {
         return Html(
-            crate::views::components::error::error_message("Match not found").into_string(),
+            crate::views::components::error::error_message(&t, t.messages.error_match_not_found())
+                .into_string(),
         )
         .into_response();
     };
@@ -178,15 +186,21 @@ pub async fn score_event_edit_form(
         Ok(Some(se)) => se,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Score event not found")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_score_event_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch score event: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load score event")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_score_event(),
+                )
+                .into_string(),
             );
         }
     };
@@ -196,14 +210,21 @@ pub async fn score_event_edit_form(
         Ok(Some(m)) => m,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Match not found").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_match_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch match: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load match")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_match(),
+                )
+                .into_string(),
             );
         }
     };
@@ -244,7 +265,11 @@ pub async fn score_event_update(
 
     let Some(score_event) = score_event else {
         return Html(
-            crate::views::components::error::error_message("Score event not found").into_string(),
+            crate::views::components::error::error_message(
+                &t,
+                t.messages.error_score_event_not_found(),
+            )
+            .into_string(),
         )
         .into_response();
     };
@@ -257,7 +282,8 @@ pub async fn score_event_update(
 
     let Some(match_info) = match_info else {
         return Html(
-            crate::views::components::error::error_message("Match not found").into_string(),
+            crate::views::components::error::error_message(&t, t.messages.error_match_not_found())
+                .into_string(),
         )
         .into_response();
     };
@@ -349,6 +375,7 @@ pub async fn score_event_update(
 
 /// POST /matches/score-events/{id}/delete - Delete score event
 pub async fn score_event_delete(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> impl IntoResponse {
@@ -357,16 +384,22 @@ pub async fn score_event_delete(
         Ok(Some(se)) => se.match_id,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Score event not found")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_score_event_not_found(),
+                )
+                .into_string(),
             )
             .into_response();
         }
         Err(e) => {
             tracing::error!("Failed to fetch score event: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load score event")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_score_event(),
+                )
+                .into_string(),
             )
             .into_response();
         }
@@ -385,14 +418,21 @@ pub async fn score_event_delete(
             (headers, Html("".to_string())).into_response()
         }
         Ok(false) => Html(
-            crate::views::components::error::error_message("Score event not found").into_string(),
+            crate::views::components::error::error_message(
+                &t,
+                t.messages.error_score_event_not_found(),
+            )
+            .into_string(),
         )
         .into_response(),
         Err(e) => {
             tracing::error!("Failed to delete score event: {}", e);
             Html(
-                crate::views::components::error::error_message("Failed to delete score event")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_delete_score_event(),
+                )
+                .into_string(),
             )
             .into_response()
         }

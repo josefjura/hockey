@@ -75,7 +75,10 @@ pub async fn events_get(
                     &session,
                     "/events",
                     &t,
-                    crate::views::components::error::error_message("Failed to load events"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_events(),
+                    ),
                 )
                 .into_string(),
             );
@@ -105,8 +108,11 @@ pub async fn events_list_partial(
         Err(e) => {
             tracing::error!("Failed to fetch events: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load events")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_events(),
+                )
+                .into_string(),
             );
         }
     };
@@ -130,7 +136,10 @@ pub async fn event_detail(
                     &session,
                     "/events",
                     &t,
-                    crate::views::components::error::error_message("Event not found"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_event_not_found(),
+                    ),
                 )
                 .into_string(),
             );
@@ -143,7 +152,10 @@ pub async fn event_detail(
                     &session,
                     "/events",
                     &t,
-                    crate::views::components::error::error_message("Failed to load event"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_event(),
+                    ),
                 )
                 .into_string(),
             );
@@ -220,14 +232,21 @@ pub async fn event_edit_form(
         Ok(Some(event)) => event,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Event not found").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_event_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch event: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load event")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_event(),
+                )
+                .into_string(),
             );
         }
     };
@@ -250,7 +269,7 @@ pub async fn event_update(
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
             let Some(event) = event else {
-                return Html(error_message("Event not found").into_string());
+                return Html(error_message(&t, t.messages.error_event_not_found()).into_string());
             };
             return Html(event_edit_modal(&t, &event, &countries, Some(error)).into_string());
         }
@@ -271,13 +290,13 @@ pub async fn event_update(
             // Return HTMX response to close modal and reload table
             htmx_reload_table("/events/list", "events-table")
         }
-        Ok(false) => Html(error_message("Event not found").into_string()),
+        Ok(false) => Html(error_message(&t, t.messages.error_event_not_found()).into_string()),
         Err(e) => {
             tracing::error!("Failed to update event: {}", e);
             let event = events::get_event_by_id(&state.db, id).await.ok().flatten();
             let countries = events::get_countries(&state.db).await.unwrap_or_default();
             let Some(event) = event else {
-                return Html(error_message("Event not found").into_string());
+                return Html(error_message(&t, t.messages.error_event_not_found()).into_string());
             };
             Html(
                 event_edit_modal(&t, &event, &countries, Some("Failed to update event"))
@@ -288,20 +307,28 @@ pub async fn event_update(
 }
 
 /// POST /events/{id}/delete - Delete event
-pub async fn event_delete(State(state): State<AppState>, Path(id): Path<i64>) -> impl IntoResponse {
+pub async fn event_delete(
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> impl IntoResponse {
     match events::delete_event(&state.db, id).await {
         Ok(true) => {
             // Return HTMX response to reload table
             htmx_reload_table("/events/list", "events-table")
         }
-        Ok(false) => {
-            Html(crate::views::components::error::error_message("Event not found").into_string())
-        }
+        Ok(false) => Html(
+            crate::views::components::error::error_message(&t, t.messages.error_event_not_found())
+                .into_string(),
+        ),
         Err(e) => {
             tracing::error!("Failed to delete event: {}", e);
             Html(
-                crate::views::components::error::error_message("Failed to delete event")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_delete_event(),
+                )
+                .into_string(),
             )
         }
     }

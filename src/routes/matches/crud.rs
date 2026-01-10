@@ -128,14 +128,21 @@ pub async fn match_edit_form(
         Ok(Some(m)) => m,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Match not found").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_match_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch match: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load match")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_match(),
+                )
+                .into_string(),
             );
         }
     };
@@ -161,7 +168,8 @@ pub async fn match_update(
 
     let Some(match_entity) = match_entity else {
         return Html(
-            crate::views::components::error::error_message("Match not found").into_string(),
+            crate::views::components::error::error_message(&t, t.messages.error_match_not_found())
+                .into_string(),
         )
         .into_response();
     };
@@ -237,20 +245,28 @@ pub async fn match_update(
 }
 
 /// POST /matches/{id}/delete - Delete match
-pub async fn match_delete(State(state): State<AppState>, Path(id): Path<i64>) -> impl IntoResponse {
+pub async fn match_delete(
+    Extension(t): Extension<TranslationContext>,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> impl IntoResponse {
     match matches::delete_match(&state.db, id).await {
         Ok(true) => {
             // Redirect to matches list using HTMX redirect header
             Html(r#"<div hx-redirect="/matches"></div>"#.to_string())
         }
-        Ok(false) => {
-            Html(crate::views::components::error::error_message("Match not found").into_string())
-        }
+        Ok(false) => Html(
+            crate::views::components::error::error_message(&t, t.messages.error_match_not_found())
+                .into_string(),
+        ),
         Err(e) => {
             tracing::error!("Failed to delete match: {}", e);
             Html(
-                crate::views::components::error::error_message("Failed to delete match")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_delete_match(),
+                )
+                .into_string(),
             )
         }
     }

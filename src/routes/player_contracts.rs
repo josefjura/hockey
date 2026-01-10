@@ -41,7 +41,8 @@ pub async fn roster_get(
                         "/seasons",
                         &t,
                         crate::views::components::error::error_message(
-                            "Team participation not found",
+                            &t,
+                            t.messages.error_team_participation_not_found(),
                         ),
                     )
                     .into_string(),
@@ -60,7 +61,8 @@ pub async fn roster_get(
                         "/seasons",
                         &t,
                         crate::views::components::error::error_message(
-                            "Failed to load team participation",
+                            &t,
+                            t.messages.error_team_participation_not_found(),
                         ),
                     )
                     .into_string(),
@@ -83,7 +85,10 @@ pub async fn roster_get(
                     &session,
                     &format!("/seasons/{}", context.season_id),
                     &t,
-                    crate::views::components::error::error_message("Failed to load roster"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_roster(),
+                    ),
                 )
                 .into_string(),
             );
@@ -186,6 +191,7 @@ pub async fn roster_add_player(
 
 /// POST /player-contracts/{id}/delete - Remove player from roster
 pub async fn player_contract_delete(
+    Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(player_contract_id): Path<i64>,
 ) -> axum::response::Response {
@@ -199,8 +205,11 @@ pub async fn player_contract_delete(
         Ok(Some(id)) => id,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Player contract not found")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_player_contract_not_found(),
+                )
+                .into_string(),
             )
             .into_response();
         }
@@ -208,7 +217,8 @@ pub async fn player_contract_delete(
             tracing::error!("Failed to fetch player contract: {}", e);
             return Html(
                 crate::views::components::error::error_message(
-                    "Failed to remove player from roster",
+                    &t,
+                    t.messages.error_failed_to_load_roster(),
                 )
                 .into_string(),
             )
@@ -229,15 +239,19 @@ pub async fn player_contract_delete(
             (headers, Html("".to_string())).into_response()
         }
         Ok(false) => Html(
-            crate::views::components::error::error_message("Player contract not found")
-                .into_string(),
+            crate::views::components::error::error_message(
+                &t,
+                t.messages.error_player_contract_not_found(),
+            )
+            .into_string(),
         )
         .into_response(),
         Err(e) => {
             tracing::error!("Failed to remove player from roster: {}", e);
             Html(
                 crate::views::components::error::error_message(
-                    "Failed to remove player from roster",
+                    &t,
+                    t.messages.error_failed_to_load_roster(),
                 )
                 .into_string(),
             )

@@ -88,7 +88,10 @@ pub async fn players_get(
                     &session,
                     "/players",
                     &t,
-                    crate::views::components::error::error_message("Failed to load players"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_players(),
+                    ),
                 )
                 .into_string(),
             );
@@ -140,8 +143,11 @@ pub async fn players_list_partial(
         Err(e) => {
             tracing::error!("Failed to fetch players: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load players")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_players(),
+                )
+                .into_string(),
             );
         }
     };
@@ -246,14 +252,21 @@ pub async fn player_edit_form(
         Ok(Some(player)) => player,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Player not found").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_player_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch player: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load player")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_player(),
+                )
+                .into_string(),
             );
         }
     };
@@ -275,11 +288,13 @@ pub async fn player_update(
     let current_player = match players::get_player_by_id(&state.db, id).await {
         Ok(Some(player)) => player,
         Ok(None) => {
-            return Html(error_message("Player not found").into_string()).into_response();
+            return Html(error_message(&t, t.messages.error_player_not_found()).into_string())
+                .into_response();
         }
         Err(e) => {
             tracing::error!("Failed to fetch player: {}", e);
-            return Html(error_message("Failed to load player").into_string()).into_response();
+            return Html(error_message(&t, t.messages.error_failed_to_load_player()).into_string())
+                .into_response();
         }
     };
 
@@ -414,8 +429,11 @@ pub async fn player_delete(
                 Err(e) => {
                     tracing::error!("Failed to fetch players after delete: {}", e);
                     return Html(
-                        crate::views::components::error::error_message("Failed to reload players")
-                            .into_string(),
+                        crate::views::components::error::error_message(
+                            &t,
+                            t.messages.error_failed_to_reload_players(),
+                        )
+                        .into_string(),
                     )
                     .into_response();
                 }
@@ -427,15 +445,19 @@ pub async fn player_delete(
             )
             .into_response()
         }
-        Ok(false) => {
-            Html(crate::views::components::error::error_message("Player not found").into_string())
-                .into_response()
-        }
+        Ok(false) => Html(
+            crate::views::components::error::error_message(&t, t.messages.error_player_not_found())
+                .into_string(),
+        )
+        .into_response(),
         Err(e) => {
             tracing::error!("Failed to delete player: {}", e);
             Html(
-                crate::views::components::error::error_message("Failed to delete player")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_delete_player(),
+                )
+                .into_string(),
             )
             .into_response()
         }
@@ -460,7 +482,10 @@ pub async fn player_detail(
                     &session,
                     "/players",
                     &t,
-                    crate::views::components::error::error_message("Player not found"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_player_not_found(),
+                    ),
                 )
                 .into_string(),
             );
@@ -473,7 +498,10 @@ pub async fn player_detail(
                     &session,
                     "/players",
                     &t,
-                    crate::views::components::error::error_message("Failed to load player"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_player(),
+                    ),
                 )
                 .into_string(),
             );

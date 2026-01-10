@@ -368,6 +368,54 @@ error-system = A system error occurred. Please try again.
 error-team-already-in-season = This team is already participating in the selected season
 error-creating-participation = Failed to add team to season
 
+# Error messages - Entity not found
+error-player-not-found = Player not found
+error-event-not-found = Event not found
+error-season-not-found = Season not found
+error-team-not-found = Team not found
+error-match-not-found = Match not found
+error-score-event-not-found = Score event not found
+error-player-contract-not-found = Player contract not found
+error-team-participation-not-found = Team participation not found
+error-statistics-not-found = Statistics not found
+
+# Error messages - Failed to load
+error-failed-to-load-players = Failed to load players
+error-failed-to-load-player = Failed to load player
+error-failed-to-load-events = Failed to load events
+error-failed-to-load-event = Failed to load event
+error-failed-to-load-seasons = Failed to load seasons
+error-failed-to-load-season = Failed to load season
+error-failed-to-load-teams = Failed to load teams
+error-failed-to-load-team = Failed to load team
+error-failed-to-load-matches = Failed to load matches
+error-failed-to-load-match = Failed to load match
+error-failed-to-load-match-detail = Failed to load match detail
+error-failed-to-load-roster = Failed to load roster
+error-failed-to-load-score-event = Failed to load score event
+error-failed-to-load-player-scoring-data = Failed to load player scoring data
+error-failed-to-load-scoring-events = Failed to load scoring events
+error-failed-to-load-statistics = Failed to load statistics
+
+# Error messages - Failed to delete
+error-failed-to-delete-player = Failed to delete player
+error-failed-to-delete-event = Failed to delete event
+error-failed-to-delete-season = Failed to delete season
+error-failed-to-delete-team = Failed to delete team
+error-failed-to-delete-match = Failed to delete match
+error-failed-to-delete-score-event = Failed to delete score event
+error-failed-to-delete-statistics = Failed to delete statistics
+
+# Error messages - Failed to save/update
+error-failed-to-save-statistics = Failed to save statistics
+
+# Error messages - Failed to reload
+error-failed-to-reload-players = Failed to reload players
+error-failed-to-reload-seasons = Failed to reload seasons
+
+# Error messages - Failed to remove
+error-failed-to-remove-team-from-season = Failed to remove team from season
+
 # Player Scoring
 player-scoring-title = Scoring History
 player-scoring-total-goals = Total Goals

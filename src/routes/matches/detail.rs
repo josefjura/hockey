@@ -27,7 +27,10 @@ pub async fn match_detail(
                     &session,
                     "/matches",
                     &t,
-                    crate::views::components::error::error_message("Match not found"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_match_not_found(),
+                    ),
                 )
                 .into_string(),
             );
@@ -40,7 +43,10 @@ pub async fn match_detail(
                     &session,
                     "/matches",
                     &t,
-                    crate::views::components::error::error_message("Failed to load match detail"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_match_detail(),
+                    ),
                 )
                 .into_string(),
             );

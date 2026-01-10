@@ -55,7 +55,8 @@ pub async fn team_participation_create_form(
             tracing::error!("Failed to load teams/seasons for form: {}", e);
             return Html(
                 crate::views::components::error::error_message(
-                    &t.messages.error_loading_form_data().to_string(),
+                    &t,
+                    t.messages.error_loading_form_data(),
                 )
                 .into_string(),
             );
@@ -103,7 +104,8 @@ pub async fn team_participation_create(
                     tracing::error!("Failed to reload form data after error: {}", e);
                     return Html(
                         crate::views::components::error::error_message(
-                            &t.messages.error_system().to_string(),
+                            &t,
+                            t.messages.error_system(),
                         )
                         .into_string(),
                     )
@@ -131,10 +133,8 @@ pub async fn team_participation_create(
         Err(e) => {
             tracing::error!("Database error checking team participation: {}", e);
             return Html(
-                crate::views::components::error::error_message(
-                    &t.messages.error_system().to_string(),
-                )
-                .into_string(),
+                crate::views::components::error::error_message(&t, t.messages.error_system())
+                    .into_string(),
             )
             .into_response();
         }
@@ -150,10 +150,8 @@ pub async fn team_participation_create(
         Err(e) => {
             tracing::error!("Failed to get event_id for season: {}", e);
             return Html(
-                crate::views::components::error::error_message(
-                    &t.messages.error_system().to_string(),
-                )
-                .into_string(),
+                crate::views::components::error::error_message(&t, t.messages.error_system())
+                    .into_string(),
             )
             .into_response();
         }
@@ -204,7 +202,8 @@ pub async fn team_participation_create(
                     tracing::error!("Failed to reload form data after error: {}", e);
                     return Html(
                         crate::views::components::error::error_message(
-                            &t.messages.error_system().to_string(),
+                            &t,
+                            t.messages.error_system(),
                         )
                         .into_string(),
                     )

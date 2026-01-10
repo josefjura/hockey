@@ -127,7 +127,10 @@ pub async fn seasons_get(
                     &session,
                     "/seasons",
                     &t,
-                    crate::views::components::error::error_message("Failed to load seasons"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_seasons(),
+                    ),
                 )
                 .into_string(),
             );
@@ -179,8 +182,11 @@ pub async fn seasons_list_partial(
         Err(e) => {
             tracing::error!("Failed to fetch seasons: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load seasons")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_seasons(),
+                )
+                .into_string(),
             );
         }
     };
@@ -214,14 +220,21 @@ pub async fn event_season_create_form(
         Ok(Some(event)) => event,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Event not found").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_event_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch event: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load event")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_event(),
+                )
+                .into_string(),
             );
         }
     };
@@ -373,14 +386,21 @@ pub async fn season_edit_form(
         Ok(Some(season)) => season,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Season not found").into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_season_not_found(),
+                )
+                .into_string(),
             );
         }
         Err(e) => {
             tracing::error!("Failed to fetch season: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to load season")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_load_season(),
+                )
+                .into_string(),
             );
         }
     };
@@ -411,7 +431,8 @@ pub async fn season_update(
             .ok()
             .flatten();
         let Some(season) = season else {
-            return Html(error_message("Season not found").into_string()).into_response();
+            return Html(error_message(&t, t.messages.error_season_not_found()).into_string())
+                .into_response();
         };
         return Html(
             season_edit_modal(
@@ -435,7 +456,8 @@ pub async fn season_update(
                 .ok()
                 .flatten();
             let Some(season) = season else {
-                return Html(error_message("Season not found").into_string()).into_response();
+                return Html(error_message(&t, t.messages.error_season_not_found()).into_string())
+                    .into_response();
             };
             return Html(
                 season_edit_modal(
@@ -477,7 +499,8 @@ pub async fn season_update(
             Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
                 .into_response()
         }
-        Ok(false) => Html(error_message("Season not found").into_string()).into_response(),
+        Ok(false) => Html(error_message(&t, t.messages.error_season_not_found()).into_string())
+            .into_response(),
         Err(e) => {
             tracing::error!("Failed to update season: {}", e);
             let season = seasons::get_season_by_id(&state.db, id)
@@ -485,7 +508,8 @@ pub async fn season_update(
                 .ok()
                 .flatten();
             let Some(season) = season else {
-                return Html(error_message("Season not found").into_string()).into_response();
+                return Html(error_message(&t, t.messages.error_season_not_found()).into_string())
+                    .into_response();
             };
             Html(
                 season_edit_modal(
@@ -542,8 +566,11 @@ pub async fn season_delete(
                 Err(e) => {
                     tracing::error!("Failed to fetch seasons after delete: {}", e);
                     return Html(
-                        crate::views::components::error::error_message("Failed to reload seasons")
-                            .into_string(),
+                        crate::views::components::error::error_message(
+                            &t,
+                            t.messages.error_failed_to_reload_seasons(),
+                        )
+                        .into_string(),
                     )
                     .into_response();
                 }
@@ -555,15 +582,19 @@ pub async fn season_delete(
             )
             .into_response()
         }
-        Ok(false) => {
-            Html(crate::views::components::error::error_message("Season not found").into_string())
-                .into_response()
-        }
+        Ok(false) => Html(
+            crate::views::components::error::error_message(&t, t.messages.error_season_not_found())
+                .into_string(),
+        )
+        .into_response(),
         Err(e) => {
             tracing::error!("Failed to delete season: {}", e);
             Html(
-                crate::views::components::error::error_message("Failed to delete season")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_delete_season(),
+                )
+                .into_string(),
             )
             .into_response()
         }
@@ -586,7 +617,10 @@ pub async fn season_detail(
                     &session,
                     "/seasons",
                     &t,
-                    crate::views::components::error::error_message("Season not found"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_season_not_found(),
+                    ),
                 )
                 .into_string(),
             );
@@ -599,7 +633,10 @@ pub async fn season_detail(
                     &session,
                     "/seasons",
                     &t,
-                    crate::views::components::error::error_message("Failed to load season"),
+                    crate::views::components::error::error_message(
+                        &t,
+                        t.messages.error_failed_to_load_season(),
+                    ),
                 )
                 .into_string(),
             );
@@ -736,6 +773,7 @@ pub async fn season_add_team(
 pub async fn team_participation_delete(
     Extension(session): Extension<Session>,
     State(state): State<AppState>,
+    Extension(t): Extension<TranslationContext>,
     Path(id): Path<i64>,
     Form(form): Form<DeleteTeamParticipationForm>,
 ) -> axum::response::Response {
@@ -750,16 +788,22 @@ pub async fn team_participation_delete(
         Ok(Some(season_id)) => season_id,
         Ok(None) => {
             return Html(
-                crate::views::components::error::error_message("Team participation not found")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_team_participation_not_found(),
+                )
+                .into_string(),
             )
             .into_response();
         }
         Err(e) => {
             tracing::error!("Failed to fetch team participation: {}", e);
             return Html(
-                crate::views::components::error::error_message("Failed to remove team from season")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_remove_team_from_season(),
+                )
+                .into_string(),
             )
             .into_response();
         }
@@ -778,15 +822,21 @@ pub async fn team_participation_delete(
             (headers, Html("".to_string())).into_response()
         }
         Ok(false) => Html(
-            crate::views::components::error::error_message("Team participation not found")
-                .into_string(),
+            crate::views::components::error::error_message(
+                &t,
+                t.messages.error_team_participation_not_found(),
+            )
+            .into_string(),
         )
         .into_response(),
         Err(e) => {
             tracing::error!("Failed to remove team from season: {}", e);
             Html(
-                crate::views::components::error::error_message("Failed to remove team from season")
-                    .into_string(),
+                crate::views::components::error::error_message(
+                    &t,
+                    t.messages.error_failed_to_remove_team_from_season(),
+                )
+                .into_string(),
             )
             .into_response()
         }

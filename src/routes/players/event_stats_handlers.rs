@@ -30,15 +30,20 @@ pub struct EventStatsUpdateForm {
 
 /// Helper function to fetch player by ID with consistent error handling
 async fn get_player_or_error(
+    t: &TranslationContext,
     db: &SqlitePool,
     player_id: i64,
 ) -> Result<PlayerEntity, Html<String>> {
     match players::get_player_by_id(db, player_id).await {
         Ok(Some(player)) => Ok(player),
-        Ok(None) => Err(Html(error_message("Player not found").into_string())),
+        Ok(None) => Err(Html(
+            error_message(t, t.messages.error_player_not_found()).into_string(),
+        )),
         Err(e) => {
             tracing::error!("Failed to fetch player: {}", e);
-            Err(Html(error_message("Failed to load player").into_string()))
+            Err(Html(
+                error_message(t, t.messages.error_failed_to_load_player()).into_string(),
+            ))
         }
     }
 }
@@ -49,7 +54,7 @@ pub async fn event_stats_create_form(
     State(state): State<AppState>,
     Path(player_id): Path<i64>,
 ) -> impl IntoResponse {
-    let player = match get_player_or_error(&state.db, player_id).await {
+    let player = match get_player_or_error(&t, &state.db, player_id).await {
         Ok(p) => p,
         Err(err) => return err,
     };
@@ -67,7 +72,7 @@ pub async fn event_stats_create(
     Path(player_id): Path<i64>,
     Form(form): Form<EventStatsForm>,
 ) -> impl IntoResponse {
-    let player = match get_player_or_error(&state.db, player_id).await {
+    let player = match get_player_or_error(&t, &state.db, player_id).await {
         Ok(p) => p,
         Err(err) => return err,
     };
@@ -106,7 +111,7 @@ pub async fn event_stats_edit_form(
     State(state): State<AppState>,
     Path((player_id, stats_id)): Path<(i64, i64)>,
 ) -> impl IntoResponse {
-    let player = match get_player_or_error(&state.db, player_id).await {
+    let player = match get_player_or_error(&t, &state.db, player_id).await {
         Ok(p) => p,
         Err(err) => return err,
     };
@@ -116,13 +121,17 @@ pub async fn event_stats_edit_form(
         Ok(stats) => stats,
         Err(e) => {
             tracing::error!("Failed to fetch event stats: {}", e);
-            return Html(error_message("Failed to load statistics").into_string());
+            return Html(
+                error_message(&t, t.messages.error_failed_to_load_statistics()).into_string(),
+            );
         }
     };
 
     let stats = match all_stats.iter().find(|s| s.id == stats_id) {
         Some(s) => s,
-        None => return Html(error_message("Statistics not found").into_string()),
+        None => {
+            return Html(error_message(&t, t.messages.error_statistics_not_found()).into_string())
+        }
     };
 
     Html(event_stats_edit_modal(&t, &player, stats, None).into_string())
@@ -138,19 +147,27 @@ pub async fn event_stats_update(
     // Validation
     if let Err(error_msg) = validate_event_stats(form.goals_total, form.assists_total) {
         // Get player and stats for error display
-        let player = match get_player_or_error(&state.db, player_id).await {
+        let player = match get_player_or_error(&t, &state.db, player_id).await {
             Ok(p) => p,
             Err(err) => return err,
         };
 
         let all_stats = match players::get_player_event_stats(&state.db, player_id).await {
             Ok(stats) => stats,
-            Err(_) => return Html(error_message("Failed to load statistics").into_string()),
+            Err(_) => {
+                return Html(
+                    error_message(&t, t.messages.error_failed_to_load_statistics()).into_string(),
+                )
+            }
         };
 
         let stats = match all_stats.iter().find(|s| s.id == stats_id) {
             Some(s) => s,
-            None => return Html(error_message("Statistics not found").into_string()),
+            None => {
+                return Html(
+                    error_message(&t, t.messages.error_statistics_not_found()).into_string(),
+                )
+            }
         };
 
         return Html(event_stats_edit_modal(&t, &player, stats, Some(error_msg)).into_string());
@@ -168,7 +185,7 @@ pub async fn event_stats_update(
         Ok(_) => htmx_reload_page(),
         Err(e) => {
             tracing::error!("Failed to update event stats: {}", e);
-            Html(error_message("Failed to save statistics").into_string())
+            Html(error_message(&t, t.messages.error_failed_to_save_statistics()).into_string())
         }
     }
 }
@@ -177,12 +194,13 @@ pub async fn event_stats_update(
 pub async fn event_stats_delete(
     State(state): State<AppState>,
     Path((_player_id, stats_id)): Path<(i64, i64)>,
+    Extension(t): Extension<TranslationContext>,
 ) -> impl IntoResponse {
     match players::delete_player_event_stats(&state.db, stats_id).await {
         Ok(_) => htmx_reload_page(),
         Err(e) => {
             tracing::error!("Failed to delete event stats: {}", e);
-            Html(error_message("Failed to delete statistics").into_string())
+            Html(error_message(&t, t.messages.error_failed_to_delete_statistics()).into_string())
         }
     }
 }

@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 
+use crate::i18n::TranslationContext;
 use maud::{html, Markup, PreEscaped};
 
 /// Simple inline error message
-pub fn error_message(message: &str) -> Markup {
+pub fn error_message(_t: &TranslationContext, message: impl std::fmt::Display) -> Markup {
     html! {
         div class="error" style="padding: 1rem; margin: 1rem 0;" {
             (message)

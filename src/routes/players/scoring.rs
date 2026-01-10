@@ -95,7 +95,7 @@ pub async fn player_scoring_get(
                     &session,
                     "/players",
                     &t,
-                    error_message("Player not found"),
+                    error_message(&t, t.messages.error_player_not_found()),
                 )
                 .into_string(),
             );
@@ -108,7 +108,7 @@ pub async fn player_scoring_get(
                     &session,
                     "/players",
                     &t,
-                    error_message("Failed to load player scoring data"),
+                    error_message(&t, t.messages.error_failed_to_load_player_scoring_data()),
                 )
                 .into_string(),
             );
@@ -171,7 +171,9 @@ pub async fn player_scoring_list_partial(
         Ok(result) => result,
         Err(e) => {
             tracing::error!("Failed to fetch player scoring events: {}", e);
-            return Html(error_message("Failed to load scoring events").into_string());
+            return Html(
+                error_message(&t, t.messages.error_failed_to_load_scoring_events()).into_string(),
+            );
         }
     };
 
