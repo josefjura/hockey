@@ -3,7 +3,6 @@ use std::env;
 #[derive(Debug, Clone)]
 pub struct Config {
     pub database_url: String,
-    #[allow(dead_code)]
     pub session_secret: String,
     pub environment: Environment,
     pub port: u16,

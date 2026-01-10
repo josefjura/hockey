@@ -11,7 +11,9 @@ use serde::Deserialize;
 use sqlx::Row;
 
 use crate::app_state::AppState;
-use crate::auth::{verify_password, SESSION_COOKIE_NAME};
+use crate::auth::{
+    sign_session_id, verify_password, verify_signed_session_id, SESSION_COOKIE_NAME,
+};
 use crate::views::pages::auth::login_page;
 
 #[derive(Debug, Deserialize)]
@@ -114,8 +116,11 @@ pub async fn login_post(
 
     tracing::info!("User {} logged in successfully", user_email);
 
-    // Set session cookie
-    let session_cookie = Cookie::build((SESSION_COOKIE_NAME, session.id))
+    // Sign the session ID for the cookie
+    let signed_session_id = sign_session_id(&session.id, &state.session_secret);
+
+    // Set session cookie with signed session ID
+    let session_cookie = Cookie::build((SESSION_COOKIE_NAME, signed_session_id))
         .path("/")
         .http_only(true)
         .same_site(SameSite::Strict)
@@ -130,11 +135,16 @@ pub async fn login_post(
 
 /// POST /auth/logout - Handle logout
 pub async fn logout_post(State(state): State<AppState>, jar: CookieJar) -> impl IntoResponse {
-    // Get session cookie
+    // Get session cookie (contains signed session ID)
     if let Some(session_cookie) = jar.get(SESSION_COOKIE_NAME) {
-        // Delete session from store
-        state.sessions.delete_session(session_cookie.value()).await;
-        tracing::info!("User logged out");
+        // Verify signature and extract session ID
+        if let Some(session_id) =
+            verify_signed_session_id(session_cookie.value(), &state.session_secret)
+        {
+            // Delete session from store
+            state.sessions.delete_session(&session_id).await;
+            tracing::info!("User logged out");
+        }
     }
 
     // Remove session cookie

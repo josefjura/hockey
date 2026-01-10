@@ -7,6 +7,7 @@ use axum::{
 use axum_extra::extract::CookieJar;
 
 use super::session::Session;
+use super::signing::verify_signed_session_id;
 use crate::app_state::AppState;
 
 pub const SESSION_COOKIE_NAME: &str = "hockey_session";
@@ -19,22 +20,27 @@ pub async fn require_auth(
     mut request: Request,
     next: Next,
 ) -> Result<Response, Response> {
-    // Get session cookie
-    let session_id = jar
+    // Get session cookie (contains signed session ID: "session_id.signature")
+    let signed_session_id = jar
         .get(SESSION_COOKIE_NAME)
         .map(|cookie| cookie.value().to_string());
 
-    if let Some(session_id) = session_id {
-        // Validate session
-        if let Some(session) = state.sessions.validate_session(&session_id).await {
-            // Refresh session expiry on each request
-            state.sessions.refresh_session(&session_id).await;
+    if let Some(signed_session_id) = signed_session_id {
+        // Verify signature and extract session ID
+        if let Some(session_id) =
+            verify_signed_session_id(&signed_session_id, &state.session_secret)
+        {
+            // Validate session
+            if let Some(session) = state.sessions.validate_session(&session_id).await {
+                // Refresh session expiry on each request
+                state.sessions.refresh_session(&session_id).await;
 
-            // Add session to request extensions
-            request.extensions_mut().insert(session);
+                // Add session to request extensions
+                request.extensions_mut().insert(session);
 
-            // Continue to the route handler
-            return Ok(next.run(request).await);
+                // Continue to the route handler
+                return Ok(next.run(request).await);
+            }
         }
     }
 
@@ -51,14 +57,19 @@ pub async fn optional_auth(
     mut request: Request,
     next: Next,
 ) -> Response {
-    let session_id = jar
+    let signed_session_id = jar
         .get(SESSION_COOKIE_NAME)
         .map(|cookie| cookie.value().to_string());
 
-    if let Some(session_id) = session_id {
-        if let Some(session) = state.sessions.validate_session(&session_id).await {
-            state.sessions.refresh_session(&session_id).await;
-            request.extensions_mut().insert(session);
+    if let Some(signed_session_id) = signed_session_id {
+        // Verify signature and extract session ID
+        if let Some(session_id) =
+            verify_signed_session_id(&signed_session_id, &state.session_secret)
+        {
+            if let Some(session) = state.sessions.validate_session(&session_id).await {
+                state.sessions.refresh_session(&session_id).await;
+                request.extensions_mut().insert(session);
+            }
         }
     }
 

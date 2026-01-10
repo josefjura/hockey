@@ -7,7 +7,7 @@
 //! - Test app creation for route tests
 
 use crate::app_state::AppState;
-use crate::auth::{Session, SessionStore};
+use crate::auth::{sign_session_id, Session, SessionStore};
 use axum::{
     middleware,
     routing::{get, post},
@@ -16,13 +16,16 @@ use axum::{
 use axum_extra::extract::cookie::Cookie;
 use sqlx::SqlitePool;
 
+/// Test session secret (32+ characters as required)
+pub const TEST_SESSION_SECRET: &str = "test-secret-key-DO-NOT-USE-IN-PRODUCTION-32chars";
+
 /// Create a test application with routes for integration testing
 ///
 /// This creates the full application router with all routes and middleware,
 /// using the provided database pool. Use with axum-test for route testing.
 pub fn create_test_app(pool: SqlitePool) -> Router {
     let session_store = SessionStore::new(pool.clone());
-    let state = AppState::new(pool, session_store);
+    let state = AppState::new(pool, session_store, TEST_SESSION_SECRET.to_string());
 
     // Public routes
     let public_routes = Router::new()
@@ -111,9 +114,13 @@ pub async fn create_test_session(pool: &SqlitePool) -> Session {
 /// Generate a session cookie from a Session
 ///
 /// Creates a Cookie that can be used with axum-test's `add_cookie()` method
-/// to authenticate requests in route tests.
+/// to authenticate requests in route tests. The session ID is signed using
+/// the TEST_SESSION_SECRET to match production behavior.
 pub fn session_cookie(session: &Session) -> Cookie<'static> {
-    Cookie::build(("hockey_session", session.id.clone()))
+    // Sign the session ID using the test secret
+    let signed_session_id = sign_session_id(&session.id, TEST_SESSION_SECRET);
+
+    Cookie::build(("hockey_session", signed_session_id))
         .http_only(true)
         .secure(false) // Not secure in tests
         .same_site(axum_extra::extract::cookie::SameSite::Lax)
@@ -265,11 +272,20 @@ mod tests {
 
     #[sqlx::test(migrations = "./migrations")]
     async fn test_session_cookie(pool: SqlitePool) {
+        use crate::auth::verify_signed_session_id;
+
         let session = create_test_session(&pool).await;
         let cookie = session_cookie(&session);
 
         assert_eq!(cookie.name(), "hockey_session");
-        assert_eq!(cookie.value(), session.id);
+
+        // Cookie value should be a signed session ID, not plain session ID
+        assert_ne!(cookie.value(), session.id);
+
+        // Verify that the cookie value is properly signed
+        let verified_session_id = verify_signed_session_id(cookie.value(), TEST_SESSION_SECRET);
+        assert_eq!(verified_session_id, Some(session.id.clone()));
+
         assert!(cookie.http_only().unwrap());
         assert_eq!(cookie.path(), Some("/"));
     }

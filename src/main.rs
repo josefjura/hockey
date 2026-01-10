@@ -63,7 +63,11 @@ async fn main() -> Result<(), anyhow::Error> {
     let session_store = SessionStore::new(db_pool.clone());
 
     // Create app state
-    let state = AppState::new(db_pool, session_store.clone());
+    let state = AppState::new(
+        db_pool,
+        session_store.clone(),
+        config.session_secret.clone(),
+    );
 
     // Start background task to cleanup expired sessions
     tokio::spawn(async move {
