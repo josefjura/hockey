@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 
 ### Fixed
+- CI formatting check now passes after applying `rustfmt` style to player validation functions introduced in #170 — the method chains were broken at the call site instead of after the `=`, which is what `rustfmt` enforces (#170)
+- CI Clippy check now passes after removing a needless double-borrow in the sidebar navigation loop — `item` was already a `&NavItem` reference from iterating `&nav_items`, so `&item` created a redundant `&&NavItem` that the compiler silently dereferenced
 - Error handling is now consistent across all routes, making debugging easier and providing clearer error messages when operations fail (#163)
 - Database errors when loading dropdown data (countries, seasons, teams) are now logged instead of silently ignored, making it easier to diagnose problems (#163)
 - Failed database operations now distinguish between "not found" and "database error" scenarios, providing more accurate error messages to users (#163)

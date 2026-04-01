@@ -49,7 +49,7 @@ pub fn sidebar(session: &Session, current_path: &str, t: &TranslationContext) ->
             // Navigation
             nav class="sidebar-nav" {
                 @for item in &nav_items {
-                    (nav_link(&item, current_path))
+                    (nav_link(item, current_path))
                 }
             }
 

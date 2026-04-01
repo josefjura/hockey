@@ -257,8 +257,8 @@ pub async fn create_player_validated(
     photo_path: Option<String>,
 ) -> Result<i64, PlayerError> {
     // Validate name
-    let validated_name = validate_name(&form_data.name)
-        .map_err(PlayerValidationError::InvalidName)?;
+    let validated_name =
+        validate_name(&form_data.name).map_err(PlayerValidationError::InvalidName)?;
 
     // Validate country_id is provided
     let country_id = form_data
@@ -266,12 +266,12 @@ pub async fn create_player_validated(
         .ok_or(PlayerValidationError::MissingCountryId)?;
 
     // Validate height
-    let validated_height = validate_height_cm(form_data.height_cm)
-        .map_err(PlayerValidationError::InvalidHeight)?;
+    let validated_height =
+        validate_height_cm(form_data.height_cm).map_err(PlayerValidationError::InvalidHeight)?;
 
     // Validate weight
-    let validated_weight = validate_weight_kg(form_data.weight_kg)
-        .map_err(PlayerValidationError::InvalidWeight)?;
+    let validated_weight =
+        validate_weight_kg(form_data.weight_kg).map_err(PlayerValidationError::InvalidWeight)?;
 
     // Create player
     players::create_player(
@@ -312,8 +312,8 @@ pub async fn update_player_validated(
     photo_path: Option<String>,
 ) -> Result<bool, PlayerError> {
     // Validate name
-    let validated_name = validate_name(&form_data.name)
-        .map_err(PlayerValidationError::InvalidName)?;
+    let validated_name =
+        validate_name(&form_data.name).map_err(PlayerValidationError::InvalidName)?;
 
     // Validate country_id is provided
     let country_id = form_data
@@ -321,12 +321,12 @@ pub async fn update_player_validated(
         .ok_or(PlayerValidationError::MissingCountryId)?;
 
     // Validate height
-    let validated_height = validate_height_cm(form_data.height_cm)
-        .map_err(PlayerValidationError::InvalidHeight)?;
+    let validated_height =
+        validate_height_cm(form_data.height_cm).map_err(PlayerValidationError::InvalidHeight)?;
 
     // Validate weight
-    let validated_weight = validate_weight_kg(form_data.weight_kg)
-        .map_err(PlayerValidationError::InvalidWeight)?;
+    let validated_weight =
+        validate_weight_kg(form_data.weight_kg).map_err(PlayerValidationError::InvalidWeight)?;
 
     // Update player
     players::update_player(
