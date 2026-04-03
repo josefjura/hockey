@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Database connection pool size is now configurable via the `DB_MAX_CONNECTIONS` environment variable, allowing you to optimize performance for different workloads or limit resources in constrained environments (default: 5) (#181)
 - Match create and edit forms now show a localized "Loading teams…" indicator next to the season dropdown while HTMX fetches the available teams, using the existing `htmx-indicator` infrastructure (#190)
+- Empty list pages for players, teams, and seasons now show a "Create" call-to-action button when there are no items and no filters are active, giving users a direct path to add their first record (#187)
 
 ### Changed
 - Login page now respects the user's language selection — title, field labels, button, and error messages are all translated (Czech and English) instead of being hardcoded in English (#185)

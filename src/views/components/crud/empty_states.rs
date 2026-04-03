@@ -3,7 +3,15 @@ use maud::{html, Markup};
 use crate::views::components::empty_state::{empty_state_enhanced, EmptyStateIcon};
 
 /// Empty state when no items are found (enhanced with icon)
-pub fn empty_state(entity_name: &str, has_filters: bool) -> Markup {
+///
+/// When `has_filters` is false and both `create_url` and `create_label` are provided,
+/// a "Create" call-to-action button is shown so users can immediately add the first item.
+pub fn empty_state(
+    entity_name: &str,
+    has_filters: bool,
+    create_url: Option<&str>,
+    create_label: Option<&str>,
+) -> Markup {
     let (icon, description) = if has_filters {
         (
             EmptyStateIcon::Search,
@@ -19,13 +27,20 @@ pub fn empty_state(entity_name: &str, has_filters: bool) -> Markup {
         )
     };
 
+    // Only show the CTA when there are no active filters
+    let (action_label, action_url) = if !has_filters {
+        (create_label, create_url)
+    } else {
+        (None, None)
+    };
+
     empty_state_enhanced(
         icon,
         &format!("No {} found", entity_name),
         &description,
-        None,
-        None,
-        None,
+        action_label,
+        action_url,
+        Some("#modal-container"),
     )
 }
 
