@@ -308,7 +308,8 @@ pub async fn event_update(
                 Ok(None) => {
                     return Html(
                         error_message(&t, t.messages.error_event_not_found()).into_string(),
-                    );
+                    )
+                    .into_response();
                 }
                 Err(e) => {
                     tracing::error!(
@@ -318,7 +319,8 @@ pub async fn event_update(
                     );
                     return Html(
                         error_message(&t, t.messages.error_failed_to_load_event()).into_string(),
-                    );
+                    )
+                    .into_response();
                 }
             };
             let countries = match countries::get_countries_simple(&state.db).await {
@@ -328,7 +330,8 @@ pub async fn event_update(
                     Vec::new()
                 }
             };
-            return Html(event_edit_modal(&t, &event, &countries, Some(error)).into_string());
+            return Html(event_edit_modal(&t, &event, &countries, Some(error)).into_string())
+                .into_response();
         }
     };
 
