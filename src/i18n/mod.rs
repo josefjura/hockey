@@ -91,4 +91,38 @@ mod tests {
         assert_eq!(ctx.messages.nav_dashboard().to_string(), "Přehled");
         assert_eq!(ctx.messages.nav_teams().to_string(), "Týmy");
     }
+
+    #[test]
+    fn test_signin_strings_english() {
+        let ctx = TranslationContext::new(Locale::English);
+        assert_eq!(
+            ctx.messages.signin_title().to_string(),
+            "Sign in to your account"
+        );
+        assert_eq!(ctx.messages.signin_email().to_string(), "Email address");
+        assert_eq!(ctx.messages.signin_password().to_string(), "Password");
+        assert_eq!(ctx.messages.signin_button().to_string(), "Sign in");
+        assert_eq!(
+            ctx.messages.signin_error_invalid_credentials().to_string(),
+            "Invalid email or password"
+        );
+        assert_eq!(
+            ctx.messages.signin_error_general().to_string(),
+            "Something went wrong. Please try again."
+        );
+    }
+
+    #[test]
+    fn test_signin_strings_czech() {
+        let ctx = TranslationContext::new(Locale::Czech);
+        assert_eq!(
+            ctx.messages.signin_title().to_string(),
+            "Přihlaste se do svého účtu"
+        );
+        assert_eq!(ctx.messages.signin_button().to_string(), "Přihlásit se");
+        assert_eq!(
+            ctx.messages.signin_error_invalid_credentials().to_string(),
+            "Neplatný e-mail nebo heslo"
+        );
+    }
 }

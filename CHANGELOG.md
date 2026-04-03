@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Database connection pool size is now configurable via the `DB_MAX_CONNECTIONS` environment variable, allowing you to optimize performance for different workloads or limit resources in constrained environments (default: 5) (#181)
 
 ### Changed
+- Login page now respects the user's language selection — title, field labels, button, and error messages are all translated (Czech and English) instead of being hardcoded in English (#185)
 - Simplified internal code structure by removing duplicate country-fetching logic across multiple modules, making the codebase easier to maintain and understand (#168)
 - Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 
