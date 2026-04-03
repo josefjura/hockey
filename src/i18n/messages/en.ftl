@@ -224,6 +224,7 @@ matches-score = Score
 matches-season = Season
 matches-select-team = Select team
 matches-select-season = Select season
+matches-loading-teams = Loading teams…
 matches-select-status = Select status
 matches-created = Match created successfully
 matches-updated = Match updated successfully

@@ -3,6 +3,7 @@ use maud::{html, Markup};
 use crate::i18n::TranslationContext;
 use crate::service::matches::MatchEntity;
 use crate::views::components::crud::modal_form_i18n;
+use crate::views::components::loading::htmx_loading_indicator;
 
 /// Create match modal
 pub fn match_create_modal(
@@ -12,11 +13,11 @@ pub fn match_create_modal(
     teams: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
-        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-row" style="margin-bottom: 1rem;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_season())
-                    span style="color: red;" { "*" }
+                    span class="required-indicator" { " *" }
                 }
                 select
                     name="season_id"
@@ -24,25 +25,22 @@ pub fn match_create_modal(
                     hx-get="/matches/teams-for-season"
                     hx-swap="none"
                     hx-trigger="change"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                    hx-indicator="#season-loading-create"
                 {
                     option value="" { (t.messages.matches_select_season()) }
                     @for (id, name) in seasons {
                         option value=(id) { (name) }
                     }
                 }
+                (htmx_loading_indicator("season-loading-create", Some(&t.messages.matches_loading_teams().to_string())))
             }
 
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_status())
-                    span style="color: red;" { "*" }
+                    span class="required-indicator" { " *" }
                 }
-                select
-                    name="status"
-                    required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-                {
+                select name="status" required {
                     option value="scheduled" selected { (t.messages.matches_status_scheduled()) }
                     option value="in_progress" { (t.messages.matches_status_in_progress()) }
                     option value="finished" { (t.messages.matches_status_finished()) }
@@ -51,18 +49,17 @@ pub fn match_create_modal(
             }
         }
 
-        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-row" style="margin-bottom: 1rem;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_home_team())
-                    span style="color: red;" { "*" }
+                    span class="required-indicator" { " *" }
                 }
                 select
                     name="home_team_id"
                     id="home_team_id"
                     class="team-select"
                     required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
                     option value="" { (t.messages.matches_select_team()) }
                     @for (id, name) in teams {
@@ -71,17 +68,16 @@ pub fn match_create_modal(
                 }
             }
 
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_away_team())
-                    span style="color: red;" { "*" }
+                    span class="required-indicator" { " *" }
                 }
                 select
                     name="away_team_id"
                     id="away_team_id"
                     class="team-select"
                     required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
                     option value="" { (t.messages.matches_select_team()) }
                     @for (id, name) in teams {
@@ -91,51 +87,47 @@ pub fn match_create_modal(
             }
         }
 
-        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-row" style="margin-bottom: 1rem;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_score()) " (Home)"
                 }
                 input
                     type="number"
                     name="home_score_unidentified"
                     value="0"
-                    min="0"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    min="0";
             }
 
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_score()) " (Away)"
                 }
                 input
                     type="number"
                     name="away_score_unidentified"
                     value="0"
-                    min="0"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    min="0";
             }
         }
 
-        div style="margin-bottom: 1rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label class="form-label" {
                 (t.messages.matches_date())
             }
             input
                 type="datetime-local"
-                name="match_date"
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                name="match_date";
         }
 
-        div style="margin-bottom: 1.5rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label class="form-label" {
                 (t.messages.matches_location())
             }
             input
                 type="text"
                 name="venue"
-                placeholder=(t.messages.matches_location_placeholder())
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                placeholder=(t.messages.matches_location_placeholder());
         }
     };
 
@@ -159,11 +151,11 @@ pub fn match_edit_modal(
     teams: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
-        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-row" style="margin-bottom: 1rem;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_season())
-                    span style="color: red;" { "*" }
+                    span class="required-indicator" { " *" }
                 }
                 select
                     name="season_id"
@@ -171,7 +163,7 @@ pub fn match_edit_modal(
                     hx-get="/matches/teams-for-season"
                     hx-swap="none"
                     hx-trigger="change"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
+                    hx-indicator="#season-loading-edit"
                 {
                     @for (id, name) in seasons {
                         option
@@ -182,18 +174,15 @@ pub fn match_edit_modal(
                         }
                     }
                 }
+                (htmx_loading_indicator("season-loading-edit", Some(&t.messages.matches_loading_teams().to_string())))
             }
 
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_status())
-                    span style="color: red;" { "*" }
+                    span class="required-indicator" { " *" }
                 }
-                select
-                    name="status"
-                    required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
-                {
+                select name="status" required {
                     option value="scheduled" selected[match_entity.status == "scheduled"] { (t.messages.matches_status_scheduled()) }
                     option value="in_progress" selected[match_entity.status == "in_progress"] { (t.messages.matches_status_in_progress()) }
                     option value="finished" selected[match_entity.status == "finished"] { (t.messages.matches_status_finished()) }
@@ -202,18 +191,17 @@ pub fn match_edit_modal(
             }
         }
 
-        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-row" style="margin-bottom: 1rem;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_home_team())
-                    span style="color: red;" { "*" }
+                    span class="required-indicator" { " *" }
                 }
                 select
                     name="home_team_id"
                     id="edit_home_team_id"
                     class="edit-team-select"
                     required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
                     @for (id, name) in teams {
                         option
@@ -226,17 +214,16 @@ pub fn match_edit_modal(
                 }
             }
 
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_away_team())
-                    span style="color: red;" { "*" }
+                    span class="required-indicator" { " *" }
                 }
                 select
                     name="away_team_id"
                     id="edit_away_team_id"
                     class="edit-team-select"
                     required
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;"
                 {
                     @for (id, name) in teams {
                         option
@@ -250,53 +237,49 @@ pub fn match_edit_modal(
             }
         }
 
-        div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;" {
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-row" style="margin-bottom: 1rem;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_score()) " (Home)"
                 }
                 input
                     type="number"
                     name="home_score_unidentified"
                     value=(match_entity.home_score_unidentified)
-                    min="0"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    min="0";
             }
 
-            div {
-                label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+            div class="form-group" {
+                label class="form-label" {
                     (t.messages.matches_score()) " (Away)"
                 }
                 input
                     type="number"
                     name="away_score_unidentified"
                     value=(match_entity.away_score_unidentified)
-                    min="0"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                    min="0";
             }
         }
 
-        div style="margin-bottom: 1rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label class="form-label" {
                 (t.messages.matches_date())
             }
             input
                 type="datetime-local"
                 name="match_date"
-                value=[match_entity.match_date.as_ref()]
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                value=[match_entity.match_date.as_ref()];
         }
 
-        div style="margin-bottom: 1.5rem;" {
-            label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
+        div class="form-group" {
+            label class="form-label" {
                 (t.messages.matches_location())
             }
             input
                 type="text"
                 name="venue"
                 value=[match_entity.venue.as_ref()]
-                placeholder=(t.messages.matches_location_placeholder())
-                style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;";
+                placeholder=(t.messages.matches_location_placeholder());
         }
     };
 

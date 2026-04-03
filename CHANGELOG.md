@@ -9,12 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Database connection pool size is now configurable via the `DB_MAX_CONNECTIONS` environment variable, allowing you to optimize performance for different workloads or limit resources in constrained environments (default: 5) (#181)
+- Match create and edit forms now show a localized "Loading teams…" indicator next to the season dropdown while HTMX fetches the available teams, using the existing `htmx-indicator` infrastructure (#190)
 
 ### Changed
 - Simplified internal code structure by removing duplicate country-fetching logic across multiple modules, making the codebase easier to maintain and understand (#168)
 - Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 
 ### Fixed
+- Required and out-of-range form fields now get a red border highlight automatically via the CSS `:user-invalid` pseudo-class, giving immediate visual feedback when a field fails HTML5 validation constraints (#186)
+- Match create/edit form now uses the shared `.form-group` / `.form-label` CSS classes instead of duplicated inline styles, so it benefits from all form styling improvements consistently (#186)
 - CI formatting check now passes after applying `rustfmt` style to player validation functions introduced in #170 — the method chains were broken at the call site instead of after the `=`, which is what `rustfmt` enforces (#170)
 - CI Clippy check now passes after removing a needless double-borrow in the sidebar navigation loop — `item` was already a `&NavItem` reference from iterating `&nav_items`, so `&item` created a redundant `&&NavItem` that the compiler silently dereferenced
 - Error handling is now consistent across all routes, making debugging easier and providing clearer error messages when operations fail (#163)
