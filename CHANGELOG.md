@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Login page now respects the user's language selection — title, field labels, button, and error messages are all translated (Czech and English) instead of being hardcoded in English (#185)
+- Delete confirmation dialogs now show the exact item name being deleted (e.g. "Delete 'John Smith'") instead of a generic "Delete Player", preventing accidental deletions of the wrong item (#188)
+- Player photo in roster now uses the actual stored photo URL instead of a broken external placeholder service (#200)
 - Simplified internal code structure by removing duplicate country-fetching logic across multiple modules, making the codebase easier to maintain and understand (#168)
 - Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Match create/edit form now uses the shared `.form-group` / `.form-label` CSS classes instead of duplicated inline styles, so it benefits from all form styling improvements consistently (#186)
 - CI formatting check now passes after applying `rustfmt` style to player validation functions introduced in #170 — the method chains were broken at the call site instead of after the `=`, which is what `rustfmt` enforces (#170)
 - CI Clippy check now passes after removing a needless double-borrow in the sidebar navigation loop — `item` was already a `&NavItem` reference from iterating `&nav_items`, so `&item` created a redundant `&&NavItem` that the compiler silently dereferenced
+- Broken player photos now show a grey avatar placeholder instead of vanishing, both on the player detail page and in the roster (#200)
 - Error handling is now consistent across all routes, making debugging easier and providing clearer error messages when operations fail (#163)
 - Database errors when loading dropdown data (countries, seasons, teams) are now logged instead of silently ignored, making it easier to diagnose problems (#163)
 - Failed database operations now distinguish between "not found" and "database error" scenarios, providing more accurate error messages to users (#163)

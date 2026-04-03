@@ -36,7 +36,7 @@ pub fn team_detail_page(t: &TranslationContext, detail: &TeamDetailEntity) -> Ma
                         class="btn btn-danger"
                         hx-post=(format!("/teams/{}/delete", team.id))
                         hx-confirm-custom=(confirm_attrs(
-                            &t.messages.teams_delete().to_string(),
+                            &format!("{} \"{}\"", t.messages.common_delete(), team.name),
                             &t.messages.teams_confirm_delete().to_string(),
                             ConfirmVariant::Danger,
                             Some(&t.messages.common_delete().to_string()),
