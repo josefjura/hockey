@@ -36,7 +36,7 @@ pub fn event_detail_page(t: &TranslationContext, detail: &EventDetailEntity) -> 
                         class="btn btn-danger"
                         hx-post=(format!("/events/{}/delete", event.id))
                         hx-confirm-custom=(confirm_attrs(
-                            &t.messages.events_delete().to_string(),
+                            &format!("{} \"{}\"", t.messages.common_delete(), event.name),
                             &t.messages.events_confirm_delete().to_string(),
                             ConfirmVariant::Danger,
                             Some(&t.messages.common_delete().to_string()),

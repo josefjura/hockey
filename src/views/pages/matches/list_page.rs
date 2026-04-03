@@ -305,7 +305,12 @@ pub fn match_list_content(
                                         hx-target="#matches-table"
                                         hx-swap="outerHTML"
                                         hx-confirm-custom=(confirm_attrs(
-                                            &t.messages.matches_delete().to_string(),
+                                            &format!(
+                                                "{} \"{} vs {}\"",
+                                                t.messages.common_delete(),
+                                                match_item.home_team_name,
+                                                match_item.away_team_name
+                                            ),
                                             &t.messages.matches_confirm_delete().to_string(),
                                             ConfirmVariant::Danger,
                                             Some(&t.messages.common_delete().to_string()),

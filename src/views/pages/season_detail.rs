@@ -42,7 +42,11 @@ pub fn season_detail_page(t: &TranslationContext, detail: &SeasonDetailEntity) -
                         class="btn btn-danger"
                         hx-post=(format!("/seasons/{}/delete", season.id))
                         hx-confirm-custom=(confirm_attrs(
-                            &t.messages.seasons_delete().to_string(),
+                            &format!(
+                                "{} \"{}\"",
+                                t.messages.common_delete(),
+                                season.display_name.as_deref().unwrap_or(&season.event_name)
+                            ),
                             &t.messages.seasons_confirm_delete().to_string(),
                             ConfirmVariant::Danger,
                             Some(&t.messages.common_delete().to_string()),
