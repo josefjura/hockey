@@ -37,6 +37,11 @@
   transform: scale(0.95);
 }
 
+.mobile-menu-toggle[aria-expanded="true"] {
+  background: var(--primary-dark);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
 /* ========== Mobile Overlay ========== */
 .sidebar-overlay {
   display: none;
@@ -96,9 +101,10 @@
 }
 
 .nav-link.active {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(59, 130, 246, 0.22);
   color: white;
   border-left-color: var(--sidebar-active);
+  font-weight: 600;
 }
 
 .nav-icon {
