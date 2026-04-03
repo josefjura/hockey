@@ -1,5 +1,5 @@
 use axum::{
-    extract::State,
+    extract::{Extension, State},
     response::{Html, IntoResponse, Redirect},
     Form,
 };
@@ -14,6 +14,7 @@ use crate::app_state::AppState;
 use crate::auth::{
     sign_session_id, verify_password, verify_signed_session_id, SESSION_COOKIE_NAME,
 };
+use crate::i18n::TranslationContext;
 use crate::views::pages::auth::login_page;
 
 #[derive(Debug, Deserialize)]
@@ -23,14 +24,15 @@ pub struct LoginForm {
 }
 
 /// GET /auth/login - Show login page
-pub async fn login_get() -> Html<String> {
-    let html = login_page(None);
+pub async fn login_get(Extension(t): Extension<TranslationContext>) -> Html<String> {
+    let html = login_page(&t, None);
     Html(html.into_string())
 }
 
 /// POST /auth/login - Handle login form submission
 pub async fn login_post(
     State(state): State<AppState>,
+    Extension(t): Extension<TranslationContext>,
     jar: CookieJar,
     Form(form): Form<LoginForm>,
 ) -> Result<impl IntoResponse, impl IntoResponse> {
@@ -44,7 +46,7 @@ pub async fn login_post(
             (
                 jar.clone(),
                 Html(
-                    login_page(Some("An error occurred. Please try again.".to_string()))
+                    login_page(&t, Some(t.messages.signin_error_general().to_string()))
                         .into_string(),
                 ),
             )
@@ -56,7 +58,13 @@ pub async fn login_post(
         None => {
             return Err((
                 jar,
-                Html(login_page(Some("Invalid email or password".to_string())).into_string()),
+                Html(
+                    login_page(
+                        &t,
+                        Some(t.messages.signin_error_invalid_credentials().to_string()),
+                    )
+                    .into_string(),
+                ),
             ));
         }
     };
@@ -72,16 +80,20 @@ pub async fn login_post(
         tracing::error!("Password verification error: {}", e);
         (
             jar.clone(),
-            Html(
-                login_page(Some("An error occurred. Please try again.".to_string())).into_string(),
-            ),
+            Html(login_page(&t, Some(t.messages.signin_error_general().to_string())).into_string()),
         )
     })?;
 
     if !password_valid {
         return Err((
             jar,
-            Html(login_page(Some("Invalid email or password".to_string())).into_string()),
+            Html(
+                login_page(
+                    &t,
+                    Some(t.messages.signin_error_invalid_credentials().to_string()),
+                )
+                .into_string(),
+            ),
         ));
     }
 
@@ -96,7 +108,10 @@ pub async fn login_post(
             tracing::error!("Failed to create session for user {}: {}", user_email, e);
             return Err((
                 jar,
-                Html(login_page(Some("Login failed - please try again".to_string())).into_string()),
+                Html(
+                    login_page(&t, Some(t.messages.signin_error_general().to_string()))
+                        .into_string(),
+                ),
             ));
         }
     };

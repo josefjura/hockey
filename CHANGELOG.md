@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Match create and edit forms now show a localized "Loading teams…" indicator next to the season dropdown while HTMX fetches the available teams, using the existing `htmx-indicator` infrastructure (#190)
 
 ### Changed
+- Login page now respects the user's language selection — title, field labels, button, and error messages are all translated (Czech and English) instead of being hardcoded in English (#185)
 - Simplified internal code structure by removing duplicate country-fetching logic across multiple modules, making the codebase easier to maintain and understand (#168)
 - Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 

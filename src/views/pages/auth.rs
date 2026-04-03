@@ -1,14 +1,15 @@
 use maud::{html, Markup};
 
+use crate::i18n::TranslationContext;
 use crate::views::layout::auth_layout;
 
-pub fn login_page(error: Option<String>) -> Markup {
+pub fn login_page(t: &TranslationContext, error: Option<String>) -> Markup {
     auth_layout(
-        "Sign In",
+        &t.messages.signin_title().to_string(),
         html! {
             div.card {
                 h1 style="margin-bottom: 1.5rem; font-size: 1.875rem; font-weight: 700;" {
-                    "Sign In"
+                    (t.messages.signin_title())
                 }
 
                 @if let Some(err) = error {
@@ -20,7 +21,7 @@ pub fn login_page(error: Option<String>) -> Markup {
                 form method="POST" action="/auth/login" {
 
                     div.form-group {
-                        label for="email" { "Email" }
+                        label for="email" { (t.messages.signin_email()) }
                         input
                             type="email"
                             id="email"
@@ -31,17 +32,16 @@ pub fn login_page(error: Option<String>) -> Markup {
                     }
 
                     div.form-group {
-                        label for="password" { "Password" }
+                        label for="password" { (t.messages.signin_password()) }
                         input
                             type="password"
                             id="password"
                             name="password"
-                            required
-                            placeholder="Enter your password";
+                            required;
                     }
 
                     button type="submit" style="width: 100%; margin-top: 0.5rem;" {
-                        "Sign In"
+                        (t.messages.signin_button())
                     }
                 }
             }
