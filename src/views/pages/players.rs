@@ -110,7 +110,9 @@ pub fn player_list_content(
             @if result.items.is_empty() {
                 (empty_state(
                     &t.messages.players_entity().to_string(),
-                    filters.name.is_some() || filters.country_id.is_some()
+                    filters.name.is_some() || filters.country_id.is_some(),
+                    Some("/players/new"),
+                    Some(&t.messages.players_create().to_string()),
                 ))
             } @else {
                 table class="table" {

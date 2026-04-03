@@ -112,7 +112,9 @@ pub fn season_list_content(
             @if result.items.is_empty() {
                 (empty_state(
                     &t.messages.seasons_empty_title().to_string(),
-                    filters.event_id.is_some() || filters.year.is_some()
+                    filters.event_id.is_some() || filters.year.is_some(),
+                    Some("/seasons/new"),
+                    Some(&t.messages.seasons_new().to_string()),
                 ))
             } @else {
                 table class="table" {

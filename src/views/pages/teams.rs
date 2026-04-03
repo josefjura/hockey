@@ -111,7 +111,9 @@ pub fn team_list_content(
             @if result.items.is_empty() {
                 (empty_state(
                     &t.messages.teams_entity().to_string(),
-                    filters.name.is_some() || filters.country_id.is_some()
+                    filters.name.is_some() || filters.country_id.is_some(),
+                    Some("/teams/new"),
+                    Some(&t.messages.teams_create().to_string()),
                 ))
             } @else {
                 table class="table" {
