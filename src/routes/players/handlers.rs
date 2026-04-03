@@ -238,6 +238,10 @@ pub async fn player_create(
                 HeaderName::from_static("hx-trigger"),
                 "entity-created".parse().unwrap(),
             );
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.players_created().to_string().parse().unwrap(),
+            );
             (headers, htmx_reload_table("/players/list", "players-table")).into_response()
         }
         Err(crate::business::players::PlayerError::Validation(validation_error)) => {
@@ -373,7 +377,13 @@ pub async fn player_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload page to show updated data
-            htmx_reload_page().into_response()
+            use axum::http::header::{HeaderMap, HeaderName};
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.players_updated().to_string().parse().unwrap(),
+            );
+            (headers, htmx_reload_page()).into_response()
         }
         Ok(false) => Html(
             player_edit_modal(
@@ -472,11 +482,20 @@ pub async fn player_delete(
                 }
             };
 
-            Html(
-                player_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
-                    .into_string(),
+            use axum::http::header::{HeaderMap, HeaderName};
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.players_deleted().to_string().parse().unwrap(),
+            );
+            (
+                headers,
+                Html(
+                    player_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
+                        .into_string(),
+                ),
             )
-            .into_response()
+                .into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_player_not_found())
