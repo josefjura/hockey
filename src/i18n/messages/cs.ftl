@@ -224,6 +224,7 @@ matches-score = Skóre
 matches-season = Sezóna
 matches-select-team = Vyberte tým
 matches-select-season = Vyberte sezónu
+matches-loading-teams = Načítání týmů…
 matches-select-status = Vyberte stav
 matches-created = Zápas byl úspěšně vytvořen
 matches-updated = Zápas byl úspěšně aktualizován

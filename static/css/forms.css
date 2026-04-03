@@ -62,6 +62,19 @@
   border-color: var(--danger-color);
 }
 
+/* Client-side HTML5 validation — highlights invalid fields after user interaction */
+.form-group input:user-invalid,
+.form-group select:user-invalid,
+.form-group textarea:user-invalid {
+  border-color: var(--danger-color);
+}
+
+.form-group input:user-invalid:focus,
+.form-group select:user-invalid:focus,
+.form-group textarea:user-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
 .form-group input.input-error:focus,
 .form-group select.input-error:focus,
 .form-group textarea.input-error:focus {
