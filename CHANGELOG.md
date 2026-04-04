@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Login page now respects the user's language selection — title, field labels, button, and error messages are all translated (Czech and English) instead of being hardcoded in English (#185)
 - Delete confirmation dialogs now show the exact item name being deleted (e.g. "Delete 'John Smith'") instead of a generic "Delete Player", preventing accidental deletions of the wrong item (#188)
 - Player photo in roster now uses the actual stored photo URL instead of a broken external placeholder service (#200)
+- Table column headers are now displayed in sentence-case instead of ALL-CAPS, improving readability across all list pages (#199)
+- Active sidebar navigation item now has a noticeably stronger background highlight and bold text, making it easier to see which page you are on (#191)
+- Mobile sidebar toggle button now shows a ✕ close icon when the sidebar is open (was always ☰), and uses `aria-expanded` for accessibility (#196)
 - Simplified internal code structure by removing duplicate country-fetching logic across multiple modules, making the codebase easier to maintain and understand (#168)
 - Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 

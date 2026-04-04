@@ -83,8 +83,16 @@ pub fn admin_layout(
                 // Mobile menu toggle button
                 button
                     class="mobile-menu-toggle"
-                    onclick="document.querySelector('.sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active');"
                     aria-label="Toggle navigation menu"
+                    aria-expanded="false"
+                    onclick="
+                        var sidebar = document.querySelector('.sidebar');
+                        var overlay = document.querySelector('.sidebar-overlay');
+                        var open = sidebar.classList.toggle('active');
+                        overlay.classList.toggle('active');
+                        this.setAttribute('aria-expanded', open);
+                        this.textContent = open ? '✕' : '☰';
+                    "
                 {
                     "☰"
                 }

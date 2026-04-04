@@ -16,9 +16,7 @@
   text-align: left;
   padding: 0.875rem 1rem;
   font-weight: 600;
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.875rem;
   color: var(--gray-600);
   border-bottom: 2px solid var(--gray-200);
   white-space: nowrap;
