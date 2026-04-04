@@ -1,5 +1,6 @@
 use axum::{
     extract::{Path, Query, State},
+    http::{HeaderMap, HeaderName},
     response::{Html, IntoResponse},
     Extension, Form,
 };
@@ -14,7 +15,7 @@ use crate::service::{
 };
 use crate::validation::validate_name;
 use crate::views::{
-    components::{error::error_message, htmx::htmx_reload_table},
+    components::{error::error_message, htmx::{htmx_reload_table, with_toast_success}},
     layout::admin_layout,
     pages::team_detail::team_detail_page,
     pages::teams::{team_create_modal, team_edit_modal, team_list_content, teams_page},
@@ -220,8 +221,6 @@ pub async fn team_create(
     .await
     {
         Ok(_) => {
-            use axum::http::header::{HeaderMap, HeaderName};
-
             // Return HTMX response to close modal and reload table
             // Trigger entity-created event for dashboard stats update
             let mut headers = HeaderMap::new();
@@ -331,13 +330,10 @@ pub async fn team_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            use axum::http::header::{HeaderMap, HeaderName};
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.teams_updated().to_string().parse().unwrap(),
-            );
-            (headers, htmx_reload_table("/teams/list", "teams-table")).into_response()
+            with_toast_success(
+                &t.messages.teams_updated().to_string(),
+                htmx_reload_table("/teams/list", "teams-table"),
+            )
         }
         Ok(false) => {
             Html(error_message(&t, t.messages.error_team_not_found()).into_string()).into_response()
@@ -401,20 +397,10 @@ pub async fn team_delete(
             }
 
             // Return HTMX response to reload table with filters
-            use axum::http::header::{HeaderMap, HeaderName};
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.teams_deleted().to_string().parse().unwrap(),
-            );
-            (
-                headers,
-                Html(format!(
-                    "<div hx-get=\"{}\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>",
-                    reload_url
-                )),
+            with_toast_success(
+                &t.messages.teams_deleted().to_string(),
+                htmx_reload_table(&reload_url, "teams-table"),
             )
-                .into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_team_not_found())

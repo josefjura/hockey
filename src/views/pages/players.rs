@@ -7,6 +7,7 @@ use crate::views::components::crud::{
     empty_state, modal_form_multipart, page_header, pagination, table_actions,
 };
 use crate::views::components::forms::csrf_token_field;
+use crate::views::components::AVATAR_FALLBACK_SVG;
 
 /// Main players page with table and filters
 pub fn players_page(
@@ -158,7 +159,7 @@ pub fn player_list_content(
                                             src=(photo_path)
                                             alt=(format!("{} photo", player.name))
                                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%; border: 2px solid var(--gray-300);"
-                                            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2240%22 fill=%22%23666%22%3E%3F%3C/text%3E%3C/svg%3E'";
+                                            onerror=(format!("this.src='{}'", AVATAR_FALLBACK_SVG));
                                     } @else {
                                         div
                                             style="width: 40px; height: 40px; border-radius: 50%; background: var(--gray-200); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--gray-600);"

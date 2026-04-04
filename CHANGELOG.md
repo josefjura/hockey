@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Create, update, and delete operations for teams, players, events, seasons, and matches now show a localized success toast notification confirming the action completed, using the pre-existing toast web component and i18n message keys (#189)
 
 ### Changed
+- Extracted `with_toast_success` helper in `htmx.rs` to replace 9 repeated `HeaderMap::new() / insert / into_response()` blocks across the route handlers — each success path now reads as a single call (#simplify)
+- Extracted `AVATAR_FALLBACK_SVG` constant to eliminate the same 200-character URL-encoded SVG string duplicated across `player_detail.rs`, `players.rs`, and `roster.rs` (#simplify)
+- `season_update` now uses the `htmx_reload_table` helper instead of an equivalent inline HTML string, consistent with all other update handlers (#simplify)
+- Moved `HeaderMap` / `HeaderName` imports to module level in `events.rs`, `teams.rs`, and `players/handlers.rs` where they were incorrectly declared inside function bodies (#simplify)
 - Login page now respects the user's language selection — title, field labels, button, and error messages are all translated (Czech and English) instead of being hardcoded in English (#185)
 - Delete confirmation dialogs now show the exact item name being deleted (e.g. "Delete 'John Smith'") instead of a generic "Delete Player", preventing accidental deletions of the wrong item (#188)
 - Player photo in roster now uses the actual stored photo URL instead of a broken external placeholder service (#200)

@@ -1,4 +1,7 @@
-use axum::response::Html;
+use axum::{
+    http::{HeaderMap, HeaderName, HeaderValue},
+    response::{Html, IntoResponse},
+};
 
 /// Helper function to generate HTMX reload trigger for tables
 ///
@@ -31,4 +34,26 @@ pub fn htmx_reload_table(endpoint: &str, target_id: &str) -> Html<String> {
 /// ```
 pub fn htmx_reload_page() -> Html<String> {
     Html("<div hx-get=\"\" hx-target=\"body\" hx-trigger=\"load\" hx-swap=\"outerHTML\" hx-push-url=\"true\"></div>".to_string())
+}
+
+/// Wrap any HTMX response body with an `hx-toast-success` header.
+///
+/// This is the standard way to trigger a success toast notification after a
+/// successful CRUD operation. The message is taken from an i18n key via
+/// `t.messages.some_key().to_string()`.
+///
+/// # Example
+/// ```rust
+/// with_toast_success(
+///     &t.messages.teams_updated().to_string(),
+///     htmx_reload_table("/teams/list", "teams-table"),
+/// )
+/// ```
+pub fn with_toast_success<T: IntoResponse>(message: &str, body: T) -> impl IntoResponse {
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        HeaderName::from_static("hx-toast-success"),
+        HeaderValue::from_str(message).expect("toast message should be a valid header value"),
+    );
+    (headers, body).into_response()
 }
