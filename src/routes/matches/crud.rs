@@ -116,6 +116,10 @@ pub async fn match_create(
                 HeaderName::from_static("hx-trigger"),
                 "entity-created".parse().unwrap(),
             );
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.matches_created().to_string().parse().unwrap(),
+            );
             (headers, htmx_reload_table("/matches/list", "matches-table")).into_response()
         }
         Err(Ok(validation_error)) => {
@@ -272,6 +276,10 @@ pub async fn match_update(
                     .parse()
                     .expect("Valid redirect URL should parse"),
             );
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.matches_updated().to_string().parse().unwrap(),
+            );
             (headers, Html("".to_string())).into_response()
         }
         Ok(false) => Html(
@@ -320,12 +328,22 @@ pub async fn match_delete(
     match matches::delete_match(&state.db, id).await {
         Ok(true) => {
             // Redirect to matches list using HTMX redirect header
-            Html(r#"<div hx-redirect="/matches"></div>"#.to_string())
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.matches_deleted().to_string().parse().unwrap(),
+            );
+            (
+                headers,
+                Html(r#"<div hx-redirect="/matches"></div>"#.to_string()),
+            )
+                .into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_match_not_found())
                 .into_string(),
-        ),
+        )
+        .into_response(),
         Err(e) => {
             tracing::error!("Failed to delete match: {}", e);
             Html(
@@ -335,6 +353,7 @@ pub async fn match_delete(
                 )
                 .into_string(),
             )
+            .into_response()
         }
     }
 }

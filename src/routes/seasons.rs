@@ -342,6 +342,10 @@ pub async fn season_create(
                 HeaderName::from_static("hx-trigger"),
                 "entity-created".parse().unwrap(),
             );
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.seasons_created().to_string().parse().unwrap(),
+            );
 
             if let Some(return_url) = &form.return_url {
                 // Redirect to the return URL (e.g., event detail page)
@@ -507,7 +511,15 @@ pub async fn season_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string())
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.seasons_updated().to_string().parse().unwrap(),
+            );
+            (
+                headers,
+                Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string()),
+            )
                 .into_response()
         }
         Ok(false) => Html(error_message(&t, t.messages.error_season_not_found()).into_string())
@@ -587,11 +599,19 @@ pub async fn season_delete(
                 }
             };
 
-            Html(
-                season_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
-                    .into_string(),
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.seasons_deleted().to_string().parse().unwrap(),
+            );
+            (
+                headers,
+                Html(
+                    season_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
+                        .into_string(),
+                ),
             )
-            .into_response()
+                .into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_season_not_found())

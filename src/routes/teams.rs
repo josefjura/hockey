@@ -229,6 +229,10 @@ pub async fn team_create(
                 HeaderName::from_static("hx-trigger"),
                 "entity-created".parse().unwrap(),
             );
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.teams_created().to_string().parse().unwrap(),
+            );
             (headers, htmx_reload_table("/teams/list", "teams-table")).into_response()
         }
         Err(e) => {
@@ -327,7 +331,13 @@ pub async fn team_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            htmx_reload_table("/teams/list", "teams-table").into_response()
+            use axum::http::header::{HeaderMap, HeaderName};
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.teams_updated().to_string().parse().unwrap(),
+            );
+            (headers, htmx_reload_table("/teams/list", "teams-table")).into_response()
         }
         Ok(false) => {
             Html(error_message(&t, t.messages.error_team_not_found()).into_string()).into_response()
@@ -391,11 +401,20 @@ pub async fn team_delete(
             }
 
             // Return HTMX response to reload table with filters
-            Html(format!(
-                "<div hx-get=\"{}\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>",
-                reload_url
-            ))
-            .into_response()
+            use axum::http::header::{HeaderMap, HeaderName};
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.teams_deleted().to_string().parse().unwrap(),
+            );
+            (
+                headers,
+                Html(format!(
+                    "<div hx-get=\"{}\" hx-target=\"#teams-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>",
+                    reload_url
+                )),
+            )
+                .into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_team_not_found())
@@ -570,6 +589,8 @@ mod tests {
         let body = response.text();
         // Should return HTMX response to reload table
         assert!(body.contains("HX-Trigger") || body.contains("hx-trigger"));
+        // Should include success toast header
+        assert!(response.headers().get("hx-toast-success").is_some());
 
         // Verify team was created
         let count =
@@ -643,6 +664,8 @@ mod tests {
             .await;
 
         response.assert_status_ok();
+        // Should include success toast header
+        assert!(response.headers().get("hx-toast-success").is_some());
 
         // Verify team was updated
         let name = sqlx::query_scalar::<_, String>("SELECT name FROM team WHERE id = 1")
@@ -665,6 +688,8 @@ mod tests {
             .await;
 
         response.assert_status_ok();
+        // Should include success toast header
+        assert!(response.headers().get("hx-toast-success").is_some());
 
         // Verify team was deleted
         let count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM team WHERE id = 1")

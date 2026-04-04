@@ -232,6 +232,10 @@ pub async fn event_create(
                 HeaderName::from_static("hx-trigger"),
                 "entity-created".parse().unwrap(),
             );
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.events_created().to_string().parse().unwrap(),
+            );
             (headers, htmx_reload_table("/events/list", "events-table")).into_response()
         }
         Err(e) => {
@@ -304,7 +308,8 @@ pub async fn event_update(
                 Ok(None) => {
                     return Html(
                         error_message(&t, t.messages.error_event_not_found()).into_string(),
-                    );
+                    )
+                    .into_response();
                 }
                 Err(e) => {
                     tracing::error!(
@@ -314,7 +319,8 @@ pub async fn event_update(
                     );
                     return Html(
                         error_message(&t, t.messages.error_failed_to_load_event()).into_string(),
-                    );
+                    )
+                    .into_response();
                 }
             };
             let countries = match countries::get_countries_simple(&state.db).await {
@@ -324,7 +330,8 @@ pub async fn event_update(
                     Vec::new()
                 }
             };
-            return Html(event_edit_modal(&t, &event, &countries, Some(error)).into_string());
+            return Html(event_edit_modal(&t, &event, &countries, Some(error)).into_string())
+                .into_response();
         }
     };
 
@@ -341,9 +348,16 @@ pub async fn event_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            htmx_reload_table("/events/list", "events-table")
+            use axum::http::header::{HeaderMap, HeaderName};
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.events_updated().to_string().parse().unwrap(),
+            );
+            (headers, htmx_reload_table("/events/list", "events-table")).into_response()
         }
-        Ok(false) => Html(error_message(&t, t.messages.error_event_not_found()).into_string()),
+        Ok(false) => Html(error_message(&t, t.messages.error_event_not_found()).into_string())
+            .into_response(),
         Err(e) => {
             tracing::error!("Failed to update event: {}", e);
             let event = match events::get_event_by_id(&state.db, id).await {
@@ -351,7 +365,8 @@ pub async fn event_update(
                 Ok(None) => {
                     return Html(
                         error_message(&t, t.messages.error_event_not_found()).into_string(),
-                    );
+                    )
+                    .into_response();
                 }
                 Err(e2) => {
                     tracing::error!(
@@ -361,7 +376,8 @@ pub async fn event_update(
                     );
                     return Html(
                         error_message(&t, t.messages.error_failed_to_load_event()).into_string(),
-                    );
+                    )
+                    .into_response();
                 }
             };
             let countries = match countries::get_countries_simple(&state.db).await {
@@ -375,6 +391,7 @@ pub async fn event_update(
                 event_edit_modal(&t, &event, &countries, Some("Failed to update event"))
                     .into_string(),
             )
+            .into_response()
         }
     }
 }
@@ -388,12 +405,19 @@ pub async fn event_delete(
     match events::delete_event(&state.db, id).await {
         Ok(true) => {
             // Return HTMX response to reload table
-            htmx_reload_table("/events/list", "events-table")
+            use axum::http::header::{HeaderMap, HeaderName};
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                HeaderName::from_static("hx-toast-success"),
+                t.messages.events_deleted().to_string().parse().unwrap(),
+            );
+            (headers, htmx_reload_table("/events/list", "events-table")).into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_event_not_found())
                 .into_string(),
-        ),
+        )
+        .into_response(),
         Err(e) => {
             tracing::error!("Failed to delete event: {}", e);
             Html(
@@ -403,6 +427,7 @@ pub async fn event_delete(
                 )
                 .into_string(),
             )
+            .into_response()
         }
     }
 }
