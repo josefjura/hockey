@@ -15,7 +15,10 @@ use crate::service::{
     seasons::{self, CreateSeasonEntity, SeasonFilters, SortField, SortOrder, UpdateSeasonEntity},
 };
 use crate::views::{
-    components::{error::error_message, htmx::{htmx_reload_table, with_toast_success}},
+    components::{
+        error::error_message,
+        htmx::{htmx_reload_table, with_toast_success},
+    },
     layout::admin_layout,
     pages::season_detail::{add_team_modal, season_detail_page},
     pages::seasons::{season_create_modal, season_edit_modal, season_list_content, seasons_page},

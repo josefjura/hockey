@@ -16,7 +16,10 @@ use crate::validation::validate_name;
 use axum::http::{HeaderMap, HeaderName};
 
 use crate::views::{
-    components::{error::error_message, htmx::{htmx_reload_table, with_toast_success}},
+    components::{
+        error::error_message,
+        htmx::{htmx_reload_table, with_toast_success},
+    },
     layout::admin_layout,
     pages::event_detail::event_detail_page,
     pages::events::{event_create_modal, event_edit_modal, event_list_content, events_page},

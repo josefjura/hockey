@@ -15,7 +15,10 @@ use crate::service::{
 };
 use crate::validation::validate_name;
 use crate::views::{
-    components::{error::error_message, htmx::{htmx_reload_table, with_toast_success}},
+    components::{
+        error::error_message,
+        htmx::{htmx_reload_table, with_toast_success},
+    },
     layout::admin_layout,
     pages::team_detail::team_detail_page,
     pages::teams::{team_create_modal, team_edit_modal, team_list_content, teams_page},
