@@ -1,11 +1,17 @@
 use maud::{html, Markup};
 
+use crate::auth::Session;
 use crate::i18n::TranslationContext;
 use crate::service::teams::{TeamDetailEntity, TeamEntity, TeamParticipationWithSeasonEntity};
 use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
+use crate::views::components::forms::csrf_token_field;
 
 /// Team detail page with season participation management
-pub fn team_detail_page(t: &TranslationContext, detail: &TeamDetailEntity) -> Markup {
+pub fn team_detail_page(
+    session: &Session,
+    t: &TranslationContext,
+    detail: &TeamDetailEntity,
+) -> Markup {
     let team = &detail.team_info;
 
     html! {
@@ -32,18 +38,22 @@ pub fn team_detail_page(t: &TranslationContext, detail: &TeamDetailEntity) -> Ma
                     {
                         (t.messages.teams_edit())
                     }
-                    button
-                        class="btn btn-danger"
-                        hx-post=(format!("/teams/{}/delete", team.id))
-                        hx-confirm-custom=(confirm_attrs(
-                            &format!("{} \"{}\"", t.messages.common_delete(), team.name),
-                            &t.messages.teams_confirm_delete().to_string(),
-                            ConfirmVariant::Danger,
-                            Some(&t.messages.common_delete().to_string()),
-                            Some(&t.messages.common_cancel().to_string())
-                        ))
-                    {
-                        (t.messages.teams_delete())
+                    form style="display: inline;" {
+                        (csrf_token_field(&session.csrf_token))
+                        button
+                            type="submit"
+                            class="btn btn-danger"
+                            hx-post=(format!("/teams/{}/delete", team.id))
+                            hx-confirm-custom=(confirm_attrs(
+                                &format!("{} \"{}\"", t.messages.common_delete(), team.name),
+                                &t.messages.teams_confirm_delete().to_string(),
+                                ConfirmVariant::Danger,
+                                Some(&t.messages.common_delete().to_string()),
+                                Some(&t.messages.common_cancel().to_string())
+                            ))
+                        {
+                            (t.messages.teams_delete())
+                        }
                     }
                 }
             }

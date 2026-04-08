@@ -674,7 +674,7 @@ pub async fn season_detail(
         }
     };
 
-    let content = season_detail_page(&t, &detail);
+    let content = season_detail_page(&session, &t, &detail);
     Html(admin_layout("Season Detail", &session, "/seasons", &t, content).into_string())
 }
 

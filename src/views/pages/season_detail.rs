@@ -1,13 +1,19 @@
 use maud::{html, Markup};
 
+use crate::auth::Session;
 use crate::i18n::TranslationContext;
 use crate::service::seasons::SeasonDetailEntity;
 use crate::service::team_participations::TeamParticipationEntity;
 use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
 use crate::views::components::crud::modal_form_i18n;
+use crate::views::components::forms::csrf_token_field;
 
 /// Season detail page with team participation management
-pub fn season_detail_page(t: &TranslationContext, detail: &SeasonDetailEntity) -> Markup {
+pub fn season_detail_page(
+    session: &Session,
+    t: &TranslationContext,
+    detail: &SeasonDetailEntity,
+) -> Markup {
     let season = &detail.season_info;
 
     html! {
@@ -38,22 +44,26 @@ pub fn season_detail_page(t: &TranslationContext, detail: &SeasonDetailEntity) -
                     {
                         (t.messages.seasons_edit())
                     }
-                    button
-                        class="btn btn-danger"
-                        hx-post=(format!("/seasons/{}/delete", season.id))
-                        hx-confirm-custom=(confirm_attrs(
-                            &format!(
-                                "{} \"{}\"",
-                                t.messages.common_delete(),
-                                season.display_name.as_deref().unwrap_or(&season.event_name)
-                            ),
-                            &t.messages.seasons_confirm_delete().to_string(),
-                            ConfirmVariant::Danger,
-                            Some(&t.messages.common_delete().to_string()),
-                            Some(&t.messages.common_cancel().to_string())
-                        ))
-                    {
-                        (t.messages.seasons_delete())
+                    form style="display: inline;" {
+                        (csrf_token_field(&session.csrf_token))
+                        button
+                            type="submit"
+                            class="btn btn-danger"
+                            hx-post=(format!("/seasons/{}/delete", season.id))
+                            hx-confirm-custom=(confirm_attrs(
+                                &format!(
+                                    "{} \"{}\"",
+                                    t.messages.common_delete(),
+                                    season.display_name.as_deref().unwrap_or(&season.event_name)
+                                ),
+                                &t.messages.seasons_confirm_delete().to_string(),
+                                ConfirmVariant::Danger,
+                                Some(&t.messages.common_delete().to_string()),
+                                Some(&t.messages.common_cancel().to_string())
+                            ))
+                        {
+                            (t.messages.seasons_delete())
+                        }
                     }
                 }
             }
@@ -80,7 +90,7 @@ pub fn season_detail_page(t: &TranslationContext, detail: &SeasonDetailEntity) -
                 @if detail.participating_teams.is_empty() {
                     (empty_teams_state(t))
                 } @else {
-                    (teams_list(t, &detail.participating_teams))
+                    (teams_list(session, t, &detail.participating_teams))
                 }
             }
 
@@ -130,7 +140,11 @@ fn season_info_card(
 }
 
 /// Teams list in grid layout with flags and action buttons
-fn teams_list(t: &TranslationContext, teams: &[TeamParticipationEntity]) -> Markup {
+fn teams_list(
+    session: &Session,
+    t: &TranslationContext,
+    teams: &[TeamParticipationEntity],
+) -> Markup {
     html! {
         div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;" {
             @for team in teams {
@@ -158,22 +172,26 @@ fn teams_list(t: &TranslationContext, teams: &[TeamParticipationEntity]) -> Mark
                         {
                             "Manage Roster"
                         }
-                        button
-                            class="btn btn-sm btn-danger"
-                            hx-post=(format!("/team-participations/{}/delete", team.id))
-                            hx-confirm-custom=(confirm_attrs(
-                                &t.messages.seasons_remove_team().to_string(),
-                                &format!("{} {} {}",
-                                    t.messages.seasons_confirm_remove_team_1(),
-                                    team.team_name,
-                                    t.messages.seasons_confirm_remove_team_2()
-                                ),
-                                ConfirmVariant::Danger,
-                                Some(&t.messages.common_remove().to_string()),
-                                Some(&t.messages.common_cancel().to_string())
-                            ))
-                        {
-                            (t.messages.common_remove())
+                        form style="display: inline;" {
+                            (csrf_token_field(&session.csrf_token))
+                            button
+                                type="submit"
+                                class="btn btn-sm btn-danger"
+                                hx-post=(format!("/team-participations/{}/delete", team.id))
+                                hx-confirm-custom=(confirm_attrs(
+                                    &t.messages.seasons_remove_team().to_string(),
+                                    &format!("{} {} {}",
+                                        t.messages.seasons_confirm_remove_team_1(),
+                                        team.team_name,
+                                        t.messages.seasons_confirm_remove_team_2()
+                                    ),
+                                    ConfirmVariant::Danger,
+                                    Some(&t.messages.common_remove().to_string()),
+                                    Some(&t.messages.common_cancel().to_string())
+                                ))
+                            {
+                                (t.messages.common_remove())
+                            }
                         }
                     }
                 }

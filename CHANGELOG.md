@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 
 ### Fixed
+- Delete buttons on player, team, and season detail pages now work correctly — they were missing CSRF tokens because the buttons were not inside a `<form>` element, causing every delete action to return a 422 error
+- Removing a team from a season now works correctly — the remove button on the season detail page had the same missing CSRF token issue
 - Required and out-of-range form fields now get a red border highlight automatically via the CSS `:user-invalid` pseudo-class, giving immediate visual feedback when a field fails HTML5 validation constraints (#186)
 - Match create/edit form now uses the shared `.form-group` / `.form-label` CSS classes instead of duplicated inline styles, so it benefits from all form styling improvements consistently (#186)
 - CI formatting check now passes after applying `rustfmt` style to player validation functions introduced in #170 — the method chains were broken at the call site instead of after the `=`, which is what `rustfmt` enforces (#170)
