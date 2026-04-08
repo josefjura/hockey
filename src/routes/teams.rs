@@ -477,7 +477,7 @@ pub async fn team_detail(
         }
     };
 
-    let content = team_detail_page(&t, &detail);
+    let content = team_detail_page(&session, &t, &detail);
     Html(admin_layout("Team Detail", &session, "/teams", &t, content).into_string())
 }
 

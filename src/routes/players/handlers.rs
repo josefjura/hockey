@@ -561,6 +561,7 @@ pub async fn player_detail(
     };
 
     let content = player_detail_page(
+        &session,
         &t,
         &page_data.detail,
         &page_data.season_stats,
