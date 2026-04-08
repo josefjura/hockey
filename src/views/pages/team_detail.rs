@@ -7,7 +7,11 @@ use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
 use crate::views::components::forms::csrf_token_field;
 
 /// Team detail page with season participation management
-pub fn team_detail_page(session: &Session, t: &TranslationContext, detail: &TeamDetailEntity) -> Markup {
+pub fn team_detail_page(
+    session: &Session,
+    t: &TranslationContext,
+    detail: &TeamDetailEntity,
+) -> Markup {
     let team = &detail.team_info;
 
     html! {

@@ -9,7 +9,11 @@ use crate::views::components::crud::modal_form_i18n;
 use crate::views::components::forms::csrf_token_field;
 
 /// Season detail page with team participation management
-pub fn season_detail_page(session: &Session, t: &TranslationContext, detail: &SeasonDetailEntity) -> Markup {
+pub fn season_detail_page(
+    session: &Session,
+    t: &TranslationContext,
+    detail: &SeasonDetailEntity,
+) -> Markup {
     let season = &detail.season_info;
 
     html! {
