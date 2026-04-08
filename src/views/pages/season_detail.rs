@@ -90,7 +90,7 @@ pub fn season_detail_page(
                 @if detail.participating_teams.is_empty() {
                     (empty_teams_state(t))
                 } @else {
-                    (teams_list(t, &detail.participating_teams))
+                    (teams_list(session, t, &detail.participating_teams))
                 }
             }
 
@@ -140,7 +140,11 @@ fn season_info_card(
 }
 
 /// Teams list in grid layout with flags and action buttons
-fn teams_list(t: &TranslationContext, teams: &[TeamParticipationEntity]) -> Markup {
+fn teams_list(
+    session: &Session,
+    t: &TranslationContext,
+    teams: &[TeamParticipationEntity],
+) -> Markup {
     html! {
         div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;" {
             @for team in teams {
