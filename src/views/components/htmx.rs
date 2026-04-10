@@ -1,6 +1,6 @@
 use axum::{
     http::{HeaderMap, HeaderName, HeaderValue},
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse, Response},
 };
 
 /// Helper function to generate HTMX reload trigger for tables
@@ -49,7 +49,7 @@ pub fn htmx_reload_page() -> Html<String> {
 ///     htmx_reload_table("/teams/list", "teams-table"),
 /// )
 /// ```
-pub fn with_toast_success<T: IntoResponse>(message: &str, body: T) -> impl IntoResponse {
+pub fn with_toast_success<T: IntoResponse>(message: &str, body: T) -> Response {
     let mut headers = HeaderMap::new();
     headers.insert(
         HeaderName::from_static("hx-toast-success"),
