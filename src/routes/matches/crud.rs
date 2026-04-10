@@ -11,7 +11,7 @@ use crate::business;
 use crate::i18n::TranslationContext;
 use crate::service::matches::{self, CreateMatchEntity, UpdateMatchEntity};
 use crate::views::{
-    components::htmx::htmx_reload_table,
+    components::htmx::{htmx_reload_table, with_toast_success},
     pages::matches::{match_create_modal, match_edit_modal},
 };
 
@@ -107,8 +107,6 @@ pub async fn match_create(
     .await
     {
         Ok(_) => {
-            use axum::http::header::{HeaderMap, HeaderName};
-
             // Return HTMX response to close modal and reload table
             // Trigger entity-created event for dashboard stats update
             let mut headers = HeaderMap::new();
@@ -328,16 +326,10 @@ pub async fn match_delete(
     match matches::delete_match(&state.db, id).await {
         Ok(true) => {
             // Redirect to matches list using HTMX redirect header
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.matches_deleted().to_string().parse().unwrap(),
-            );
-            (
-                headers,
+            with_toast_success(
+                &t.messages.matches_deleted().to_string(),
                 Html(r#"<div hx-redirect="/matches"></div>"#.to_string()),
             )
-                .into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_match_not_found())

@@ -8,6 +8,7 @@ use crate::service::players::{
 };
 use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
 use crate::views::components::forms::csrf_token_field;
+use crate::views::components::AVATAR_FALLBACK_SVG;
 
 /// Player detail page with career history and scoring
 pub fn player_detail_page(
@@ -113,7 +114,7 @@ fn player_info_card(t: &TranslationContext, player: &PlayerEntity) -> Markup {
                             src=(photo_path)
                             alt=(player.name)
                             style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid var(--gray-300);"
-                            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2240%22 fill=%22%23666%22%3E%3F%3C/text%3E%3C/svg%3E'";
+                            onerror=(format!("this.src='{}'", AVATAR_FALLBACK_SVG));
                     }
                 }
                 div {

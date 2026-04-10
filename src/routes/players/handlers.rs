@@ -1,5 +1,6 @@
 use axum::{
     extract::{Multipart, Path, Query, State},
+    http::{HeaderMap, HeaderName},
     response::{Html, IntoResponse},
     Extension,
 };
@@ -15,7 +16,7 @@ use crate::service::{
 use crate::views::{
     components::{
         error::error_message,
-        htmx::{htmx_reload_page, htmx_reload_table},
+        htmx::{htmx_reload_page, htmx_reload_table, with_toast_success},
     },
     layout::admin_layout,
     pages::player_detail::player_detail_page,
@@ -190,8 +191,6 @@ pub async fn player_create(
     State(state): State<AppState>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
-    use axum::http::header::{HeaderMap, HeaderName};
-
     // Get countries for form re-render on error
     let countries = match countries::get_countries_simple(&state.db).await {
         Ok(countries) => countries,
@@ -377,13 +376,10 @@ pub async fn player_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload page to show updated data
-            use axum::http::header::{HeaderMap, HeaderName};
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.players_updated().to_string().parse().unwrap(),
-            );
-            (headers, htmx_reload_page()).into_response()
+            with_toast_success(
+                &t.messages.players_updated().to_string(),
+                htmx_reload_page(),
+            )
         }
         Ok(false) => Html(
             player_edit_modal(
@@ -482,20 +478,13 @@ pub async fn player_delete(
                 }
             };
 
-            use axum::http::header::{HeaderMap, HeaderName};
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.players_deleted().to_string().parse().unwrap(),
-            );
-            (
-                headers,
+            with_toast_success(
+                &t.messages.players_deleted().to_string(),
                 Html(
                     player_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
                         .into_string(),
                 ),
             )
-                .into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_player_not_found())

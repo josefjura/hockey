@@ -15,7 +15,10 @@ use crate::service::{
     seasons::{self, CreateSeasonEntity, SeasonFilters, SortField, SortOrder, UpdateSeasonEntity},
 };
 use crate::views::{
-    components::{error::error_message, htmx::htmx_reload_table},
+    components::{
+        error::error_message,
+        htmx::{htmx_reload_table, with_toast_success},
+    },
     layout::admin_layout,
     pages::season_detail::{add_team_modal, season_detail_page},
     pages::seasons::{season_create_modal, season_edit_modal, season_list_content, seasons_page},
@@ -333,8 +336,6 @@ pub async fn season_create(
     .await
     {
         Ok(_) => {
-            use axum::http::header::{HeaderMap, HeaderName};
-
             // Return HTMX response based on context
             // Trigger entity-created event for dashboard stats update
             let mut headers = HeaderMap::new();
@@ -511,16 +512,10 @@ pub async fn season_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.seasons_updated().to_string().parse().unwrap(),
-            );
-            (
-                headers,
-                Html("<div hx-get=\"/seasons/list\" hx-target=\"#seasons-table\" hx-trigger=\"load\" hx-swap=\"outerHTML\"></div>".to_string()),
+            with_toast_success(
+                &t.messages.seasons_updated().to_string(),
+                htmx_reload_table("/seasons/list", "seasons-table"),
             )
-                .into_response()
         }
         Ok(false) => Html(error_message(&t, t.messages.error_season_not_found()).into_string())
             .into_response(),
@@ -599,19 +594,13 @@ pub async fn season_delete(
                 }
             };
 
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.seasons_deleted().to_string().parse().unwrap(),
-            );
-            (
-                headers,
+            with_toast_success(
+                &t.messages.seasons_deleted().to_string(),
                 Html(
                     season_list_content(&session, &t, &result, &filters, &sort_field, &sort_order)
                         .into_string(),
                 ),
             )
-                .into_response()
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_season_not_found())

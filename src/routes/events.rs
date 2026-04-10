@@ -13,8 +13,13 @@ use crate::service::{
     events::{self, CreateEventEntity, EventFilters, UpdateEventEntity},
 };
 use crate::validation::validate_name;
+use axum::http::{HeaderMap, HeaderName};
+
 use crate::views::{
-    components::{error::error_message, htmx::htmx_reload_table},
+    components::{
+        error::error_message,
+        htmx::{htmx_reload_table, with_toast_success},
+    },
     layout::admin_layout,
     pages::event_detail::event_detail_page,
     pages::events::{event_create_modal, event_edit_modal, event_list_content, events_page},
@@ -223,8 +228,6 @@ pub async fn event_create(
     .await
     {
         Ok(_) => {
-            use axum::http::header::{HeaderMap, HeaderName};
-
             // Return HTMX response to close modal and reload table
             // Trigger entity-created event for dashboard stats update
             let mut headers = HeaderMap::new();
@@ -348,13 +351,10 @@ pub async fn event_update(
     {
         Ok(true) => {
             // Return HTMX response to close modal and reload table
-            use axum::http::header::{HeaderMap, HeaderName};
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.events_updated().to_string().parse().unwrap(),
-            );
-            (headers, htmx_reload_table("/events/list", "events-table")).into_response()
+            with_toast_success(
+                &t.messages.events_updated().to_string(),
+                htmx_reload_table("/events/list", "events-table"),
+            )
         }
         Ok(false) => Html(error_message(&t, t.messages.error_event_not_found()).into_string())
             .into_response(),
@@ -405,13 +405,10 @@ pub async fn event_delete(
     match events::delete_event(&state.db, id).await {
         Ok(true) => {
             // Return HTMX response to reload table
-            use axum::http::header::{HeaderMap, HeaderName};
-            let mut headers = HeaderMap::new();
-            headers.insert(
-                HeaderName::from_static("hx-toast-success"),
-                t.messages.events_deleted().to_string().parse().unwrap(),
-            );
-            (headers, htmx_reload_table("/events/list", "events-table")).into_response()
+            with_toast_success(
+                &t.messages.events_deleted().to_string(),
+                htmx_reload_table("/events/list", "events-table"),
+            )
         }
         Ok(false) => Html(
             crate::views::components::error::error_message(&t, t.messages.error_event_not_found())
