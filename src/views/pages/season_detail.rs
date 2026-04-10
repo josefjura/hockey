@@ -219,12 +219,14 @@ fn empty_teams_state(t: &TranslationContext) -> Markup {
 
 /// Modal form to add a team to the season
 pub fn add_team_modal(
+    session: &Session,
     t: &TranslationContext,
     season_id: i64,
     error: Option<&str>,
     available_teams: &[(i64, String)],
 ) -> Markup {
     let form_fields = html! {
+        (csrf_token_field(&session.csrf_token))
         div style="margin-bottom: 1.5rem;" {
             label style="display: block; margin-bottom: 0.5rem; font-weight: 500;" {
                 (t.messages.seasons_select_team())

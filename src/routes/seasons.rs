@@ -680,7 +680,7 @@ pub async fn season_detail(
 
 /// GET /seasons/{season_id}/teams/add - Show add team modal
 pub async fn season_add_team_form(
-    Extension(_session): Extension<Session>,
+    Extension(session): Extension<Session>,
     Extension(t): Extension<TranslationContext>,
     State(state): State<AppState>,
     Path(season_id): Path<i64>,
@@ -689,7 +689,7 @@ pub async fn season_add_team_form(
         .await
         .unwrap_or_default();
 
-    Html(add_team_modal(&t, season_id, None, &available_teams).into_string())
+    Html(add_team_modal(&session, &t, season_id, None, &available_teams).into_string())
 }
 
 /// POST /seasons/{season_id}/teams - Add team to season
@@ -715,6 +715,7 @@ pub async fn season_add_team(
         Ok(true) => {
             return Html(
                 add_team_modal(
+                    &session,
                     &t,
                     season_id,
                     Some("This team is already participating in this season"),
@@ -728,6 +729,7 @@ pub async fn season_add_team(
             tracing::error!("Failed to check team participation: {}", e);
             return Html(
                 add_team_modal(
+                    &session,
                     &t,
                     season_id,
                     Some("Failed to check team participation"),
@@ -751,6 +753,7 @@ pub async fn season_add_team(
             tracing::error!("Failed to get event_id for season: {}", e);
             return Html(
                 add_team_modal(
+                    &session,
                     &t,
                     season_id,
                     Some("Failed to get season information"),
@@ -788,6 +791,7 @@ pub async fn season_add_team(
             tracing::error!("Failed to add team to season: {}", e);
             Html(
                 add_team_modal(
+                    &session,
                     &t,
                     season_id,
                     Some("Failed to add team. Please try again."),
