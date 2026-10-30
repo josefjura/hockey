@@ -75,7 +75,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // Create app state
     let state = AppState::new(
-        db_pool,
+        db_pool.clone(),
         session_store.clone(),
         config.session_secret.clone(),
         config.is_production(),
@@ -303,9 +303,42 @@ async fn main() -> Result<(), anyhow::Error> {
     tracing::info!("Login at http://{}:{}/auth/login", addr.ip(), config.port);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
+
+    // Close the pool so in-flight SQLite writes finish before exit
+    tracing::info!("Server stopped, closing database pool");
+    db_pool.close().await;
 
     Ok(())
+}
+
+/// Resolves on Ctrl+C or SIGTERM (sent by Kubernetes/Docker on stop)
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    tracing::info!("Shutdown signal received, draining connections");
 }
 
 async fn root_handler(
