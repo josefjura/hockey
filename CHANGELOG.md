@@ -12,7 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
-- Release Docker image builds no longer fail after sqlx-cli 0.9.0 was published — the build now installs sqlx-cli 0.8.6, matching the sqlx version the app uses
+
+## [0.2.1] - 2026-10-30
+
+### Fixed
+- Release Docker image builds no longer fail after sqlx-cli 0.9.0 was published — the build now installs sqlx-cli 0.8.6, matching the sqlx version the app uses (#220)
 
 ## [0.2.0] - 2026-10-30
 
@@ -104,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Initial changelog - previous versions not documented_
 
-[unreleased]: https://github.com/josefjura/hockey/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/josefjura/hockey/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/josefjura/hockey/releases/tag/v0.2.1
 [0.2.0]: https://github.com/josefjura/hockey/releases/tag/v0.2.0
 [0.1.9]: https://github.com/josefjura/hockey/releases/tag/v0.1.9
 [0.1.8]: https://github.com/josefjura/hockey/releases/tag/v0.1.8
