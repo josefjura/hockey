@@ -19,7 +19,7 @@ pub async fn require_auth(
     jar: CookieJar,
     mut request: Request,
     next: Next,
-) -> Result<Response, Response> {
+) -> Response {
     // Get session cookie (contains signed session ID: "session_id.signature")
     let signed_session_id = jar
         .get(SESSION_COOKIE_NAME)
@@ -41,13 +41,13 @@ pub async fn require_auth(
                 request.extensions_mut().insert(session);
 
                 // Continue to the route handler
-                return Ok(next.run(request).await);
+                return next.run(request).await;
             }
         }
     }
 
     // No valid session - redirect to login
-    Err(Redirect::to("/auth/login").into_response())
+    Redirect::to("/auth/login").into_response()
 }
 
 /// Middleware that optionally extracts session if present

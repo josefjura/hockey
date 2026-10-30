@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error handling code in player validation is now clearer and more maintainable, removing confusing nested Result types that made the code harder to understand (#170)
 
 ### Fixed
+- The server now shuts down cleanly as soon as it is asked to stop: it finishes in-flight requests and closes the database before exiting, instead of hanging until it is force-killed. Deploys are faster and a database write can no longer be cut off mid-way
 - Delete buttons on player, team, and season detail pages now work correctly — they were missing CSRF tokens because the buttons were not inside a `<form>` element, causing every delete action to return a 422 error
 - Removing a team from a season now works correctly — the remove button on the season detail page had the same missing CSRF token issue
 - Adding a team to a season now works correctly — the form was missing a CSRF token hidden field, causing every submission to fail with a 422 Unprocessable Entity error
