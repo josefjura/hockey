@@ -4,6 +4,7 @@ use crate::i18n::TranslationContext;
 use crate::service::player_contracts::{PlayerInRoster, TeamParticipationContext};
 use crate::views::components::confirm::{confirm_attrs, ConfirmVariant};
 use crate::views::components::crud::modal_form_i18n;
+use crate::views::components::AVATAR_FALLBACK_SVG;
 
 /// Main roster management page
 pub fn roster_page(
@@ -125,7 +126,7 @@ fn roster_table(roster: &[PlayerInRoster]) -> Markup {
                                         src=(photo)
                                         alt=(player.player_name)
                                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"
-                                        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23e5e7eb%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2240%22 fill=%22%23666%22%3E%3F%3C/text%3E%3C/svg%3E'";
+                                        onerror=(format!("this.src='{}'", AVATAR_FALLBACK_SVG));
                                 }
                                 span style="font-weight: 500;" {
                                     (player.player_name)
