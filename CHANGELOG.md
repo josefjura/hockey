@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Release Docker image builds no longer fail after sqlx-cli 0.9.0 was published — the build now installs sqlx-cli 0.8.6, matching the sqlx version the app uses
 
 ## [0.2.0] - 2026-10-30
 
