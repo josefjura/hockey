@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [0.2.0] - 2026-10-30
+
+### Added
 - Database connection pool size is now configurable via the `DB_MAX_CONNECTIONS` environment variable, allowing you to optimize performance for different workloads or limit resources in constrained environments (default: 5) (#181)
 - Match create and edit forms now show a localized "Loading teams…" indicator next to the season dropdown while HTMX fetches the available teams, using the existing `htmx-indicator` infrastructure (#190)
 - Empty list pages for players, teams, and seasons now show a "Create" call-to-action button when there are no items and no filters are active, giving users a direct path to add their first record (#187)
@@ -95,7 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Initial changelog - previous versions not documented_
 
-[unreleased]: https://github.com/josefjura/hockey/compare/v0.1.9...HEAD
+[unreleased]: https://github.com/josefjura/hockey/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/josefjura/hockey/releases/tag/v0.2.0
 [0.1.9]: https://github.com/josefjura/hockey/releases/tag/v0.1.9
 [0.1.8]: https://github.com/josefjura/hockey/releases/tag/v0.1.8
 [0.1.7]: https://github.com/josefjura/hockey/releases/tag/v0.1.7
